@@ -1,6 +1,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-abril: 'Abril Fatface', serif;
+  --font-merriweather: 'Merriweather', serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -19,9 +21,13 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-merriweather);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-abril);
 }
 
 * {
