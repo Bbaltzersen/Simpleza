@@ -1,0 +1,41 @@
+.menuWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .menuCheckbox {
+    display: none;
+  }
+  
+  .menuButton {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 1.5rem;
+    height: 1.2rem;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .menuLine {
+    background: var(--foreground);
+    height: 0.20rem;
+    width: 100%;
+    transition: all 0.2s ease;
+    border-radius: 50px;
+  }
+  
+  .menuCheckbox:checked + .menuButton .menuLine:nth-child(1) {
+    transform: translateY(0.5rem) rotate(45deg);
+  }
+  
+  .menuCheckbox:checked + .menuButton .menuLine:nth-child(2) {
+    opacity: 0;
+  }
+  
+  .menuCheckbox:checked + .menuButton .menuLine:nth-child(3) {
+    transform: translateY(-0.5rem) rotate(-45deg);
+  }
+  
