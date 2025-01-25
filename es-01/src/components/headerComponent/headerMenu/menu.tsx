@@ -2,7 +2,7 @@ import styles from './menu.module.css'
 
 const Menu = () => {
     return (
-        <div className={styles.logo}>
+        <div className={styles.container}>
             <a>Sign in</a>
             <a>Register</a>
         </div>
