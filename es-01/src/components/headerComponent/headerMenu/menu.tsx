@@ -1,3 +1,6 @@
+"use client"
+
+import React, { useState } from "react";
 import styles from './menu.module.css'
 import NavMenuButton from './navMenuButton/navMenuButton';
 
@@ -6,7 +9,7 @@ const Menu = () => {
         <div className={styles.container}>
             <a>Sign in</a>
             <a>Register</a>
-            <NavMenuButton />
+            <NavMenuButton/>
         </div>
     );
 };

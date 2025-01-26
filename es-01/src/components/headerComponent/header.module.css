@@ -2,6 +2,7 @@
   position: fixed;
   top: 0;
   left: 0;
+  height: 4rem;
   width: 100%;
   z-index: 1000;
   display: flex;
@@ -12,5 +13,5 @@
 }
 
 .spacer {
-  height: 6rem; 
+  height: 4rem; 
 }

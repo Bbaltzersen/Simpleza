@@ -16,7 +16,6 @@
     height: 1.2rem;
     cursor: pointer;
     position: relative;
-    z-index: 2;
   }
   
   .menuLine {
@@ -38,4 +37,5 @@
   .menuCheckbox:checked + .menuButton .menuLine:nth-child(3) {
     transform: translateY(-0.5rem) rotate(-45deg);
   }
+  
   
