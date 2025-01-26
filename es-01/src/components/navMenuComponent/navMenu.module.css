@@ -4,8 +4,7 @@
     right: 0;
     height: calc(100vh - 4rem);
     width: 20rem; /* Adjust the width of the drawer */
-    background-color: #fff;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+    border-left: 1px solid #ccc;
     padding: 1rem;
     flex-direction: column;
     gap: 1rem;
