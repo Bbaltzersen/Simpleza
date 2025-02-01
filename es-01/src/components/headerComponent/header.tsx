@@ -1,17 +1,20 @@
-import Logo from './headerLogo/logo';
-import Menu from './headerMenu/menu';
-import styles from './header.module.css';
+"use client";
 
-const Header = () => {
-    return (
-        <>
-            <div className={styles.container}>
-                <Logo />
-                <Menu />
-            </div>
-            <div className={styles.spacer}></div>
-        </>
-    );
+import React from "react";
+import Logo from "./headerLogo/logo";
+import Menu from "./headerMenu/menu";
+import styles from "./header.module.css";
+
+const Header: React.FC = () => {
+  return (
+    <>
+      <div className={styles.container} data-header>
+        <Logo />
+        <Menu />
+      </div>
+      <div className={styles.spacer} />
+    </>
+  );
 };
 
 export default Header;
