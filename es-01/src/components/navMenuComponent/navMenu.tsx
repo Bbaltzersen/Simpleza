@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { useNavMenu } from "@/context/navMenuContext";
+import { useNavMenu } from "@/lib/context/navMenuContext";
 import styles from "./navMenu.module.css";
 
 const NavMenu: React.FC = () => {

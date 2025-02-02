@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useNavMenu } from "@/context/navMenuContext";
+import { useNavMenu } from "@/lib/context/navMenuContext";
 import styles from "./navMenuButton.module.css";
 
 const NavMenuButton: React.FC = () => {

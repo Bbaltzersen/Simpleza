@@ -1,5 +1,5 @@
 import Header from "./headerComponent/header";
-import { NavMenuProvider } from "@/context/navMenuContext";
+import { NavMenuProvider } from "@/lib/context/navMenuContext";
 import ContentLayout from "./layoutComponent/contentLayout";
 import NavMenu from "./navMenuComponent/navMenu";
 
