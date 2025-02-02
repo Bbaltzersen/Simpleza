@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
+import NavLinks from "./navLinks/navLinks";
 import { useNavMenu } from "@/lib/context/navMenuContext";
 import styles from "./navMenu.module.css";
 
@@ -10,9 +11,7 @@ const NavMenu: React.FC = () => {
 
   return (
     <nav ref={navMenuRef} className={`${styles.navMenu} ${isOpen ? styles.open : ""}`}>
-      <a href="#" className={styles.navLink}>Home</a>
-      <a href="#" className={styles.navLink}>About</a>
-      <a href="#" className={styles.navLink}>Contact</a>
+      <NavLinks/>
     </nav>
   );
 };

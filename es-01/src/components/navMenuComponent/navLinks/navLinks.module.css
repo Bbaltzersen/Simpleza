@@ -1,0 +1,14 @@
+.navLink {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 1rem;
+    text-decoration: none;
+    color: #000;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .navLink:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.125rem;
+  }
+  
