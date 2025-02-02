@@ -1,6 +1,6 @@
 import React from 'react'
 import styles from './navLinks.module.css'
-import { useSession } from "@/lib/context/sessionContext";
+import { useSession } from "@/lib/context/sessionHandler";
 import { auth0 } from '@/lib/auth0'
 
 export default function NavLinks() {
@@ -8,7 +8,7 @@ export default function NavLinks() {
     return (
         <>
             {session ? <a href="#" className={styles.navLink}>Profile</a> : <></>}
-            {session ? <a href="#" className={styles.navLink}>My Recipes</a> : <></>}
+            {session ? <a href="/myrecipes" className={styles.navLink}>My Recipes</a> : <></>}
             <a href="#" className={styles.navLink}>Find Recipes</a>
         </>
     )

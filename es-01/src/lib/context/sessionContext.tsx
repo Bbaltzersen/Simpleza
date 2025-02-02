@@ -1,14 +1,13 @@
-"use client";
+import { auth0 } from "@/lib/auth0";
+import Layout from "../../app/layout"; 
+import { SessionHandler } from "@/lib/context/sessionHandler"; 
 
-import React, { createContext, useContext } from "react";
-import { SessionData } from "@auth0/nextjs-auth0/types";
+export default async function SessionProvider({ children }: { children: React.ReactNode }) {
+  const session = await auth0.getSession();
 
-const SessionContext = createContext<SessionData | null>(null);
-
-export function useSession() {
-  return useContext(SessionContext);
-}
-
-export function SessionProvider({ session, children }: { session: SessionData | null; children: React.ReactNode }) {
-  return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
+  return (
+    <SessionHandler session={session}>
+      <Layout>{children}</Layout>
+    </SessionHandler>
+  );
 }
