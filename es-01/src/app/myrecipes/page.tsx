@@ -9,7 +9,7 @@ import Header from "@/components/headerComponent/header";
 import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 
-export default async function myrecipes() {
+export default async function MyRecipes() {
   const session = await auth0.getSession();
 
   if (!session) {

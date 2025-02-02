@@ -7,9 +7,9 @@ export default function NavLinks() {
     const session = useSession();
     return (
         <>
-            {session ? <a href="#" className={styles.navLink}>Profile</a> : <></>}
+            {session ? <a href="/profile" className={styles.navLink}>Profile</a> : <></>}
             {session ? <a href="/myrecipes" className={styles.navLink}>My Recipes</a> : <></>}
-            <a href="#" className={styles.navLink}>Find Recipes</a>
+            <a href="/findrecipes" className={styles.navLink}>Find Recipes</a>
         </>
     )
 }
