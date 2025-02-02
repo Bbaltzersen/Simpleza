@@ -3,7 +3,7 @@ import NavMenuButton from './navMenuButton/navMenuButton';
 import Register from "./regMenuButton/register";
 import SignIn from "./sigMenuButton/signIn";
 import SignOut from './signOutMenuButton/signOut';
-import { auth0 } from '@/lib/auth0';
+import { auth0 } from '@/lib/authentication/auth0';
 
 const Menu = async () => {
     const session = await auth0.getSession();

@@ -1,4 +1,4 @@
-import { auth0 } from "@/lib/auth0";
+import { auth0 } from "@/lib/authentication/auth0";
 import Layout from "../../app/layout"; 
 import { SessionHandler } from "@/lib/context/sessionHandler"; 
 
