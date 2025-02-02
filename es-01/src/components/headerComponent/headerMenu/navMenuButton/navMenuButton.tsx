@@ -1,42 +1,31 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import eventEmitter from "@/lib/eventEmitter";
+import React, { useEffect, useState } from "react";
+import { signal } from "@preact/signals-react";
 import styles from "./navMenuButton.module.css";
 
+export const isOpen = signal(false);
+
 const NavMenuButton: React.FC = () => {
-  const checkboxRef = useRef<HTMLInputElement>(null);
+  const [, setRender] = useState(false);
 
   useEffect(() => {
-    const handleMenuClose = () => {
-      if (checkboxRef.current) {
-        checkboxRef.current.checked = false;
-      }
-    };
-
-    eventEmitter.on("menuClose", handleMenuClose);
-    return () => eventEmitter.off("menuClose", handleMenuClose);
+    const rerender = () => setRender(prev => !prev);
+    const unsubscribe = isOpen.subscribe(rerender);
+    return unsubscribe;
   }, []);
 
-  const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isOpen = e.target.checked;
-    eventEmitter.emit("menuToggle", isOpen);
+  const handleToggle = () => {
+    isOpen.value = !isOpen.value;
   };
 
   return (
-    <div className={styles.menuWrapper}>
-      <input
-        type="checkbox"
-        id="menu-toggle"
-        className={styles.menuCheckbox}
-        onChange={handleToggle}
-        ref={checkboxRef}
-      />
-      <label htmlFor="menu-toggle" className={styles.menuButton}>
+    <div className={styles.menuWrapper} onClick={handleToggle}>
+      <div className={`${styles.menuButton} ${isOpen.value ? styles.open : ""}`}>
         <span className={styles.menuLine} />
         <span className={styles.menuLine} />
         <span className={styles.menuLine} />
-      </label>
+      </div>
     </div>
   );
 };

@@ -1,41 +1,36 @@
 .menuWrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  .menuCheckbox {
-    display: none;
-  }
-  
-  .menuButton {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 1.5rem;
-    height: 1.2rem;
-    cursor: pointer;
-    position: relative;
-  }
-  
-  .menuLine {
-    background: var(--foreground);
-    height: 0.20rem;
-    width: 100%;
-    transition: all 0.2s ease;
-    border-radius: 50px;
-  }
-  
-  .menuCheckbox:checked + .menuButton .menuLine:nth-child(1) {
-    transform: translateY(0.5rem) rotate(45deg);
-  }
-  
-  .menuCheckbox:checked + .menuButton .menuLine:nth-child(2) {
-    opacity: 0;
-  }
-  
-  .menuCheckbox:checked + .menuButton .menuLine:nth-child(3) {
-    transform: translateY(-0.5rem) rotate(-45deg);
-  }
-  
-  
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.menuButton {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 1.5rem;
+  height: 1.2rem;
+  position: relative;
+  transition: all 0.3s ease-in-out;
+}
+
+.menuLine {
+  background: var(--foreground);
+  height: 0.20rem;
+  width: 100%;
+  transition: all 0.3s ease-in-out;
+  border-radius: 50px;
+}
+
+.menuButton.open .menuLine:nth-child(1) {
+  transform: translateY(0.5rem) rotate(45deg);
+}
+
+.menuButton.open .menuLine:nth-child(2) {
+  opacity: 0;
+}
+
+.menuButton.open .menuLine:nth-child(3) {
+  transform: translateY(-0.5rem) rotate(-45deg);
+}

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import eventEmitter from "@/lib/eventEmitter";
+import React, { useRef, useState, useEffect } from "react";
+import { isOpen } from "../headerComponent/headerMenu/navMenuButton/navMenuButton";
 import styles from "./contentWrapper.module.css";
 
 interface ContentWrapperProps {
@@ -9,24 +9,17 @@ interface ContentWrapperProps {
 }
 
 export default function ContentWrapper({ children }: ContentWrapperProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleToggle = (state: boolean) => setIsMenuOpen(state);
+  const [, setRender] = useState(false);
+  
+    useEffect(() => {
+      const rerender = () => setRender(prev => !prev);
+      return isOpen.subscribe(rerender);
+    }, []);
     
-    eventEmitter.on("menuToggle", handleToggle);
-    eventEmitter.on("menuClose", () => setIsMenuOpen(false));
-
-    return () => {
-      eventEmitter.off("menuToggle", handleToggle);
-      eventEmitter.off("menuClose", () => setIsMenuOpen(false));
-    };
-  }, []);
-
   return (
     <div
-      className={`${styles.contentWrapper} ${isMenuOpen ? styles.overlay : ""}`}
-      onClick={isMenuOpen ? () => eventEmitter.emit("menuClose") : undefined} // Only track clicks if the menu is open
+      className={`${styles.contentWrapper} ${isOpen.value ? styles.overlay : ""}`}
+      onClick={isOpen.value ? () => (isOpen.value = false) : undefined}
     >
       {children}
     </div>
