@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Logo from "./headerLogo/logo";
 import Menu from "./headerMenu/menu";
