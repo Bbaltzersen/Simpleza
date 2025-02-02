@@ -3,7 +3,7 @@ import styles from './register.module.css'
 
 function Register() {
   return (
-    <a href='/auth/login?screen_hint=signup'>Register</a>
+    <a href='/auth/login?screen_hint=signup' className={styles.container}>Register</a>
   )
 }
 

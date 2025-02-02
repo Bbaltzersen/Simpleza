@@ -1,11 +1,13 @@
-import React from 'react'
-import { useRouter } from "next/navigation";
-import styles from './signIn.module.css'
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import styles from "./signIn.module.css";
 
 function SignIn() {
   return (
-    <a href='/auth/login'>Sign In</a>
-  )
+      <a href="/auth/login" className={styles.container}>Sign In</a>
+  );
 }
 
-export default SignIn
+export default SignIn;

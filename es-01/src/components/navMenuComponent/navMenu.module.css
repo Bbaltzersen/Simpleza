@@ -1,28 +1,33 @@
 .navMenu {
-    background-color: var(--background);
-    position: fixed;
-    top: 4rem;
-    right: 0;
-    height: calc(100vh - 4rem);
-    width: 20rem; /* Adjust the width of the drawer */
-    border-left: 1px solid #ccc;
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-    z-index: 1000;
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    transform: translateX(100%); /* Hidden off-screen to the right */
-    opacity: 0; /* Fully transparent */
-  }
-  
-  .navMenu.open {
-    transform: translateX(0); /* Slide into view */
-    opacity: 1; /* Fully visible */
-  }
-  
-  .navLink {
-    text-decoration: none;
-    color: #000;
-    font-size: 1rem;
-  }
-  
+  display: flex;
+  background-color: var(--background);
+  position: fixed;
+  top: 4rem;
+  right: 0;
+  height: calc(100vh - 4rem);
+  width: 20rem; 
+  border-left: 1px solid #ccc;
+  flex-direction: column;
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(100%); 
+  will-change: transform; 
+}
+
+.navMenu.open {
+  transform: translateX(0); 
+}
+
+.navLink {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  padding-left: 1rem;
+  text-decoration: none;
+  color: #000;
+  border-bottom: 1px solid #ccc;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+}
