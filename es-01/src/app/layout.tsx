@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Abril_Fatface, Merriweather } from "next/font/google";
 import "./globals.css";
-import NavMenu from "@/components/navMenuComponent/navMenu";
 
 const abrilFatface = Abril_Fatface({
   weight: '400',
@@ -29,7 +28,6 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${abrilFatface.variable} ${merriweather.variable}`}>
         {children}
-        <NavMenu></NavMenu>
       </body>
     </html>
   );

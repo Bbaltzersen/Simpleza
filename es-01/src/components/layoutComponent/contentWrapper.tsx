@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { isOpen } from "../headerComponent/headerMenu/navMenuButton/navMenuButton";
+import React from "react";
+import { useNavMenu } from "@/context/navMenuContext";
 import styles from "./contentWrapper.module.css";
 
 interface ContentWrapperProps {
@@ -9,17 +9,12 @@ interface ContentWrapperProps {
 }
 
 export default function ContentWrapper({ children }: ContentWrapperProps) {
-  const [, setRender] = useState(false);
-  
-    useEffect(() => {
-      const rerender = () => setRender(prev => !prev);
-      return isOpen.subscribe(rerender);
-    }, []);
-    
+  const { isOpen, closeMenu } = useNavMenu(); 
+
   return (
     <div
-      className={`${styles.contentWrapper} ${isOpen.value ? styles.overlay : ""}`}
-      onClick={isOpen.value ? () => (isOpen.value = false) : undefined}
+      className={`${styles.contentWrapper} ${isOpen ? styles.overlay : ""}`}
+      onClick={isOpen ? closeMenu : undefined}
     >
       {children}
     </div>
