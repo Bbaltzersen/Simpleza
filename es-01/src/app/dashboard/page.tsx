@@ -9,7 +9,9 @@ import Header from "@/components/headerComponent/header";
 import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 
-export default async function MyRecipes() {
+import DashboardContent from '@/pages/dashboard/dashboardContent';
+
+export default async function Dashboard() {
   const session = await auth0.getSession();
 
   if (!session) {
@@ -22,7 +24,7 @@ export default async function MyRecipes() {
         <Header />
         <NavMenu />
         <ContentLayout>
-          <h1>My Recipe</h1>
+          <DashboardContent/>
         </ContentLayout>
       </NavMenuProvider>
     </SessionProvider>

@@ -8,7 +8,7 @@ export default function NavLinks() {
     return (
         <>
             {session ? <a href="/profile" className={styles.navLink}>Profile</a> : <></>}
-            {session ? <a href="/myrecipes" className={styles.navLink}>My Recipes</a> : <></>}
+            {session ? <a href="/dashboard" className={styles.navLink}>My Recipes</a> : <></>}
             <a href="/findrecipes" className={styles.navLink}>Find Recipes</a>
         </>
     )
