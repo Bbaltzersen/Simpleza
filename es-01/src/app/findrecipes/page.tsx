@@ -1,7 +1,5 @@
 import React from 'react'
-import { redirect } from "next/navigation";
 
-import { auth0 } from '@/lib/authentication/auth0';
 import { NavMenuProvider } from "@/lib/context/navMenuContext";
 import SessionProvider from "@/lib/context/sessionContext";
 

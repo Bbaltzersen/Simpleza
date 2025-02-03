@@ -15,7 +15,7 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Esencial",
+  title: "Simpleza",
   description: "One step at a time.",
 };
 

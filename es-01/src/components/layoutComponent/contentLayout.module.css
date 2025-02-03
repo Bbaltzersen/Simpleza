@@ -1,0 +1,35 @@
+:root {
+    --content-padding: 2rem; 
+    --max-width: 1200px; 
+  }
+  
+  .contentContainer {
+    width: 90%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--content-padding);
+  }
+  
+  @media (min-width: 2560px) {
+    :root {
+      --content-padding: 3rem;
+      --max-width: 1600px;
+    }
+  }
+  
+  @media (max-width: 1024px) {
+    :root {
+      --content-padding: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    :root {
+      --content-padding: 1rem;
+    }
+  
+    .contentContainer {
+      width: 95%;
+    }
+  }
+  

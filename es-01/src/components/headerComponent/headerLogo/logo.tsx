@@ -5,7 +5,7 @@ const Logo = () => {
         <div className={styles.logo}>
             <h1>
                 <a href='/'>
-                    Esencial
+                    Simpleza
                 </a>
             </h1>
         </div>

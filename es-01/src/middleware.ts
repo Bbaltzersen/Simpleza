@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
   
     const session = await auth0.getSession(request)
   
-    // the headers from the auth middleware should always be returned
     return authRes
   }
 
