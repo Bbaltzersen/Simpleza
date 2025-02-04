@@ -1,0 +1,43 @@
+# General Python Ignored Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+*.log
+.DS_Store
+
+# Virtual Environment
+venv/
+.venv/
+env/
+*.egg-info/
+pip-wheel-metadata/
+
+# IDE and Editor Configurations
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+
+# Database and Secrets
+config/config.py  # If config.py contains sensitive info
+config/__pycache__/
+database/__pycache__/
+migrations/versions/__pycache__/
+alembic.ini  # Only if you're keeping settings elsewhere
+
+# Alembic Migration Cache
+migrations/versions/*.pyc
+migrations/versions/*.pyo
+migrations/versions/*.pyd
+
+# Logs & Temporary Files
+logs/
+*.log
+*.bak
+*.swp
+*.swo
+*.tmp
