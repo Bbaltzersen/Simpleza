@@ -11,3 +11,4 @@ export default async function SessionProvider({ children }: { children: React.Re
     </SessionHandler>
   );
 }
+

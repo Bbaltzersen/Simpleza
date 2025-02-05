@@ -8,9 +8,9 @@ export async function middleware(request: NextRequest) {
     if (request.nextUrl.pathname.startsWith("/auth")) {
       return authRes
     }
-  
-    const session = await auth0.getSession(request)
-  
+
+    fetchProtectedData()
+
     return authRes
   }
 
@@ -24,4 +24,23 @@ export const config = {
      */
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
+}
+
+
+async function fetchProtectedData() {
+  const token = await auth0.getAccessToken(); // Get the token dynamically
+
+  const response = await fetch("http://127.0.0.1:8000/protected", {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token.token}`, // Send token in Authorization header
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch data");
+  }
+
+  return response.json();
 }
