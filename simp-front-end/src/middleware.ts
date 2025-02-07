@@ -1,46 +1,64 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { auth0 } from "./lib/authentication/auth0"
-
 export async function middleware(request: NextRequest) {
-    const authRes = await auth0.middleware(request)
-  
-    if (request.nextUrl.pathname.startsWith("/auth")) {
-      return authRes
+    const token = await fetchAccessToken();
+
+    if (!token) {
+        console.error("Failed to retrieve access token.");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    fetchProtectedData()
+    try {
+        const protectedData = await fetchProtectedData(token);
+        console.log("Protected Data:", protectedData);
+    } catch (error) {
+        console.error("Error fetching protected data:", error);
+    }
 
-    return authRes
-  }
-
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
-  ],
+    return NextResponse.next();
 }
 
+export const config = {
+    matcher: [
+        "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    ],
+};
 
-async function fetchProtectedData() {
-  const token = await auth0.getAccessToken(); // Get the token dynamically
+async function fetchAccessToken() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/token");
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch token: ${response.statusText}`);
+        }
 
-  const response = await fetch("http://127.0.0.1:8000/protected", {
-    method: "GET",
-    headers: {
-      "Authorization": `Bearer ${token.token}`, // Send token in Authorization header
-      "Content-Type": "application/json",
-    },
-  });
+        const data = await response.json();
+        return data.access_token; 
+    } catch (error) {
+        console.error("Error fetching access token:", error);
+        return null;
+    }
+}
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch data");
-  }
+async function fetchProtectedData(token: string) {
+    try {
+        console.log("Using Token:", token); // Debugging
 
-  return response.json();
+        const response = await fetch("http://127.0.0.1:8000/protected", {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`, 
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch protected data: ${response.statusText}`);
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error("Error in fetchProtectedData:", error);
+        throw error;
+    }
 }
