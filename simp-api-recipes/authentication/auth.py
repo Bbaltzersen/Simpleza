@@ -7,17 +7,14 @@ from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPBearer
 from jose import jwt, JWTError
 
-# Load environment variables
 load_dotenv()
 
-# Auth0 Configuration
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
 AUTH0_CLIENT_ID = os.getenv("AUTH0_CLIENT_ID")
 AUTH0_CLIENT_SECRET = os.getenv("AUTH0_CLIENT_SECRET")
 ALGORITHMS = ["RS256"]
 
-# Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -112,6 +109,5 @@ async def verify_jwt(token: str):
         logger.error("General token verification error.")
         raise HTTPException(status_code=401, detail="Token verification failed")
 
-### ✅ Secure Route Dependency ###
 async def get_current_user(token: str = Security(security)):
     return await verify_jwt(token.credentials)
