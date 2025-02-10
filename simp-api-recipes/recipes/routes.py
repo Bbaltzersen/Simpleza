@@ -1,73 +1,100 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+# recipes/routes.py
+import uuid
 from typing import List, Optional
-from authentication.auth import get_current_user
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from config import RATE_LIMIT, limiter
+from database import get_db
+from models.recipe import Recipe as RecipeModel
 
 router = APIRouter(prefix="/recipes")
-
-# ----------------- Recipe Models -----------------
 
 class RecipeBase(BaseModel):
     title: str
     description: Optional[str] = None
-    ingredients: List[str] = []
-    instructions: Optional[str] = None
+
+    class Config:
+        from_attributes = True  
 
 class RecipeCreate(RecipeBase):
     pass
 
-class RecipeUpdate(RecipeBase):
-    pass
+class RecipeUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
 
-class Recipe(RecipeBase):
-    id: int
+class RecipeResponse(RecipeBase):
+    recipe_id: uuid.UUID
+    author_id: Optional[uuid.UUID] = None
+    created_at: str
 
-# A dummy in-memory "database" for demonstration purposes.
-recipes_db = {}
+    class Config:
+        from_attributes = True  
 
-# ----------------- Recipe CRUD Endpoints -----------------
+# ----------------- CRUD Endpoints -----------------
 
-@router.get("/", response_model=List[Recipe])
+@router.get("/", response_model=List[RecipeResponse])
 @limiter.limit(RATE_LIMIT)
-async def list_recipes(request: Request, user: dict = Depends(get_current_user)):
-    """Retrieve a list of recipes."""
-    return list(recipes_db.values())
+async def list_recipes(request: Request, db: Session = Depends(get_db)):
+    """Retrieve a list of recipes from the database."""
+    recipes = db.query(RecipeModel).all()
+    return recipes
 
-@router.get("/{recipe_id}", response_model=Recipe)
+@router.get("/{recipe_id}", response_model=RecipeResponse)
 @limiter.limit(RATE_LIMIT)
-async def get_recipe(request: Request, recipe_id: int, user: dict = Depends(get_current_user)):
+async def get_recipe(request: Request, recipe_id: uuid.UUID, db: Session = Depends(get_db)):
     """Retrieve a single recipe by its ID."""
-    recipe = recipes_db.get(recipe_id)
+    recipe = db.query(RecipeModel).filter(RecipeModel.recipe_id == recipe_id).first()
     if not recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
     return recipe
 
-@router.post("/", response_model=Recipe, status_code=201)
+@router.post("/", response_model=RecipeResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit(RATE_LIMIT)
-async def create_recipe(request: Request, recipe: RecipeCreate, user: dict = Depends(get_current_user)):
-    """Create a new recipe."""
-    recipe_id = max(recipes_db.keys(), default=0) + 1
-    new_recipe = Recipe(id=recipe_id, **recipe.dict())
-    recipes_db[recipe_id] = new_recipe
+async def create_recipe(request: Request, recipe: RecipeCreate, db: Session = Depends(get_db)):
+    """Create a new recipe in the database."""
+    new_recipe = RecipeModel(
+        title=recipe.title,
+        description=recipe.description
+        # Optionally, set the author_id if available from your authentication logic.
+    )
+    db.add(new_recipe)
+    db.commit()
+    db.refresh(new_recipe)
     return new_recipe
 
-@router.put("/{recipe_id}", response_model=Recipe)
+@router.put("/{recipe_id}", response_model=RecipeResponse)
 @limiter.limit(RATE_LIMIT)
-async def update_recipe(request: Request, recipe_id: int, recipe: RecipeUpdate, user: dict = Depends(get_current_user)):
-    """Update an existing recipe."""
-    stored_recipe = recipes_db.get(recipe_id)
-    if not stored_recipe:
-        raise HTTPException(status_code=404, detail="Recipe not found")
-    updated_recipe = stored_recipe.copy(update=recipe.dict())
-    recipes_db[recipe_id] = updated_recipe
-    return updated_recipe
+async def update_recipe(
+    request: Request,
+    recipe_id: uuid.UUID,
+    recipe_update: RecipeUpdate,
+    db: Session = Depends(get_db)
+):
+    """Update an existing recipe in the database."""
+    recipe_db = db.query(RecipeModel).filter(RecipeModel.recipe_id == recipe_id).first()
+    if not recipe_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+    
+    if recipe_update.title is not None:
+        recipe_db.title = recipe_update.title
+    if recipe_update.description is not None:
+        recipe_db.description = recipe_update.description
+    
+    db.commit()
+    db.refresh(recipe_db)
+    return recipe_db
 
-@router.delete("/{recipe_id}", status_code=204)
+@router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit(RATE_LIMIT)
-async def delete_recipe(request: Request, recipe_id: int, user: dict = Depends(get_current_user)):
-    """Delete a recipe."""
-    if recipe_id not in recipes_db:
-        raise HTTPException(status_code=404, detail="Recipe not found")
-    del recipes_db[recipe_id]
+async def delete_recipe(request: Request, recipe_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Delete a recipe from the database."""
+    recipe_db = db.query(RecipeModel).filter(RecipeModel.recipe_id == recipe_id).first()
+    if not recipe_db:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recipe not found")
+    db.delete(recipe_db)
+    db.commit()
     return

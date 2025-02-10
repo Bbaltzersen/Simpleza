@@ -17,3 +17,4 @@ RATE_LIMIT = os.getenv("RATE_LIMIT", "10/minute")
 
 # Create a limiter instance that can be shared across modules
 limiter = Limiter(key_func=get_remote_address)
+
