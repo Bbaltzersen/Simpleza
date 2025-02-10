@@ -1,6 +1,7 @@
 from .base import Base
 from .user import User
 from .recipe import Recipe
+from .recipe_author import RecipeAuthor
 from .recipe_ingredient import RecipeIngredient
 from .recipe_tag import RecipeTag
 from .recipe_image import RecipeImage
@@ -20,6 +21,7 @@ __all__ = [
     "Base",
     "User",
     "Recipe",
+    "RecipeAuthor",
     "RecipeIngredient",
     "RecipeTag",
     "RecipeImage",
