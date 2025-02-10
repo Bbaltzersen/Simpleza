@@ -23,10 +23,6 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
-    """
-    Dependency that provides a SQLAlchemy session.
-    Closes the session after the request is finished.
-    """
     db = SessionLocal()
     try:
         yield db
