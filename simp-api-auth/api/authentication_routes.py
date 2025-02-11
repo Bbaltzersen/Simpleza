@@ -15,7 +15,10 @@ from database.handling import (
 from models.schemas import UserCreate, UserResponse
 
 # Load secret key from environment
-SECRET_KEY = os.getenv("SECRET_KEY", "your_secret_key")
+# Use SECRET_KEY from .env, raise an error if not set
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is missing from the environment variables!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -23,7 +26,7 @@ router = APIRouter()
 ph = argon2.PasswordHasher()
 
 # OAuth2 for Swagger UI (Tells Swagger the login endpoint)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/authentication/login")
 
 def get_db():
     db = SessionLocal()
