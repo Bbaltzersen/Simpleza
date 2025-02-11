@@ -1,10 +1,15 @@
+# authentication/auth.py
+
 import logging
 import httpx
-from fastapi import HTTPException, Security
+from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer
 from jose import jwt, JWTError
 from dotenv import load_dotenv
 from config import AUTH0_DOMAIN, AUTH0_AUDIENCE, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET, ALGORITHMS
+from sqlalchemy.orm import Session
+from database.db_init import get_db  # Your get_db dependency
+from database.user_crud import add_user  # The helper function to add a user
 
 load_dotenv()
 
@@ -13,9 +18,8 @@ logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
-
 async def get_auth0_token():
-    """Fetch an access token from Auth0."""
+    """Fetch an access token from Auth0 using client credentials flow."""
     url = f"https://{AUTH0_DOMAIN}/oauth/token"
     payload = {
         "client_id": AUTH0_CLIENT_ID,
@@ -36,7 +40,6 @@ async def get_auth0_token():
         logger.error(f"Network error while fetching token: {str(e)}")
         raise HTTPException(status_code=500, detail="Auth0 token service unavailable")
 
-
 async def get_auth0_jwks():
     """Retrieve JWKS from Auth0."""
     url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
@@ -53,7 +56,6 @@ async def get_auth0_jwks():
     except httpx.RequestError as e:
         logger.error(f"Network error while fetching JWKS: {str(e)}")
         raise HTTPException(status_code=500, detail="Auth0 JWKS service unavailable")
-
 
 async def verify_jwt(token: str):
     """Verify a JWT token using Auth0's JWKS."""
@@ -106,7 +108,33 @@ async def verify_jwt(token: str):
         logger.error("General token verification error.")
         raise HTTPException(status_code=401, detail="Token verification failed")
 
-
 async def get_current_user(token: str = Security(security)):
-    """Dependency to get the current user by verifying the JWT."""
+    """
+    Dependency that verifies the JWT and returns the token payload.
+    """
     return await verify_jwt(token.credentials)
+
+async def get_or_create_current_user(
+    db: Session = Depends(get_db),
+    token_payload: dict = Depends(get_current_user)
+):
+    """
+    Dependency to get or create the current user.
+    
+    If the token is a client credentials token (i.e. it has "gty": "client-credentials"),
+    or if the token does not include an email claim, we raise an error.
+    """
+    # Check if the token is a client credentials token.
+    if token_payload.get("gty") == "client-credentials":
+        raise HTTPException(status_code=401, detail="User token required, not a client credentials token.")
+    
+    # Extract user details from the token payload.
+    username = token_payload.get("nickname") or token_payload.get("name") or token_payload.get("sub")
+    email = token_payload.get("email")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not found in token payload.")
+
+    # Add the user to the DB if they don't exist, or return the existing user.
+    user = add_user(db, username, email)
+    return user
