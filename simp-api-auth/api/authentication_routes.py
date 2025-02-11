@@ -2,8 +2,9 @@ import os
 import re
 import uuid
 import argon2
+import logging
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Form, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -14,19 +15,19 @@ from database.handling import (
 )
 from models.schemas import UserCreate, UserResponse
 
-# Load secret key from environment
-# Use SECRET_KEY from .env, raise an error if not set
+router = APIRouter()
+ph = argon2.PasswordHasher()
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY is missing from the environment variables!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-router = APIRouter()
-ph = argon2.PasswordHasher()
-
-# OAuth2 for Swagger UI (Tells Swagger the login endpoint)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/authentication/login")
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/v1/authentication/login",
+    auto_error=False  # Prevents immediate errors before reaching the endpoint
+)
 
 def get_db():
     db = SessionLocal()
@@ -40,7 +41,6 @@ def create_access_token(user_id: str):
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-# Password validation function (API-level validation)
 def is_secure_password(password: str):
     errors = []
     if len(password) < 8:
@@ -53,7 +53,6 @@ def is_secure_password(password: str):
         errors.append("Password must contain at least one number.")
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
         errors.append("Password must contain at least one special character.")
-
     return errors
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_200_OK)
@@ -64,7 +63,6 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if get_user_by_email(db, user.email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Validate password security
     password_errors = is_secure_password(user.password)
     if password_errors:
         raise HTTPException(status_code=400, detail={"password_errors": password_errors})
@@ -79,17 +77,42 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         role=new_user.role
     )
 
+class OAuth2EmailRequestForm(OAuth2PasswordRequestForm):
+    def __init__(
+        self,
+        email: str = Form(..., description="Your registered email address"),
+        password: str = Form(..., description="Your password"),
+        scope: str = Form(""),
+        client_id: str = Form(None),
+        client_secret: str = Form(None)
+    ):
+        super().__init__(
+            username=email,  # OAuth2PasswordRequestForm expects "username"
+            password=password,
+            scope=scope,
+            client_id=client_id,
+            client_secret=client_secret
+        )
+
 @router.post("/login", status_code=status.HTTP_200_OK)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    db_user = get_user_by_username(db, form_data.username)
+def login(
+    form_data: OAuth2EmailRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    
+    print("Got here")
+    if not form_data.username or not form_data.password:
+        raise HTTPException(status_code=422, detail="Missing email or password")
+
+    db_user = get_user_by_email(db, form_data.username)  
     if not db_user or not ph.verify(db_user.hashed_password, form_data.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Generate JWT and store it in Redis
     access_token = create_access_token(db_user.user_id)
     store_token(db_user.user_id, access_token)
 
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
@@ -102,7 +125,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/logout")
-def logout(user_id: str):
+def logout(user_id: str = Depends(get_current_user)):
     revoke_token(user_id)
     return {"message": "User logged out successfully"}
 
@@ -111,11 +134,13 @@ def protected_route(user_id: str = Depends(get_current_user)):
     return {"message": f"Hello, User {user_id}, you are authenticated."}
 
 @router.delete("/delete-user/{user_id}")
-def delete_user_account(user_id: str, db: Session = Depends(get_db)):
+def delete_user_account(user_id: str, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    if user_id != current_user:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this account")
+
     if not delete_user(db, user_id):
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Revoke user token from Redis upon deletion
     revoke_token(user_id)
 
     return {"message": "User deleted successfully"}
