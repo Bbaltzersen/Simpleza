@@ -99,8 +99,6 @@ def login(
     form_data: OAuth2EmailRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    
-    print("Got here")
     if not form_data.username or not form_data.password:
         raise HTTPException(status_code=422, detail="Missing email or password")
 
