@@ -1,8 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
 import re
-import uuid
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+from uuid import UUID
 
-# Custom password validator
 def validate_password(password: str) -> str:
     if len(password) < 8:
         raise ValueError("Password must be at least 8 characters long.")
@@ -21,18 +20,19 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
 
-    # Custom password validation
+    @field_validator("password")
     @classmethod
-    def validate(cls, values):
-        values["password"] = validate_password(values["password"])
-        return values
+    def validate_password(cls, value: str) -> str:
+        return validate_password(value)
 
-class UserLogin(BaseModel):  # 🚀 Make sure this exists
+class UserLogin(BaseModel):
     username: str
     password: str
 
 class UserResponse(BaseModel):
-    user_id: uuid.UUID
+    user_id: str
     username: str
-    email: EmailStr
+    email: str
     role: str
+
+    model_config = ConfigDict(from_attributes=True, json_encoders={UUID: str})
