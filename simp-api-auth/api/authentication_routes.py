@@ -1,34 +1,38 @@
 import os
 import re
-import uuid
 import argon2
-import logging
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Form, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
+from dotenv import load_dotenv
+
+# Database & Models
 from database.connection import SessionLocal
 from database.handling import (
-    create_user, get_user_by_username, get_user_by_email, delete_user, 
+    create_user, get_user_by_username, get_user_by_email, delete_user,
     store_token, validate_token, revoke_token
 )
 from models.schemas import UserCreate, UserResponse
 
-router = APIRouter()
-ph = argon2.PasswordHasher()
+# Load environment variables
+load_dotenv()
 
+# Security Configuration
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY is missing from the environment variables!")
+
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/v1/authentication/login",
-    auto_error=False  # Prevents immediate errors before reaching the endpoint
-)
+# Authentication Setup
+router = APIRouter()
+ph = argon2.PasswordHasher()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/v1/authentication/login")
 
+# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -36,12 +40,14 @@ def get_db():
     finally:
         db.close()
 
+# Function to create JWT access token
 def create_access_token(user_id: str):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def is_secure_password(password: str):
+# Secure password validation
+def validate_password(password: str):
     errors = []
     if len(password) < 8:
         errors.append("Password must be at least 8 characters long.")
@@ -55,6 +61,25 @@ def is_secure_password(password: str):
         errors.append("Password must contain at least one special character.")
     return errors
 
+# Custom OAuth2 form to handle email instead of username
+class OAuth2EmailRequestForm(OAuth2PasswordRequestForm):
+    def __init__(
+        self,
+        email: str = Form(..., description="Your registered email address"),
+        password: str = Form(..., description="Your password"),
+        scope: str = Form(""),
+        client_id: str = Form(None),
+        client_secret: str = Form(None)
+    ):
+        super().__init__(
+            username=email,
+            password=password,
+            scope=scope,
+            client_id=client_id,
+            client_secret=client_secret
+        )
+
+# 🔹 User Registration
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_200_OK)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     if get_user_by_username(db, user.username):
@@ -63,7 +88,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if get_user_by_email(db, user.email):
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    password_errors = is_secure_password(user.password)
+    password_errors = validate_password(user.password)
     if password_errors:
         raise HTTPException(status_code=400, detail={"password_errors": password_errors})
 
@@ -77,23 +102,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         role=new_user.role
     )
 
-class OAuth2EmailRequestForm(OAuth2PasswordRequestForm):
-    def __init__(
-        self,
-        email: str = Form(..., description="Your registered email address"),
-        password: str = Form(..., description="Your password"),
-        scope: str = Form(""),
-        client_id: str = Form(None),
-        client_secret: str = Form(None)
-    ):
-        super().__init__(
-            username=email,  # OAuth2PasswordRequestForm expects "username"
-            password=password,
-            scope=scope,
-            client_id=client_id,
-            client_secret=client_secret
-        )
-
+# 🔹 User Login (Returns JWT Token)
 @router.post("/login", status_code=status.HTTP_200_OK)
 def login(
     form_data: OAuth2EmailRequestForm = Depends(),
@@ -111,7 +120,7 @@ def login(
 
     return {"access_token": access_token, "token_type": "bearer"}
 
-
+# 🔹 Token Verification & User Retrieval
 def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -122,16 +131,19 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-@router.post("/logout")
+# 🔹 Logout & Token Revocation
+@router.post("/logout", status_code=status.HTTP_200_OK)
 def logout(user_id: str = Depends(get_current_user)):
     revoke_token(user_id)
     return {"message": "User logged out successfully"}
 
-@router.get("/protected")
+# 🔹 Protected Endpoint (Example)
+@router.get("/protected", status_code=status.HTTP_200_OK)
 def protected_route(user_id: str = Depends(get_current_user)):
     return {"message": f"Hello, User {user_id}, you are authenticated."}
 
-@router.delete("/delete-user/{user_id}")
+# 🔹 Delete User Account
+@router.delete("/delete-user/{user_id}", status_code=status.HTTP_200_OK)
 def delete_user_account(user_id: str, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     if user_id != current_user:
         raise HTTPException(status_code=403, detail="Not authorized to delete this account")
