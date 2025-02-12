@@ -13,13 +13,15 @@ load_dotenv()
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
 RATE_LIMIT = os.getenv("RATE_LIMIT", "10/minute")
+TEST_MODE = os.getenv("TEST_MODE", "False").lower() == "true"
 
 app = FastAPI()
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(429, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
+if not TEST_MODE:
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(429, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,7 +35,7 @@ api_v1 = APIRouter(prefix="/v1")
 api_v1.include_router(auth_router, prefix="/authentication", tags=["Authentication"])
 api_v1.include_router(authz_router, prefix="/authorization", tags=["Authorization"])
 
-@api_v1.get("/limited-endpoint", dependencies=[Depends(limiter.limit(RATE_LIMIT))])
+@api_v1.get("/limited-endpoint", dependencies=[Depends(limiter.limit(RATE_LIMIT))] if not TEST_MODE else [])
 async def limited_endpoint():
     return {"message": "This endpoint has rate limiting applied."}
 
