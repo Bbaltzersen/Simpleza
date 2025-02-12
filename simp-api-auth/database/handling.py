@@ -17,7 +17,7 @@ ph = argon2.PasswordHasher()
 
 def create_user(db: Session, username: str, email: str, hashed_password: str):
     user = User(
-        user_id=uuid.uuid4(),
+        user_id=str(uuid.uuid4()),  
         username=username,
         email=email,
         hashed_password=hashed_password,
@@ -28,7 +28,7 @@ def create_user(db: Session, username: str, email: str, hashed_password: str):
     db.refresh(user)
     return user
 
-def get_user_by_id(db: Session, user_id: uuid.UUID):
+def get_user_by_id(db: Session, user_id: str):
     return db.query(User).filter(User.user_id == user_id).first()
 
 def get_user_by_username(db: Session, username: str):
@@ -37,7 +37,7 @@ def get_user_by_username(db: Session, username: str):
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
-def update_user(db: Session, user_id: uuid.UUID, **kwargs):
+def update_user(db: Session, user_id: str, **kwargs):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user:
         for key, value in kwargs.items():
@@ -47,7 +47,7 @@ def update_user(db: Session, user_id: uuid.UUID, **kwargs):
         db.refresh(user)
     return user
 
-def delete_user_by_id(db: Session, user_id: uuid.UUID):
+def delete_user(db: Session, user_id: str):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user:
         db.delete(user)
@@ -55,20 +55,12 @@ def delete_user_by_id(db: Session, user_id: uuid.UUID):
         return True
     return False
 
-def delete_user_by_email(db: Session, email: str):
-    user = db.query(User).filter(User.email == email).first()
-    if user:
-        db.delete(user)
-        db.commit()
-        return True
-    return False
-
-def store_token(user_id: uuid.UUID, token: str, expires_in=3600):
+def store_token(user_id: str, token: str, expires_in=3600):
     r.setex(f"token:{user_id}", expires_in, token)
 
-def validate_token(user_id: uuid.UUID, token: str):
+def validate_token(user_id: str, token: str):
     stored_token = r.get(f"token:{user_id}")
     return stored_token == token
 
-def revoke_token(user_id: uuid.UUID):
+def revoke_token(user_id: str):
     r.delete(f"token:{user_id}")
