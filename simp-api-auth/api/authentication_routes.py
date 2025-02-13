@@ -18,6 +18,8 @@ from models.schemas import UserCreate, UserResponse
 
 load_dotenv()
 
+IS_PRODUCTION = os.getenv("NODE_ENV") == "production"
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("SECRET_KEY is missing from environment variables!")
@@ -95,7 +97,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), 
         key="auth_token",
         value=access_token,
         httponly=True,
-        secure=True,
+        secure=IS_PRODUCTION,
         samesite="Lax",
         max_age=int(1.21e+6),
     )

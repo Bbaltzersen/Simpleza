@@ -16,31 +16,31 @@ load_dotenv()
 # Environment Config
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
 RATE_LIMIT = os.getenv("RATE_LIMIT", "10/minute")
-TEST_MODE = os.getenv("TEST_MODE", "False").lower() == "true"
+IN_PRODUCTION = os.getenv("IN_PRODUCTION", "False").lower() == "true"
 
-# Ensure ALLOWED_ORIGINS is valid (avoid empty list issue)
+# Ensure ALLOWED_ORIGINS is valid
 if not ALLOWED_ORIGINS or ALLOWED_ORIGINS == [""]:
-    ALLOWED_ORIGINS = ["*"] if TEST_MODE else []  # Allow all in test mode, restrict in production
+    ALLOWED_ORIGINS = ["*"] if not IN_PRODUCTION else ["http://localhost:3000"]  # Allow frontend in dev
 
 # Initialize FastAPI
 app = FastAPI()
 
 # Enable Rate Limiting only in production
-if not TEST_MODE:
+if IN_PRODUCTION:
     limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
     app.add_exception_handler(429, _rate_limit_exceeded_handler)
     app.add_middleware(SlowAPIMiddleware)
 else:
-    limiter = None  # No rate limiting in test mode
+    limiter = None  # No rate limiting in dev mode
 
-# CORS Middleware (Allow based on env settings)
+# CORS Middleware (Allow based on environment settings)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["POST"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Create API v1 Router
@@ -48,26 +48,37 @@ api_v1 = APIRouter(prefix="/v1")
 api_v1.include_router(auth_router, prefix="/authentication", tags=["Authentication"])
 api_v1.include_router(authz_router, prefix="/authorization", tags=["Authorization"])
 
-# Rate-limited endpoint (Only applies when TEST_MODE=False)
+# Rate-limited endpoint (Only applies when IN_PRODUCTION=True)
 @api_v1.get("/limited-endpoint")
 async def limited_endpoint():
-    if not TEST_MODE:
-        return await limiter.limit(RATE_LIMIT)(lambda: {"message": "This endpoint has rate limiting applied."})()
-    return {"message": "This endpoint has no rate limiting (TEST_MODE=True)."}
+    if not IN_PRODUCTION:
+        return {"message": "This endpoint has no rate limiting (IN_PRODUCTION=False)."}
+    
+    # Apply rate limiting dynamically
+    return await limiter.limit(RATE_LIMIT)(lambda: {"message": "This endpoint has rate limiting applied."})()
 
+# Include the v1 API router
 app.include_router(api_v1)
 
-# Run FastAPI with HTTPS (if TEST_MODE=False)
+# Run FastAPI with or without HTTPS
 if __name__ == "__main__":
-    if TEST_MODE:
-        # Run FastAPI in HTTP mode for local development
-        uvicorn.run("main:app", host="127.0.0.1", port=8000)
+    if not IN_PRODUCTION:
+        print("🔧 Running FastAPI in HTTP mode for development.")
+        uvicorn.run("main:app", host="0.0.0.0", port=8000)
     else:
-        # Run FastAPI with HTTPS using SSL Certificates
-        uvicorn.run(
-            "main:app",
-            host="127.0.0.1",
-            port=8000,
-            ssl_keyfile=os.path.join("certs", "key.pem"),
-            ssl_certfile=os.path.join("certs", "cert.pem"),
-        )
+        # Check if SSL certificates exist before enabling HTTPS
+        ssl_keyfile = os.getenv("SSL_KEYFILE", "certs/key.pem")
+        ssl_certfile = os.getenv("SSL_CERTFILE", "certs/cert.pem")
+
+        if os.path.exists(ssl_keyfile) and os.path.exists(ssl_certfile):
+            print("Running FastAPI with HTTPS.")
+            uvicorn.run(
+                "main:app",
+                host="0.0.0.0",
+                port=8000,
+                ssl_keyfile=ssl_keyfile,
+                ssl_certfile=ssl_certfile,
+            )
+        else:
+            print("SSL certificates not found. Running FastAPI in HTTP mode.")
+            uvicorn.run("main:app", host="0.0.0.0", port=8000)

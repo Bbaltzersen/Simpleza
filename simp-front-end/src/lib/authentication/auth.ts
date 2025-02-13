@@ -1,4 +1,5 @@
 import axios from 'axios';
+import apiClient from '../apiClient'
 
 export interface User {
   user_id: string;
@@ -7,27 +8,20 @@ export interface User {
   role: string;
 }
 
-const API_BASE_URL = process.env.AUTH_API;
-
-const authClient = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
-
 export async function retrieveAuth(): Promise<User | null> {
   try {
-    const response = await authClient.get<User>('/protected');
-    return response.data;
+    const response = await apiClient.get<{ user: User }>('/authentication/protected');
+    return response.data.user;
   } catch (error) {
-    console.error('Error retrieving authentication', error);
+    console.error('Error retrieving authentication:', error);
     return null;
   }
 }
 
 export async function clearAuth(): Promise<void> {
   try {
-    await authClient.post('/logout');
+    await apiClient.post('/authentication/logout');
   } catch (error) {
-    console.error('Error clearing authentication', error);
+    console.error('Error clearing authentication:', error);
   }
 }
