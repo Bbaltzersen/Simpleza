@@ -1,10 +1,9 @@
 import os
 import re
 import argon2
-from argon2.exceptions import VerifyMismatchError
 import jwt
 from datetime import datetime, timedelta, UTC
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
@@ -13,7 +12,7 @@ from api.dependencies import get_current_user
 from database.connection import SessionLocal
 from database.handling import (
     create_user, get_user_by_username, get_user_by_email, delete_user,
-    store_token,  revoke_token
+    store_token, store_user_role, revoke_token
 )
 from models.schemas import UserCreate, UserResponse
 
@@ -80,32 +79,49 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         role=new_user.role
     )
 
-from argon2.exceptions import VerifyMismatchError
-
-@router.post("/login", status_code=status.HTTP_200_OK)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    db_user = get_user_by_username(db, form_data.username)  
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    try:
-        if not ph.verify(db_user.hashed_password, form_data.password):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-    except VerifyMismatchError:
+@router.post("/login")
+def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    db_user = get_user_by_username(db, form_data.username)
+    if not db_user or not ph.verify(db_user.hashed_password, form_data.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(db_user.user_id)
-    store_token(db_user.user_id, access_token)
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Store token and user role in Redis for role checking
+    store_token(db_user.user_id, access_token, expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+    store_user_role(db_user.user_id, db_user.role, expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60)
+
+    response.set_cookie(
+        key="auth_token",
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="Lax",
+        max_age=int(1.21e+6),
+    )
+
+    return {"message": "Login successful"}
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout(response: Response, current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("user_id") if isinstance(current_user, dict) else current_user
+
+    revoke_token(user_id)
+
+    response.delete_cookie(key="auth_token")
+    
+    return {"message": "Logout successful"}
+
 
 @router.get("/protected", status_code=status.HTTP_200_OK)
-def protected_route(user_id: str = Depends(get_current_user)):
-    return {"message": f"Hello, User {user_id}, you are authenticated."}
+def protected_route(user_data: dict = Depends(get_current_user)):
+    return {"user": user_data}
+
 
 @router.delete("/delete-user/{user_id}", status_code=status.HTTP_200_OK)
-def delete_user_account(user_id: str, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
-    if user_id != current_user:
+def delete_user_account(user_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    current_user_id = current_user.get("user_id") if isinstance(current_user, dict) else current_user
+    if user_id != current_user_id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this account")
 
     if not delete_user(db, user_id):
