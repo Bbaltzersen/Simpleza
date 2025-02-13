@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './navLinks.module.css'
 import { useSession } from "@/lib/context/sessionHandler";
-import { auth0 } from '@/lib/authentication/auth'
+import { auth0 } from '@/lib/api/authentication/auth'
 
 export default function NavLinks() {
     const session = useSession();

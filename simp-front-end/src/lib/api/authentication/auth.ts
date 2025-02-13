@@ -1,5 +1,5 @@
-import axios from 'axios';
-import apiClient from '../apiClient'
+import apiClient from '../apiClient';
+import { fetchCSRFToken } from './csrf';
 
 export interface User {
   user_id: string;
@@ -7,6 +7,7 @@ export interface User {
   email: string;
   role: string;
 }
+
 
 export async function retrieveAuth(): Promise<User | null> {
   try {
@@ -20,7 +21,9 @@ export async function retrieveAuth(): Promise<User | null> {
 
 export async function clearAuth(): Promise<void> {
   try {
-    await apiClient.post('/authentication/logout');
+    await apiClient.post('/authentication/logout', {}, {
+      headers: { 'X-CSRF-Token': await fetchCSRFToken() }
+    });
   } catch (error) {
     console.error('Error clearing authentication:', error);
   }

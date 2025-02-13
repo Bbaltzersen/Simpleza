@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { retrieveAuth, clearAuth } from "@/lib/authentication/auth";
+import { retrieveAuth, clearAuth } from "@/lib/api/authentication/auth";
 
 export async function middleware(request: NextRequest) {
   try {
