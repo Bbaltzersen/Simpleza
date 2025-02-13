@@ -1,20 +1,10 @@
 import axios from 'axios';
-import https from 'https';
-import fs from 'fs';
 
-const isProduction = process.env.NODE_ENV === 'production';
-const certPath = process.env.CERT_PATH || '@/certs/cert.pem';
-
-const httpsAgent = isProduction
-  ? new https.Agent({
-      ca: fs.readFileSync(certPath),
-    })
-  : new https.Agent({ rejectUnauthorized: false });
+const API_BASE_URL = process.env.AUTH_API || "http://localhost:8000/v1";
 
 const apiClient = axios.create({
-  baseURL: process.env.AUTH_API || "https://localhost:8000/v1",
-  withCredentials: true,
-  httpsAgent, // Ensures HTTPS works with self-signed certs
+  baseURL: API_BASE_URL,
+  withCredentials: true, // Ensures cookies are sent with requests
 });
 
 export default apiClient;

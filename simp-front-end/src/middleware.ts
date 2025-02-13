@@ -18,7 +18,6 @@ export async function middleware(request: NextRequest) {
   } catch (error: any) {
     console.error("Middleware encountered an error:", error);
     
-    // Optionally clear auth session if something goes wrong
     await clearAuth();
 
     return NextResponse.json({ error: "Middleware error: " + error.message }, { status: 500 });
