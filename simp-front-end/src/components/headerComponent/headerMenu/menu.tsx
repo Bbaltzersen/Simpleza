@@ -1,29 +1,29 @@
-import styles from './menu.module.css'
+import styles from './menu.module.css';
 import NavMenuButton from './navMenuButton/navMenuButton';
 import Register from "./regMenuButton/register";
 import SignIn from "./sigMenuButton/signIn";
 import SignOut from './signOutMenuButton/signOut';
-import { auth0 } from '@/lib/api/authentication/auth';
+import { session } from '@/lib/api/authentication/session';
 
 const Menu = async () => {
-    const session = await auth0.getSession();
+    await session.initServerSide();
 
-    if(!session){
-    return (
-        <div className={styles.container}>
-            <SignIn/>
-            <Register/>
-            <NavMenuButton/>
-        </div>
-    );
+    if (!session.isLoggedIn()) {
+        return (
+            <div className={styles.container}>
+                <SignIn />
+                <Register />
+                <NavMenuButton />
+            </div>
+        );
     }
 
-    return(
+    return (
         <div className={styles.container}>
-            <SignOut/>
-            <NavMenuButton/>
+            <SignOut />
+            <NavMenuButton />
         </div>
-    )
+    );
 };
 
 export default Menu;

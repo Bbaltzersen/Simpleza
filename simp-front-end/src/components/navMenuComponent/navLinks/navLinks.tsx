@@ -1,15 +1,19 @@
-import React from 'react'
-import styles from './navLinks.module.css'
-import { useSession } from "@/lib/context/sessionHandler";
-import { auth0 } from '@/lib/api/authentication/auth'
+import React from 'react';
+import styles from './navLinks.module.css';
+import { useAuth } from "@/lib/context/authContext"; // Use new AuthContext
 
 export default function NavLinks() {
-    const session = useSession();
+    const { user } = useAuth(); // Get authenticated user
+
     return (
         <>
-            {session ? <a href="/profile" className={styles.navLink}>Profile</a> : <></>}
-            {session ? <a href="/dashboard" className={styles.navLink}>My Recipes</a> : <></>}
+            {user && (
+                <>
+                    <a href="/profile" className={styles.navLink}>Profile</a>
+                    <a href="/dashboard" className={styles.navLink}>My Recipes</a>
+                </>
+            )}
             <a href="/findrecipes" className={styles.navLink}>Find Recipes</a>
         </>
-    )
+    );
 }

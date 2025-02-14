@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth0 } from '@/lib/api/authentication/auth';
 import { NavMenuProvider } from "@/lib/context/navMenuContext";
-import SessionProvider from "@/lib/context/sessionContext";
+import SessionProvider from "@/lib/context/authContext";
 
 import Header from "@/components/headerComponent/header";
 import ContentLayout from "@/components/layoutComponent/contentLayout";
