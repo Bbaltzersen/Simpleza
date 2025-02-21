@@ -1,3 +1,6 @@
+// app/ClientAuthProvider.tsx
+'use client';
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { retrieveAuth, clearAuth } from '../api/authentication/auth';
 import { User } from '../api/authentication/auth';
@@ -11,18 +14,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const AuthProvider: React.FC<{ initialUser: User | null; children: React.ReactNode }> = ({ initialUser, children }) => {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [loading, setLoading] = useState(!initialUser);
 
   useEffect(() => {
     async function loadUser() {
-      const authenticatedUser = await retrieveAuth();
-      setUser(authenticatedUser);
-      setLoading(false);
+      if (!initialUser) {
+        const authenticatedUser = await retrieveAuth();
+        setUser(authenticatedUser);
+        setLoading(false);
+      }
     }
     loadUser();
-  }, []);
+  }, [initialUser]);
 
   const login = async () => {
     const authenticatedUser = await retrieveAuth();
@@ -44,7 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useAuth must be used within a ClientAuthProvider");
   }
   return context;
 };
+
+export default AuthProvider;

@@ -40,13 +40,13 @@ export class SessionManager {
    */
   public async initServerSide(): Promise<void> {
     try {
-      const cookieStore = cookies();
+      const cookieStore = await cookies(); // Await the cookies() call
       const cookieHeader = cookieStore.toString(); // Convert cookies to a string
-
+  
       const response = await apiClient.get('/authentication/protected', {
         headers: { cookie: cookieHeader }, // Send cookies to backend
       });
-
+  
       this.user = response.data.user;
       this.isAuthenticated = !!this.user;
     } catch (error) {
@@ -54,6 +54,7 @@ export class SessionManager {
       this.isAuthenticated = false;
     }
   }
+  
 
   /**
    * Get the authenticated user.
