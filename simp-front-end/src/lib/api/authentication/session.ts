@@ -23,81 +23,97 @@ export class SessionManager {
    * Initialize the session (Client-Side)
    */
   public async init(): Promise<void> {
-    if (typeof window === 'undefined') return; // Avoid running on the server
+    // Ensure this only runs on the client-side.
+    if (typeof window === 'undefined') return;
 
     try {
       this.user = await retrieveAuth();
       this.csrfToken = await fetchCSRFToken();
       this.isAuthenticated = !!this.user;
-    } catch (error) {
-      console.error("Session initialization failed:", error);
+    } catch (error: any) {
+      console.error("Error in SessionManager.init:", error.message || error);
     }
   }
 
   /**
    * Initialize session (Server-Side) using cookies.
-   * Uses Next.js `cookies()` instead of `req` for server components.
+   * Uses Next.js `cookies()` for server components.
    */
   public async initServerSide(): Promise<void> {
     try {
-      const cookieStore = await cookies(); // Await the cookies() call
-      const cookieHeader = cookieStore.toString(); // Convert cookies to a string
-  
+      const cookieStore = cookies();
+      const cookieHeader = cookieStore.toString();
+
       const response = await apiClient.get('/authentication/protected', {
-        headers: { cookie: cookieHeader }, // Send cookies to backend
+        headers: { cookie: cookieHeader },
       });
-  
+
       this.user = response.data.user;
       this.isAuthenticated = !!this.user;
-    } catch (error) {
+    } catch (error: any) {
+      console.error(
+        'Error in SessionManager.initServerSide (GET /authentication/protected):',
+        error.message || error
+      );
       this.user = null;
       this.isAuthenticated = false;
     }
   }
-  
 
   /**
-   * Get the authenticated user.
+   * Returns the authenticated user, or null if not authenticated.
    */
   public getUser(): any | null {
     return this.user;
   }
 
   /**
-   * Check if user is authenticated.
+   * Returns a boolean indicating whether the user is logged in.
    */
   public isLoggedIn(): boolean {
     return this.isAuthenticated;
   }
 
   /**
-   * Logout and clear the session.
+   * Clears the session and logs the user out.
    */
   public async logout(): Promise<void> {
-    await clearAuth();
-    this.user = null;
-    this.csrfToken = null;
-    this.isAuthenticated = false;
+    try {
+      await clearAuth();
+    } catch (error: any) {
+      console.error('Error during logout in SessionManager.logout:', error.message || error);
+    } finally {
+      this.user = null;
+      this.csrfToken = null;
+      this.isAuthenticated = false;
+    }
   }
 
   /**
-   * Refresh session (if backend supports refresh tokens).
+   * Refreshes the session using the refreshAuth method.
+   * On success, re-initializes the session.
    */
   public async refreshSession(): Promise<boolean> {
-    const refreshed = await refreshAuth();
-    if (refreshed) {
-      await this.init();
+    try {
+      const refreshed = await refreshAuth();
+      if (refreshed) {
+        await this.init();
+      } else {
+        console.warn("Refresh session failed; session remains unauthenticated.");
+      }
+      return refreshed;
+    } catch (error: any) {
+      console.error("Error in SessionManager.refreshSession:", error.message || error);
+      return false;
     }
-    return refreshed;
   }
 
   /**
-   * Get CSRF Token (for secure requests).
+   * Returns the CSRF token used for secure requests.
    */
   public getCSRFToken(): string | null {
     return this.csrfToken;
   }
 }
 
-// Create a global instance
 export const session = SessionManager.getInstance();

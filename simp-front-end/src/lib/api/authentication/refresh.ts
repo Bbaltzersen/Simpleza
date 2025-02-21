@@ -4,8 +4,8 @@ export async function refreshAuth(): Promise<boolean> {
   try {
     await apiClient.post('/authentication/refresh');
     return true;
-  } catch (error) {
-    console.error('Error refreshing authentication:', error);
+  } catch (error: any) {
+    console.error('Error in refreshAuth (POST /authentication/refresh):', error.message || error);
     return false;
   }
 }

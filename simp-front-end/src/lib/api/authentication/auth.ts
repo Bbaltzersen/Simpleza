@@ -8,23 +8,24 @@ export interface User {
   role: string;
 }
 
-
 export async function retrieveAuth(): Promise<User | null> {
   try {
     const response = await apiClient.get<{ user: User }>('/authentication/protected');
     return response.data.user;
-  } catch (error) {
-    console.error('Error retrieving authentication:', error);
+  } catch (error: any) {
+    console.error('Error in retrieveAuth (GET /authentication/protected):', error.message || error);
     return null;
   }
 }
 
 export async function clearAuth(): Promise<void> {
   try {
-    await apiClient.post('/authentication/logout', {}, {
-      headers: { 'X-CSRF-Token': await fetchCSRFToken() }
-    });
-  } catch (error) {
-    console.error('Error clearing authentication:', error);
+    await apiClient.post(
+      '/authentication/logout',
+      {},
+      { headers: { 'X-CSRF-Token': await fetchCSRFToken() } }
+    );
+  } catch (error: any) {
+    console.error('Error in clearAuth (POST /authentication/logout):', error.message || error);
   }
 }
