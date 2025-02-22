@@ -23,36 +23,46 @@ export class SessionManager {
    * Initialize the session (Client-Side)
    */
   public async init(): Promise<void> {
-    // Ensure this only runs on the client-side.
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return; // Ensure client-side only
 
     try {
-      this.user = await retrieveAuth();
-      this.csrfToken = await fetchCSRFToken();
-      this.isAuthenticated = !!this.user;
+      const user = await retrieveAuth();
+      const csrfToken = await fetchCSRFToken();
+      this.user = user;
+      this.csrfToken = csrfToken;
+      this.isAuthenticated = !!user;
     } catch (error: any) {
       console.error("Error in SessionManager.init:", error.message || error);
+      this.user = null;
+      this.csrfToken = null;
+      this.isAuthenticated = false;
     }
   }
 
   /**
    * Initialize session (Server-Side) using cookies.
-   * Uses Next.js `cookies()` for server components.
    */
   public async initServerSide(): Promise<void> {
     try {
-      const cookieStore = cookies();
+      const cookieStore = await cookies();
       const cookieHeader = cookieStore.toString();
 
-      const response = await apiClient.get('/authentication/protected', {
+      const response = await apiClient.get('authentication/protected', {
         headers: { cookie: cookieHeader },
       });
-
-      this.user = response.data.user;
-      this.isAuthenticated = !!this.user;
+      
+      // Response handling
+      if (response.status === 200 && response.data?.user) {
+        this.user = response.data.user;
+        this.isAuthenticated = true;
+      } else {
+        console.warn("Unexpected response in initServerSide:", response);
+        this.user = null;
+        this.isAuthenticated = false;
+      }
     } catch (error: any) {
       console.error(
-        'Error in SessionManager.initServerSide (GET /authentication/protected):',
+        'Error in SessionManager.initServerSide (GET v1/authentication/protected):',
         error.message || error
       );
       this.user = null;
@@ -60,23 +70,14 @@ export class SessionManager {
     }
   }
 
-  /**
-   * Returns the authenticated user, or null if not authenticated.
-   */
   public getUser(): any | null {
     return this.user;
   }
 
-  /**
-   * Returns a boolean indicating whether the user is logged in.
-   */
   public isLoggedIn(): boolean {
     return this.isAuthenticated;
   }
 
-  /**
-   * Clears the session and logs the user out.
-   */
   public async logout(): Promise<void> {
     try {
       await clearAuth();
@@ -89,10 +90,6 @@ export class SessionManager {
     }
   }
 
-  /**
-   * Refreshes the session using the refreshAuth method.
-   * On success, re-initializes the session.
-   */
   public async refreshSession(): Promise<boolean> {
     try {
       const refreshed = await refreshAuth();
@@ -108,9 +105,6 @@ export class SessionManager {
     }
   }
 
-  /**
-   * Returns the CSRF token used for secure requests.
-   */
   public getCSRFToken(): string | null {
     return this.csrfToken;
   }
