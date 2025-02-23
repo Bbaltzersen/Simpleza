@@ -1,18 +1,21 @@
 import apiClient from '../apiClient';
 
+/**
+ * Refreshes the authentication token
+ */
 export async function refreshAuth(): Promise<boolean> {
   try {
-    const response = await apiClient.post('v1/authentication/refresh');
-    // Response handling: Expect a 200 OK for a successful refresh.
+    const response = await apiClient.post('/authentication/refresh-token', {}, { withCredentials: true });
+
     if (response.status === 200) {
-      console.info("Refresh authentication successful.");
+      console.info("Token refreshed successfully.");
       return true;
     } else {
-      console.warn("Unexpected response in refreshAuth:", response);
+      console.warn("Token refresh failed:", response);
       return false;
     }
   } catch (error: any) {
-    console.error('Error in refreshAuth (POST /authentication/refresh):', error.message || error);
+    console.error("Error in refreshAuth:", error.message || error);
     return false;
   }
 }

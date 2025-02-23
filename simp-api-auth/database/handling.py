@@ -78,7 +78,6 @@ def get_user_session(user_id: str):
         "csrf_token": session_data.get("csrf_token"),
     }
 
-
 def validate_user_session(user_id: str, auth_token: str):
     """ Validate auth token from Redis """
     session_data = get_user_session(user_id)
@@ -88,7 +87,6 @@ def validate_csrf_token(user_id: str, csrf_token: str):
     """ Validate CSRF token from Redis """
     session_data = get_user_session(user_id)
     return session_data and session_data.get("csrf_token") == csrf_token
-
 
 def revoke_user_session(user_id: str):
     """ Remove auth token & CSRF token from Redis """
