@@ -18,14 +18,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ initialUser: User | null; children: ReactNode }> = ({ initialUser, children }) => {
   const [user, setUser] = useState<User | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
-  const [error, setError] = useState<string | null>(null); // ✅ Store login error messages
+  const [error, setError] = useState<string | null>(null); 
   
   useEffect(() => {
     async function loadUser() {
       if (!initialUser) {
         try {
           setLoading(true);
-          const { user, error } = await retrieveAuth(); // ✅ Handle authentication errors
+          const { user, error } = await retrieveAuth(); 
           setUser(user);
           setError(error || null);
         } catch (err) {
@@ -41,11 +41,11 @@ export const AuthProvider: React.FC<{ initialUser: User | null; children: ReactN
 
   const login = async () => {
     try {
-      setError(null); // ✅ Reset error before login attempt
+      setError(null);
       const { user, error } = await retrieveAuth();
 
       if (error) {
-        setError(error); // ✅ Set error message if login fails
+        setError(error);
         return;
       }
 
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ initialUser: User | null; children: ReactN
     try {
       await clearAuth();
       setUser(null);
-      setError(null); // ✅ Reset error on logout
+      setError(null); 
     } catch (error) {
       console.error("Error during logout:", error);
     }

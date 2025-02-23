@@ -6,7 +6,7 @@ import styles from "./signIn.module.css";
 
 function SignIn() {
   return (
-      <a href="/auth/login" className={styles.container}>Sign In</a>
+      <a href="/authorization" className={styles.container}>Sign In</a>
   );
 }
 

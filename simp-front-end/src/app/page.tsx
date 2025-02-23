@@ -5,8 +5,10 @@ import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 
 export default function Home() {
+  const initialUser = null;
+
   return (
-    <AuthProvider>
+    <AuthProvider initialUser={initialUser}>
       <NavMenuProvider>
         <Header />
         <NavMenu />
