@@ -9,6 +9,8 @@ from .recipe_step import RecipeStep
 from .recipe_favorite import RecipeFavorite
 from .ingredient import Ingredient
 from .ingredient_nutrition import IngredientNutrition
+from .density import Density
+from .approximate_measurement import ApproximateMeasurement
 from .nutrition import Nutrition
 from .ingredient_product import IngredientProduct
 from .tag import Tag
@@ -31,6 +33,8 @@ __all__ = [
     "IngredientNutrition",
     "Nutrition",
     "IngredientProduct",
+    "ApproximateMeasurement",
+    "Densirt",
     "Tag",
     "Product",
     "ProductCompany",
