@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import styles from "./signInForm.module.css"; // Create this CSS module for custom styles if desired
+import { useRouter } from 'next/navigation';
 
 const SignInForm: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -9,7 +10,10 @@ const SignInForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
 
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
+    
     e.preventDefault();
     setError(null);
     try {
@@ -30,7 +34,7 @@ const SignInForm: React.FC = () => {
         const data = await response.json();
         setError(data.detail || "Sign in failed.");
       } else {
-        setSuccess(true);
+        window.location.href = "/";
       }
     } catch (err: any) {
       setError(err.message || "Sign in failed.");
@@ -40,10 +44,10 @@ const SignInForm: React.FC = () => {
   return (
     <div className={styles.container}>
       <h2>Sign In</h2>
-      {error && <div className={styles.error}>{error}</div>}
-      {success ? (
-        <div className={styles.success}>Sign in successful! Refresh the page or close the modal.</div>
-      ) : (
+      {error && <div className={styles.error}>{error}
+
+      </div>}
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="text"
@@ -61,7 +65,6 @@ const SignInForm: React.FC = () => {
           />
           <button type="submit">Sign In</button>
         </form>
-      )}
     </div>
   );
 };

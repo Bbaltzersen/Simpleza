@@ -39,7 +39,7 @@ const RegisterForm: React.FC = () => {
         const data = await response.json();
         setError(data.detail || "Registration failed.");
       } else {
-        setSuccess(true);
+        window.location.href = "/";
       }
     } catch (err: any) {
       setError(err.message || "Registration failed.");
@@ -50,9 +50,6 @@ const RegisterForm: React.FC = () => {
     <div className={styles.container}>
       <h2>Register</h2>
       {error && <div className={styles.error}>{error}</div>}
-      {success ? (
-        <div className={styles.success}>Registration successful! Please log in.</div>
-      ) : (
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="text"
@@ -84,7 +81,6 @@ const RegisterForm: React.FC = () => {
           />
           <button type="submit">Register</button>
         </form>
-      )}
     </div>
   );
 };

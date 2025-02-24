@@ -11,7 +11,11 @@ const SignOut: React.FC = () => {
   const handleSignOut = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     await logout();
-    router.push("/");
+    try {
+      router.push("/");
+    } catch (error) {
+      window.location.href = "/";
+    }
   };
 
   return (

@@ -8,10 +8,6 @@ import styles from "./authWindow.module.css";
 
 const AuthModal: React.FC = () => {
   const { isOpen, windowType, closeWindow } = useAuthWindow();
-  
-  useEffect(() => {
-    console.log("AuthModal rendered:", { isOpen, windowType });
-  }, [isOpen, windowType]);
 
   // Check if modal should be rendered at all
   if (!isOpen || !windowType) {
