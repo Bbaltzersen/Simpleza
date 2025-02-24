@@ -28,8 +28,6 @@ const AuthModal: React.FC = () => {
     <div
       className={styles["auth-overlay"]}
       onClick={closeWindow}
-      // Temporary red border to debug overlay
-      style={{ border: "3px solid red" }}
     >
       <div className={styles["auth-content"]} onClick={(e) => e.stopPropagation()}>
         <button className={styles["auth-close"]} onClick={closeWindow}>

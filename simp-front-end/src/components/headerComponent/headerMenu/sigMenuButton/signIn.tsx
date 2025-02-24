@@ -1,4 +1,3 @@
-// File: /components/authWindow/signIn.tsx
 "use client";
 
 import React from "react";
@@ -8,15 +7,15 @@ import styles from "./signIn.module.css";
 const SignIn = () => {
   const { openWindow } = useAuthWindow();
 
-  const handleClick = () => {
-    console.log("SignIn button clicked");
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
     openWindow("signin");
   };
 
   return (
-    <button className={styles.container} onClick={handleClick}>
+    <a href="#" className={styles.container} onClick={handleClick}>
       Sign In
-    </button>
+    </a>
   );
 };
 
