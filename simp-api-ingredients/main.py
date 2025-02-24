@@ -1,20 +1,15 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
-
-# Import API routes
 from api.routes.companies import router as companies_router
+from api.routes.products import router as products_router
 
-load_dotenv()  # Load environment variables from .env
+load_dotenv()
 
 app = FastAPI()
 
-# Root endpoint for testing
-@app.get("/")
-def read_root():
-    return {"message": "Ingredient API"}
-
-# Include companies API
+# Include companies and products APIs
 app.include_router(companies_router, prefix="/v1/companies")
+app.include_router(products_router, prefix="/v1/products")
 
 if __name__ == "__main__":
     import uvicorn
