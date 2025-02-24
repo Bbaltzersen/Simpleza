@@ -10,7 +10,6 @@ const SignOut: React.FC = () => {
     e.preventDefault();
     await logout();
     // Optionally, redirect or reload the page after logging out
-    window.location.reload();
   };
 
   return (
