@@ -25,10 +25,12 @@ router = APIRouter()
 ph = argon2.PasswordHasher()
 
 @router.post("/login")
-def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    """ Handles user login, session creation, access & refresh token storage """
+def login(
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     db_user = get_user_by_username(db, form_data.username)
-
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
@@ -38,15 +40,16 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), 
     except (argon2.exceptions.VerifyMismatchError, argon2.exceptions.VerificationError):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
+    # Create tokens and CSRF token
     access_token = create_access_token(db_user.user_id)
     refresh_token = create_refresh_token(db_user.user_id)
-    csrf_token = secrets.token_hex(32)  # Generate CSRF token
+    csrf_token = secrets.token_hex(32)
 
-    # Store session & role in Redis
+    # Store session data and user role (assumed to be handled properly)
     store_user_session(db_user.user_id, access_token, refresh_token, csrf_token, access_expires_in=3600, refresh_expires_in=604800)
-    store_user_role(db_user.user_id, db_user.role, expires_in=60 * 60)
+    store_user_role(db_user.user_id, db_user.role, expires_in=3600)
 
-    # Set Secure Cookies with IS_PRODUCTION check
+    # Set cookies
     response.set_cookie(
         key="auth_token",
         value=access_token,
@@ -55,20 +58,18 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), 
         samesite="Lax",
         max_age=3600,
     )
-
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
-        httponly=True,  # Refresh token also HTTP-Only
+        httponly=True,
         secure=IS_PRODUCTION,
         samesite="Lax",
         max_age=604800,
     )
-
     response.set_cookie(
         key="csrf_token",
         value=csrf_token,
-        httponly=False,
+        httponly=False,  # Accessible by JavaScript
         secure=IS_PRODUCTION,
         samesite="Lax",
         max_age=3600,

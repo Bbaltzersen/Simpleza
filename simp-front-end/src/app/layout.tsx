@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Abril_Fatface, Merriweather, Lobster } from "next/font/google";
 import "./globals.css";
 
+import { AuthProvider } from "@/lib/context/authContext";
+
 const abrilFatface = Abril_Fatface({
   weight: '400',
   subsets: ['latin'],
@@ -34,7 +36,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${abrilFatface.variable} ${merriweather.variable} ${lobster.variable}`}>
+        <AuthProvider>
         {children}
+        </AuthProvider>
       </body>
     </html>
   );

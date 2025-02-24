@@ -1,12 +1,16 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
+import { useAuthWindow } from "@/lib/context/authWindowContext";
 import styles from "./signIn.module.css";
 
 function SignIn() {
+  const { openWindow } = useAuthWindow();
+
   return (
-      <a href="/authorization?signin" className={styles.container}>Sign In</a>
+    <button className={styles.container} onClick={() => openWindow("signin")}>
+      Sign In
+    </button>
   );
 }
 
