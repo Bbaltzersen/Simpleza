@@ -2,14 +2,16 @@
 
 import React from 'react';
 import { useAuth } from '@/lib/context/authContext';
+import { useRouter } from 'next/navigation';
 
 const SignOut: React.FC = () => {
   const { logout } = useAuth();
+  const router = useRouter();
 
   const handleSignOut = async (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
     await logout();
-    // Optionally, redirect or reload the page after logging out
+    router.push("/");
   };
 
   return (
