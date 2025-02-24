@@ -8,17 +8,22 @@ import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 
 import DashboardContent from '@/pages/dashboard/dashboardContent';
+import AuthWindow from '@/lib/providers/authWindowProvider';
+import AuthModal from '@/components/authWindow/authWindow';
 
 export default async function Dashboard() {
   const initialUser = null;
 
   return (
+    <AuthWindow>
       <NavMenuProvider>
+        <AuthModal/>
         <Header />
         <NavMenu />
         <ContentLayout>
           <DashboardContent/>
         </ContentLayout>
       </NavMenuProvider>
+    </AuthWindow>
   )
 }
