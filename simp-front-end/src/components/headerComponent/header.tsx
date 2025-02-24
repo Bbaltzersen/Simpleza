@@ -7,12 +7,11 @@ import { AuthWindowProvider } from "@/lib/context/authWindowContext";
 const Header: React.FC = () => {
   return (
     <>
-      <AuthWindowProvider>      <div className={styles.container} data-header>
+       <div className={styles.container} data-header>
         <Logo />
         <Menu />
       </div>
         <div className={styles.spacer} />
-      </AuthWindowProvider>
     </>
   );
 };

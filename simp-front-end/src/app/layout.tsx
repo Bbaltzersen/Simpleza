@@ -3,6 +3,8 @@ import { Abril_Fatface, Merriweather, Lobster } from "next/font/google";
 import "./globals.css";
 
 import { AuthProvider } from "@/lib/context/authContext";
+import AuthWindow from "@/lib/providers/authWindowProvider";
+import AuthModal from "@/components/authWindow/authWindow";
 
 const abrilFatface = Abril_Fatface({
   weight: '400',
@@ -37,7 +39,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${abrilFatface.variable} ${merriweather.variable} ${lobster.variable}`}>
         <AuthProvider>
-        {children}
+              {children}
         </AuthProvider>
       </body>
     </html>

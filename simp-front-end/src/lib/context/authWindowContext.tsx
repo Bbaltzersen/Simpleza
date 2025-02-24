@@ -1,3 +1,4 @@
+// File: /lib/context/authWindowContext.tsx
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
@@ -16,11 +17,13 @@ export const AuthWindowProvider = ({ children }: { children: ReactNode }) => {
   const [windowType, setWindowType] = useState<"signin" | "register" | null>(null);
 
   const openWindow = (type: "signin" | "register") => {
+    console.log("openWindow called with", type);
     setWindowType(type);
     setIsOpen(true);
   };
 
   const closeWindow = () => {
+    console.log("closeWindow called");
     setWindowType(null);
     setIsOpen(false);
   };
