@@ -26,4 +26,4 @@ class IngredientOut(BaseModel):
     density: Optional[float] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
