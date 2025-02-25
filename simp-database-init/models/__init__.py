@@ -18,6 +18,7 @@ from .product import Product
 from .product_company import ProductCompany
 from .company import Company
 from .user_preference import UserPreference
+from .alcampo_productid import AlcampoProductID
 
 __all__ = [
     "Base",
@@ -40,4 +41,5 @@ __all__ = [
     "ProductCompany",
     "Company",
     "UserPreference",
+    "AlcampoProductID",
 ]
