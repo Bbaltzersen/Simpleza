@@ -8,4 +8,5 @@ class Ingredient(Base):
 
     ingredient_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(TEXT, unique=True, nullable=False)
-    calories = Column(Numeric(10, 2))
+    default_unit = Column(TEXT, nullable=False, default="g")  # Default unit is grams
+    calories_per_100g = Column(Numeric(10, 2), nullable=True)  # Calories per 100g
