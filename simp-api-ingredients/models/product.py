@@ -7,7 +7,8 @@ class Product(Base):
     __tablename__ = "products"
 
     product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(TEXT, nullable=False)
+    english_name = Column(TEXT, nullable=False)
+    spanish_name = Column(TEXT, nullable=False)
     ean = Column(VARCHAR(13), unique=True)
     amount = Column(Numeric(10, 2), nullable=False)
     measurement = Column(TEXT, nullable=False)

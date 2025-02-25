@@ -4,7 +4,8 @@ from typing import List, Optional
 
 # Request model for creating/updating a product
 class ProductCreate(BaseModel):
-    name: str
+    english_name: str
+    spanish_name: str
     ean: Optional[str] = None  # Optional barcode
     amount: float
     measurement: str
@@ -13,7 +14,8 @@ class ProductCreate(BaseModel):
 # Response model for returning product data
 class ProductOut(BaseModel):
     product_id: uuid.UUID
-    name: str
+    english_name: str
+    spanish_name: str
     ean: Optional[str] = None
     amount: float
     measurement: str
