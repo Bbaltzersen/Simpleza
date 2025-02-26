@@ -1,5 +1,7 @@
 import re
 from unidecode import unidecode
+import nltk
+nltk.download('words')
 from nltk.corpus import words
 from rapidfuzz import process
 
