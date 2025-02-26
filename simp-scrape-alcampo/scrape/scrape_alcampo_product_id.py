@@ -37,8 +37,6 @@ def scrape_alcampo_products():
     options.add_argument("--window-size=1920,1080")  # Ensure full page loads
     driver = webdriver.Chrome(options=options)
 
-    all_product_ids = set()  # Store unique product IDs
-
     try:
         for url in CATEGORY_URLS:
             print(f"Opening category: {url}")
@@ -57,7 +55,8 @@ def scrape_alcampo_products():
                     match = re.search(r"productIds=([\w,-]+)", request.url)
                     if match:
                         ids = match.group(1).split(",")  # Extract product IDs
-                        all_product_ids.update(ids)
+                        print(ids)
+                        store_product_ids_in_db(ids)
 
     except Exception as e:
         print(f"Error during scraping: {e}")
@@ -65,36 +64,41 @@ def scrape_alcampo_products():
     finally:
         driver.quit()  # Close the browser
 
-    # Insert Product IDs into the Database
-    print(f"Total unique product IDs captured: {len(all_product_ids)}")
-    store_product_ids_in_db(all_product_ids)
-
 def store_product_ids_in_db(product_ids):
-    """Stores the scraped product IDs in the database."""
+    """Stores the scraped product IDs in the database one by one after each URL."""
     db = get_db()
-    try:
-        new_products = []
+    total_added = 0
 
+    if not product_ids:
+        print("No product IDs found to add.")
+        return
+
+    print(f"Attempting to add {len(product_ids)} products to the database...")
+
+    try:
         for product_id in product_ids:
             try:
-                valid_product = AlcampoProductIDSchema(src_product_id=uuid.UUID(product_id))  # Validate
-                exists = db.query(AlcampoProductID).filter_by(src_product_id=valid_product.src_product_id).first()
-                if not exists:
-                    new_products.append(AlcampoProductID(src_product_id=valid_product.src_product_id))
-            except ValueError:
-                print(f"Invalid UUID: {product_id}")  # Ignore invalid IDs
+                valid_product = AlcampoProductIDSchema(src_product_id=uuid.UUID(product_id))  # Validate UUID
 
-        if new_products:
-            db.bulk_save_objects(new_products)  # Bulk insert for efficiency
-            db.commit()
-            print(f"Stored {len(new_products)} new product IDs in the database.")
-        else:
-            print("No new product IDs to insert.")
+                # Check if ID already exists
+                exists = db.query(AlcampoProductID).filter_by(src_product_id=valid_product.src_product_id).first()
+                if exists:
+                    print(f"Product ID already exists in DB: {product_id}")
+                    continue
+
+                # Insert new product ID
+                new_product = AlcampoProductID(src_product_id=valid_product.src_product_id)
+                db.add(new_product)
+                db.commit()  # Commit after each insert
+                total_added += 1
+                print(f"✅ Added new product ID: {product_id}")
+
+            except ValueError:
+                print(f"❌ Invalid UUID format: {product_id}")  # Ignore invalid IDs
 
     except Exception as e:
-        print(f"Database error: {e}")
+        print(f"⚠️ Database error: {e}")
 
     finally:
         db.close()
-        print("Database connection closed.")
-
+        print(f"✅ Finished processing. Total new product IDs added: {total_added}")
