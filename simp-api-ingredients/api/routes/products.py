@@ -2,19 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import uuid
 
-# Import database connection
 from database.connection import SessionLocal
-# Import models
 from models.product import Product
 from models.company import Company
 from models.product_company import ProductCompany
-# Import schemas from new schemas folder
 from schemas.product import ProductCreate, ProductOut
 
-# Initialize the FastAPI router
 router = APIRouter(prefix="/products", tags=["Products"])
 
-# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -22,118 +17,113 @@ def get_db():
     finally:
         db.close()
 
-#######################################
-#         Product CRUD Routes         #
-#######################################
-
 @router.post("/", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
-    """ Adds a new product and links it to companies. """
-
-    # Check if product exists
-    existing_product = db.query(Product).filter(Product.name == product.name).first()
+    existing_product = db.query(Product).filter(Product.english_name == product.english_name).first()
     if existing_product:
         raise HTTPException(status_code=400, detail="Product already exists")
 
-    # Create new product
     new_product = Product(
-        name=product.name,
-        ean=product.ean,
+        retail_id=product.retail_id,
+        english_name=product.english_name,
+        spanish_name=product.spanish_name,
         amount=product.amount,
+        weight=product.weight,
         measurement=product.measurement
     )
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
 
-    # Handle Company Names
     linked_companies = []
-    for company_name in product.company_names:
+    for company_name, price in product.company_prices.items():
         company = db.query(Company).filter(Company.name == company_name).first()
         if not company:
-            # Create new company if it doesn't exist
             company = Company(name=company_name)
             db.add(company)
             db.commit()
             db.refresh(company)
 
-        # Link product to company
-        product_company = ProductCompany(product_id=new_product.product_id, company_id=company.company_id)
+        product_company = ProductCompany(
+            product_id=new_product.product_id, 
+            company_id=company.company_id, 
+            price=price
+        )
         db.add(product_company)
-        linked_companies.append(company.name)
+        linked_companies.append({"company_name": company.name, "price": price})
 
     db.commit()
     
     return ProductOut(
         product_id=new_product.product_id,
-        name=new_product.name,
-        ean=new_product.ean,
+        retail_id=new_product.retail_id,
+        english_name=new_product.english_name,
+        spanish_name=new_product.spanish_name,
         amount=new_product.amount,
+        weight=new_product.weight,
         measurement=new_product.measurement,
         companies=linked_companies
     )
 
-
 @router.get("/", response_model=list[ProductOut])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """ Retrieves a list of all products (paginated). """
     products = db.query(Product).offset(skip).limit(limit).all()
-
-    # Retrieve companies for each product
     product_list = []
+
     for product in products:
-        company_ids = db.query(ProductCompany.company_id).filter(ProductCompany.product_id == product.product_id).all()
-        company_names = [db.query(Company.name).filter(Company.company_id == cid[0]).scalar() for cid in company_ids]
+        company_data = db.query(ProductCompany.company_id, ProductCompany.price).filter(ProductCompany.product_id == product.product_id).all()
+        company_prices = [{"company_name": db.query(Company.name).filter(Company.company_id == cid).scalar(), "price": price} for cid, price in company_data]
+
         product_list.append(ProductOut(
             product_id=product.product_id,
-            name=product.name,
-            ean=product.ean,
+            retail_id=product.retail_id,
+            english_name=product.english_name,
+            spanish_name=product.spanish_name,
             amount=product.amount,
+            weight=product.weight,
             measurement=product.measurement,
-            companies=company_names
+            companies=company_prices
         ))
 
     return product_list
 
-
 @router.get("/{product_id}", response_model=ProductOut)
 def read_product(product_id: uuid.UUID, db: Session = Depends(get_db)):
-    """ Retrieves a specific product by ID. """
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    company_ids = db.query(ProductCompany.company_id).filter(ProductCompany.product_id == product_id).all()
-    company_names = [db.query(Company.name).filter(Company.company_id == cid[0]).scalar() for cid in company_ids]
+    company_data = db.query(ProductCompany.company_id, ProductCompany.price).filter(ProductCompany.product_id == product_id).all()
+    company_prices = [{"company_name": db.query(Company.name).filter(Company.company_id == cid).scalar(), "price": price} for cid, price in company_data]
 
     return ProductOut(
         product_id=product.product_id,
-        name=product.name,
-        ean=product.ean,
+        retail_id=product.retail_id,
+        english_name=product.english_name,
+        spanish_name=product.spanish_name,
         amount=product.amount,
+        weight=product.weight,
         measurement=product.measurement,
-        companies=company_names
+        companies=company_prices
     )
-
 
 @router.put("/{product_id}", response_model=ProductOut)
 def update_product(product_id: uuid.UUID, product_update: ProductCreate, db: Session = Depends(get_db)):
-    """ Updates an existing product. """
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Update product details
-    product.name = product_update.name
-    product.ean = product_update.ean
+    product.retail_id = product_update.retail_id
+    product.english_name = product_update.english_name
+    product.spanish_name = product_update.spanish_name
     product.amount = product_update.amount
+    product.weight = product_update.weight
     product.measurement = product_update.measurement
 
-    # Update companies
     db.query(ProductCompany).filter(ProductCompany.product_id == product_id).delete()
 
     linked_companies = []
-    for company_name in product_update.company_names:
+    for company_name, price in product_update.company_prices.items():
         company = db.query(Company).filter(Company.name == company_name).first()
         if not company:
             company = Company(name=company_name)
@@ -141,26 +131,26 @@ def update_product(product_id: uuid.UUID, product_update: ProductCreate, db: Ses
             db.commit()
             db.refresh(company)
 
-        product_company = ProductCompany(product_id=product.product_id, company_id=company.company_id)
+        product_company = ProductCompany(product_id=product.product_id, company_id=company.company_id, price=price)
         db.add(product_company)
-        linked_companies.append(company.name)
+        linked_companies.append({"company_name": company.name, "price": price})
 
     db.commit()
     db.refresh(product)
 
     return ProductOut(
         product_id=product.product_id,
-        name=product.name,
-        ean=product.ean,
+        retail_id=product.retail_id,
+        english_name=product.english_name,
+        spanish_name=product.spanish_name,
         amount=product.amount,
+        weight=product.weight,
         measurement=product.measurement,
         companies=linked_companies
     )
 
-
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(product_id: uuid.UUID, db: Session = Depends(get_db)):
-    """ Deletes a product by ID. """
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

@@ -1,25 +1,30 @@
 from pydantic import BaseModel
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-# Request model for creating/updating a product
 class ProductCreate(BaseModel):
-    english_name: str
-    spanish_name: str
-    ean: Optional[str] = None  # Optional barcode
-    amount: float
-    measurement: str
-    company_names: Optional[List[str]] = []  # List of company names
-
-# Response model for returning product data
-class ProductOut(BaseModel):
-    product_id: uuid.UUID
     english_name: str
     spanish_name: str
     ean: Optional[str] = None
     amount: float
+    weight: float
     measurement: str
-    companies: List[str] = []  # List of associated company names
+    company_prices: Dict[str, float] = {}  # Mapping of company names to prices
+
+class CompanyOut(BaseModel):
+    company_name: str
+    price: float
+
+class ProductOut(BaseModel):
+    product_id: uuid.UUID
+    retail_id: Optional[int] = None
+    english_name: str
+    spanish_name: str
+    ean: Optional[str] = None
+    amount: float
+    weight: float
+    measurement: str
+    companies: List[CompanyOut] = []  # List of associated companies with prices
 
     class Config:
         from_attributes = True

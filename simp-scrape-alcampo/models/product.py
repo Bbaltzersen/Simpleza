@@ -1,6 +1,6 @@
 import uuid
 from sqlalchemy import Column, Numeric, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, TEXT
+from sqlalchemy.dialects.postgresql import UUID, TEXT, VARCHAR
 from db.connection import engine
 from .base import Base
 
@@ -9,6 +9,7 @@ class Product(Base):
 
     product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     retail_id = Column(Numeric, nullable=True)
+    src_product_id = Column(VARCHAR(255), nullable=True),
     english_name = Column(TEXT, nullable=False)
     spanish_name = Column(TEXT, nullable=False)
     amount = Column(Numeric(10, 2), nullable=False, default=1)
