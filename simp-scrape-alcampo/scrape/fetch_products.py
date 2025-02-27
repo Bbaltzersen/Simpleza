@@ -18,6 +18,7 @@ def fetch_product_details():
 
     if not product_ids:
         db.close()
+        print("No products found in the database.")
         return
 
     alcampo_company = db.query(Company).filter_by(name="Alcampo").first()
@@ -25,9 +26,6 @@ def fetch_product_details():
         alcampo_company = Company(company_id=uuid.uuid4(), name="Alcampo")
         db.add(alcampo_company)
         db.commit()
-
-    new_products = []
-    new_product_companies = []
 
     for product_id in product_ids:
         response = requests.get(ALCAMPO_API_URL + product_id)
@@ -39,8 +37,21 @@ def fetch_product_details():
                     product = data["products"][0]
 
                     original_name = product.get("name", "").strip()
-                    cleaned_name = preprocess_product_name(original_name)
-                    english_name = translate_text(cleaned_name)
+                    cleaned_name_data = preprocess_product_name(original_name)
+
+                    if isinstance(cleaned_name_data, dict) and "cleaned_name" in cleaned_name_data:
+                        cleaned_name = cleaned_name_data["cleaned_name"]
+                    else:
+                        cleaned_name = cleaned_name_data
+
+                    english_name_result = translate_text(cleaned_name)
+
+                    if isinstance(english_name_result, list):
+                        english_name = " ".join([t.text if hasattr(t, "text") else str(t) for t in english_name_result])
+                    elif hasattr(english_name_result, "text"):
+                        english_name = english_name_result.text
+                    else:
+                        english_name = str(english_name_result)
 
                     price = float(product["price"]["current"]["amount"]) if product.get("price") else None
 
@@ -57,7 +68,9 @@ def fetch_product_details():
                         weight=weight,
                         measurement=measurement
                     )
-                    new_products.append(new_product)
+                    db.add(new_product)
+                    db.commit()
+                    print(f"Added product: {english_name}")
 
                     if price is not None:
                         new_product_company = ProductCompany(
@@ -65,23 +78,18 @@ def fetch_product_details():
                             company_id=alcampo_company.company_id,
                             price=price
                         )
-                        new_product_companies.append(new_product_company)
+                        db.add(new_product_company)
+                        db.commit()
+                        print(f"Added price: {price} EUR for {english_name}")
 
             except Exception as e:
                 print(f"Error processing product {product_id}: {e}")
+                db.rollback()
 
         else:
             print(f"Failed to fetch details for product {product_id}. Status: {response.status_code}")
 
         time.sleep(1.5)
 
-    if new_products:
-        db.bulk_save_objects(new_products)
-        db.commit()
-
-    if new_product_companies:
-        db.bulk_save_objects(new_product_companies)
-        db.commit()
-
     db.close()
-    print(f"Successfully stored {len(new_products)} products and {len(new_product_companies)} prices.")
+    print("Product fetching completed.")
