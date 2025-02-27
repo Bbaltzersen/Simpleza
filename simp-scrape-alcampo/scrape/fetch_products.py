@@ -14,7 +14,7 @@ ALCAMPO_API_URL = "https://www.compraonline.alcampo.es/api/v6/products/decorate?
 def fetch_product_details():
     """Fetches product details from Alcampo API and stores them in the database."""
     
-    db = get_db()  # Get database session
+    db = next(get_db())  # Get database session
 
     # FIXED: Get product IDs correctly for SQLAlchemy 1.x
     product_ids = [str(row.product_id) for row in db.query(Product.product_id).all()]
