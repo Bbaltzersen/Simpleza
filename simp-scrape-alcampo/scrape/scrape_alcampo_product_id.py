@@ -1,128 +1,98 @@
-import time
-import uuid
+import requests
 import json
 import gzip
-import brotli
-from dotenv import load_dotenv
-from seleniumwire import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
+import uuid
+from io import BytesIO
 from sqlalchemy.orm import Session
-from models import AlcampoProductID
 from db.connection import get_db
+from models.alcampo_productid import AlcampoProductID
 from schemas.alcampo_productid import AlcampoProductIDSchema
 
-load_dotenv()
+ALCAMPO_API_URL = "https://www.compraonline.alcampo.es/api/v6/products"
 
-CATEGORY_URLS = [
-    "https://www.compraonline.alcampo.es/categories/frescos/OC2112?source=navigation",
-    "https://www.compraonline.alcampo.es/categories/frescos/frutas/OC1701?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/verduras-y-hortalizas/OC1702?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/carne/OC13?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/pescados-mariscos-y-moluscos/OC14?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/ahumados-surimis-anchoas-pulpos-y-otros/OC184?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/charcutería/OC15?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/jamones-y-paletas/OC151001?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/quesos/OCQuesos?sortBy=favorite",
-    "https://www.compraonline.alcampo.es/categories/frescos/panadería/OC1281?sortBy=favorite"
-]
+def fetch_and_store_product_ids():
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+        "Accept-Encoding": "gzip, deflate"  # Accepts gzip but does not assume it's always compressed
+    }
 
-def scrape_alcampo_products():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    driver = webdriver.Chrome(options=options)
-
-    try:
-        for url in CATEGORY_URLS:
-            driver.get(url)
-            time.sleep(5)
-
-            initial_data = driver.execute_script("return window.initialDocument")
-            if initial_data and "productEntities" in initial_data:
-                product_ids = [product["productId"] for product in initial_data["productEntities"].values()]
-                store_product_ids_in_db(product_ids)
-
-            previous_requests = set()
-            while True:
-                driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
-                time.sleep(3)
-
-                new_requests = {
-                    request.url for request in driver.requests if "api/webproductpagews/v6/products" in request.url
-                }
-
-                new_requests = new_requests - previous_requests
-                if not new_requests:
-                    break
-
-                previous_requests.update(new_requests)
-
-                for request in driver.requests:
-                    if request.url in new_requests and request.response:
-                        try:
-                            response_body = decode_response(request.response)
-                            product_ids = extract_product_ids(response_body)
-                            store_product_ids_in_db(product_ids)
-
-                        except Exception as e:
-                            print(f"Error parsing API response: {e}")
-
-    except Exception as e:
-        print(f"Error during scraping: {e}")
-
-    finally:
-        driver.quit()
-
-def decode_response(response):
-    encoding = response.headers.get("Content-Encoding", "").lower()
-    body = response.body
-
-    if "gzip" in encoding:
-        body = gzip.decompress(body)
-    elif "br" in encoding:
-        body = brotli.decompress(body)
-
-    return body.decode("utf-8")
-
-def extract_product_ids(response_text):
-    try:
-        json_data = json.loads(response_text)
-        if "products" in json_data:
-            return [product["productId"] for product in json_data["products"]]
-    except json.JSONDecodeError:
-        pass
-
-    return []
-
-def store_product_ids_in_db(product_ids):
-    db = next(get_db())  # Correct way to get a database session
+    db = next(get_db())  # Get database session
+    next_page_token = None
     total_added = 0
 
-    if not product_ids:
-        return
+    while True:
+        params = {}
+        if next_page_token:
+            params["nextPageToken"] = next_page_token  # Add pagination token
 
-    try:
-        for product_id in product_ids:
+        response = requests.get(ALCAMPO_API_URL, headers=headers, params=params)
+
+        if response.status_code == 200:
             try:
-                valid_product = AlcampoProductIDSchema(src_product_id=uuid.UUID(product_id))
+                response_text = decode_response(response)
 
-                exists = db.query(AlcampoProductID).filter_by(src_product_id=valid_product.src_product_id).first()
-                if exists:
-                    continue
+                data = json.loads(response_text)
 
-                new_product = AlcampoProductID(src_product_id=valid_product.src_product_id)
-                db.add(new_product)
-                db.commit()
-                total_added += 1
+                if "products" in data and isinstance(data["products"], list):
+                    product_ids = [product["productId"] for product in data["products"]]
 
-            except ValueError:
+                    # Store product IDs in the database
+                    added_count = store_product_ids_in_db(db, product_ids)
+                    total_added += added_count
+
+                next_page_token = data.get("nextPageToken")
+
+                if not next_page_token:
+                    break  # Stop if no more pages
+
+            except json.JSONDecodeError:
+                print("Error decoding JSON response.")
+                break
+
+        else:
+            print(f"Failed to fetch products. Status: {response.status_code}")
+            break
+
+    db.close()
+    print(f"Total new product IDs added: {total_added}")
+
+def decode_response(response):
+    """Handles gzip and non-gzip responses properly."""
+    encoding = response.headers.get("Content-Encoding", "").lower()
+
+    # If the response is gzip-encoded, decompress it
+    if "gzip" in encoding:
+        try:
+            with BytesIO(response.content) as compressed:
+                with gzip.GzipFile(fileobj=compressed) as decompressed:
+                    return decompressed.read().decode("utf-8")
+        except gzip.BadGzipFile:
+            print("Warning: Response is not actually gzipped despite the header.")
+            return response.text  # Return raw text instead
+
+    # If not gzip, return the response as-is
+    return response.text
+
+def store_product_ids_in_db(db: Session, product_ids):
+    total_added = 0
+
+    for product_id in product_ids:
+        try:
+            valid_product = AlcampoProductIDSchema(src_product_id=uuid.UUID(product_id))
+
+            exists = db.query(AlcampoProductID).filter_by(src_product_id=valid_product.src_product_id).first()
+            if exists:
                 continue
 
-    except Exception as e:
-        print(f"Database error: {e}")
+            new_product = AlcampoProductID(src_product_id=valid_product.src_product_id)
+            db.add(new_product)
+            db.commit()
+            total_added += 1
 
-    finally:
-        db.close()
-        print(f"Total new product IDs added: {total_added}")
+        except ValueError:
+            continue
+
+    return total_added
+
+# Run the function
+fetch_and_store_product_ids()
