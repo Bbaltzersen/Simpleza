@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 import uuid
 
 from database.connection import SessionLocal
 from models.ingredient import Ingredient
 from models.product import Product
 from models.ingredient_product import IngredientProduct
+from models.ingredient_nutrition import IngredientNutrition
 from models.density import Density
 from models.approximate_measurement import ApproximateMeasurement
-from schemas.ingredient import IngredientCreate, IngredientOut
+from schemas.ingredient import IngredientCreate, IngredientOut, IngredientUpdate
 from schemas.approximate_measurement import ApproximateMeasurementCreate, ApproximateMeasurementOut
 
 router = APIRouter(prefix="/ingredients", tags=["Ingredients"])
@@ -20,60 +22,59 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/", response_model=IngredientOut, status_code=status.HTTP_201_CREATED)
-def create_ingredient(ingredient: IngredientCreate, db: Session = Depends(get_db)):
-    """ Adds a new ingredient and links it to products, density, and measurements. """
+@router.get("/", response_model=list[IngredientOut])
+def get_ingredients(
+    db: Session = Depends(get_db),
+    skip: int = Query(0, alias="offset"),
+    limit: int = Query(10, alias="limit"),
+):
+    """ Retrieve a paginated list of ingredients. """
+    ingredients = db.query(Ingredient).offset(skip).limit(limit).all()
+    return ingredients
 
-    existing_ingredient = db.query(Ingredient).filter(Ingredient.name == ingredient.name).first()
-    if existing_ingredient:
-        raise HTTPException(status_code=400, detail="Ingredient already exists")
+@router.get("/{ingredient_id}", response_model=IngredientOut)
+def get_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    """ Retrieve a single ingredient by ID. """
+    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+    return ingredient
 
-    new_ingredient = Ingredient(
-        name=ingredient.name,
-        default_unit=ingredient.default_unit,
-        calories_per_100g=ingredient.calories_per_100g
-    )
-    db.add(new_ingredient)
+@router.put("/{ingredient_id}", response_model=IngredientOut)
+def update_ingredient(ingredient_id: uuid.UUID, ingredient_update: IngredientUpdate, db: Session = Depends(get_db)):
+    """ Update ingredient details. """
+    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+    
+    ingredient.name = ingredient_update.name or ingredient.name
+    ingredient.default_unit = ingredient_update.default_unit or ingredient.default_unit
+    ingredient.calories_per_100g = ingredient_update.calories_per_100g or ingredient.calories_per_100g
+    
+    try:
+        db.commit()
+        db.refresh(ingredient)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Ingredient name must be unique")
+    
+    return ingredient
+
+@router.delete("/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    """ Delete an ingredient and remove all links but keep related entities. """
+    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+    
+    # Remove related links
+    db.query(IngredientProduct).filter(IngredientProduct.ingredient_id == ingredient_id).delete()
+    db.query(IngredientNutrition).filter(IngredientNutrition.ingredient_id == ingredient_id).delete()
+    db.query(ApproximateMeasurement).filter(ApproximateMeasurement.ingredient_id == ingredient_id).delete()
+    db.query(Density).filter(Density.ingredient_id == ingredient_id).delete()
+    
+    # Delete ingredient
+    db.delete(ingredient)
     db.commit()
-    db.refresh(new_ingredient)
-
-    linked_products = []
-    for product_id in ingredient.product_ids:
-        product = db.query(Product).filter(Product.product_id == product_id).first()
-        if not product:
-            raise HTTPException(status_code=404, detail=f"Product ID '{product_id}' not found.")
-        ingredient_product = IngredientProduct(ingredient_id=new_ingredient.ingredient_id, product_id=product.product_id)
-        db.add(ingredient_product)
-        linked_products.append(product.product_id)
-
-    linked_measurements = []
-    for measurement_entry in ingredient.approximate_measurements:
-        measurement = ApproximateMeasurement(
-            ingredient_id=new_ingredient.ingredient_id,
-            measurement_type=measurement_entry.measurement_type,
-            value=measurement_entry.value,
-            equivalent_in_grams=measurement_entry.equivalent_in_grams
-        )
-        db.add(measurement)
-        db.commit()
-        db.refresh(measurement)
-        linked_measurements.append(measurement)
-
-    density_value = None
-    if ingredient.density:
-        new_density = Density(ingredient_id=new_ingredient.ingredient_id, density=ingredient.density)
-        db.add(new_density)
-        db.commit()
-        db.refresh(new_density)
-        density_value = new_density.density
-
-    return IngredientOut(
-        ingredient_id=new_ingredient.ingredient_id,
-        name=new_ingredient.name,
-        default_unit=new_ingredient.default_unit,
-        calories_per_100g=new_ingredient.calories_per_100g,
-        product_ids=linked_products,
-        nutritions=[],
-        approximate_measurements=linked_measurements,
-        density=density_value
-    )
+    
+    return {"detail": "Ingredient deleted successfully"}
