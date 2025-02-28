@@ -1,14 +1,15 @@
-# Start Redis server in a background process
+# Start Redis server in a new PowerShell window
 Start-Process powershell -ArgumentList "-NoExit", "-Command redis-server"
 
 # Wait a moment to ensure Redis starts
 Start-Sleep -Seconds 2
 
-# Define project path relative to this script's folder
-$projectPath = Join-Path $PSScriptRoot "simp-api-auth"
+# Define project paths relative to this script's folder
+$AuthAPIPath = Join-Path $PSScriptRoot "simp-api-auth"
+$IngredientAPIPath = Join-Path $PSScriptRoot "simp-api-ingredients"
 
-# Build the command to start FastAPI with the virtual environment activated
-$command = "cd '$projectPath'; & venv\Scripts\Activate; uvicorn main:app --reload"
+# Start Auth API in a new PowerShell window
+Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$AuthAPIPath'; & venv\Scripts\Activate; uvicorn main:app --reload`""
 
-# Start FastAPI in a new terminal
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $command
+# Start Ingredient API in a new PowerShell window
+Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$IngredientAPIPath'; & venv\Scripts\Activate; uvicorn main:app --reload`""
