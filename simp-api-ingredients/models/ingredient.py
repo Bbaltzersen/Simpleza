@@ -1,6 +1,10 @@
+from decimal import Decimal
+from typing import Optional
 import uuid
+from pydantic import Field
 from sqlalchemy import Column, Numeric
 from sqlalchemy.dialects.postgresql import UUID, TEXT
+from pydantic import BaseModel, Field
 from .base import Base
 
 class Ingredient(Base):
