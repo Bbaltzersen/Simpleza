@@ -85,3 +85,4 @@ def validate_password(password: str):
     if errors:
         raise HTTPException(status_code=400, detail={"password_errors": errors})
     return password
+
