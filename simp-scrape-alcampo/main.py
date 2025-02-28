@@ -1,6 +1,6 @@
 import sys
-from scrape.scrape_alcampo_product_id import fetch_and_store_product_ids
-from scrape.fetch_products import fetch_product_details
+from information_retrieval.fetch_product_ids import fetch_and_store_product_ids
+from information_retrieval.fetch_product_details import fetch_product_details
 
 def main():
     if len(sys.argv) < 4:
