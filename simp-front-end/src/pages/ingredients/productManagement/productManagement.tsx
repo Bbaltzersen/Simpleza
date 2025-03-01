@@ -1,9 +1,24 @@
-import React from 'react'
+"use client";
 
-function ProductManagement() {
+import React from "react";
+import { Product } from "@/lib/types/product";
+
+const ProductManagement: React.FC = () => {
   return (
-    <div>ProductManagement</div>
-  )
-}
+    <div>
+      <h2 className="text-xl font-bold mb-4">Manage Products</h2>
 
-export default ProductManagement
+      {/* Add Product Form */}
+      <div className="mb-4">
+        <p>[Form for adding products]</p>
+      </div>
+
+      {/* List of Products */}
+      <ul className="border p-4">
+        <p>[List of existing products]</p>
+      </ul>
+    </div>
+  );
+};
+
+export default ProductManagement;

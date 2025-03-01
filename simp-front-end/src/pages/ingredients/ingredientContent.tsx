@@ -8,7 +8,7 @@ import ProductManagement from "./productManagement/productManagement";
 import CompanyManagement from "./companyManagement/companyManagement";
 
 function IngredientContent() {
-  const [selectedEntity, setSelectedEntity] = useState<"Nutrition" | "Products" | "Ingredients"  | "Companies">(
+  const [selectedEntity, setSelectedEntity] = useState<"Nutrition" | "Products" | "Ingredients" | "Companies">(
     "Ingredients"
   );
 
@@ -22,19 +22,19 @@ function IngredientContent() {
             className={`p-2 ${
               selectedEntity === entity ? "bg-gray-200 font-bold" : "bg-white"
             }`}
-            onClick={() => setSelectedEntity(entity as "Nutrition" | "Products" |"Ingredients" |  "Companies")}
+            onClick={() => setSelectedEntity(entity as "Nutrition" | "Products" | "Ingredients" | "Companies")}
           >
             {entity}
           </button>
         ))}
       </div>
 
-      {/* Display Selected Entity Content Below the Menu */}
+      {/* Display the Selected Entity's Management Component */}
       <div className="mt-4">
-        {selectedEntity === "Ingredients" && <div>Ingredients Management</div>}
-        {selectedEntity === "Products" && <div>Product Management</div>}
-        {selectedEntity === "Nutrition" && <div>Nutrition Management</div>}
-        {selectedEntity === "Companies" && <div>Company Management</div>}
+        {selectedEntity === "Ingredients" && <IngredientManagement />}
+        {selectedEntity === "Products" && <ProductManagement />}
+        {selectedEntity === "Nutrition" && <NutritionManagement />}
+        {selectedEntity === "Companies" && <CompanyManagement />}
       </div>
     </div>
   );
