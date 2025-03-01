@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import { Product } from "@/lib/types/product";
 import { Company } from "@/lib/types/company";
-
-const ITEMS_PER_PAGE = 20;
+import SimpleTable from "@/components/managementComponent/simpleTable";
 
 // Mock Companies (Replace with API call later)
 const mockCompanies: Company[] = [
@@ -15,7 +14,7 @@ const mockCompanies: Company[] = [
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [productCompanies, setProductCompanies] = useState<{ company: Company }[]>([]);
+  const [productCompanies, setProductCompanies] = useState<{ product_id: string; company: Company }[]>([]);
   const [product, setProduct] = useState<Partial<Product>>({
     retail_id: undefined,
     src_product_id: undefined,
@@ -25,9 +24,6 @@ const ProductManagement: React.FC = () => {
     weight: 0,
     measurement: "",
   });
-
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const [companyInput, setCompanyInput] = useState<string>("");
 
@@ -54,17 +50,17 @@ const ProductManagement: React.FC = () => {
       weight: 0,
       measurement: "",
     }); // Reset input fields
-    setProductCompanies([]); // Reset linked companies
+    setCompanyInput(""); // Reset linked companies
   };
 
   // Add Company to Product
-  const addCompanyToProduct = () => {
+  const addCompanyToProduct = (productId: string) => {
     const trimmedInput = companyInput.trim().toLowerCase();
     if (!trimmedInput) return;
 
     const company = mockCompanies.find((c) => c.name.toLowerCase() === trimmedInput);
-    if (company && !productCompanies.some((pc) => pc.company.company_id === company.company_id)) {
-      setProductCompanies([...productCompanies, { company }]);
+    if (company && !productCompanies.some((pc) => pc.product_id === productId && pc.company.company_id === company.company_id)) {
+      setProductCompanies([...productCompanies, { product_id: productId, company }]);
       setCompanyInput(""); // Reset input field
     } else {
       alert("Company not found or already linked.");
@@ -72,19 +68,9 @@ const ProductManagement: React.FC = () => {
   };
 
   // Remove Company from Product
-  const removeCompanyFromProduct = (companyId: string) => {
-    setProductCompanies(productCompanies.filter((pc) => pc.company.company_id !== companyId));
+  const removeCompanyFromProduct = (productId: string, companyId: string) => {
+    setProductCompanies(productCompanies.filter((pc) => !(pc.product_id === productId && pc.company.company_id === companyId)));
   };
-
-  // Filter products based on search query
-  const filteredProducts = products.filter((p) =>
-    p.english_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.spanish_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Paginate the results
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="p-4">
@@ -155,7 +141,7 @@ const ProductManagement: React.FC = () => {
               onChange={(e) => setCompanyInput(e.target.value)}
               className="border p-2 flex-1"
             />
-            <button type="button" onClick={addCompanyToProduct} className="bg-green-500 text-white p-2">
+            <button type="button" onClick={() => addCompanyToProduct(product.product_id!)} className="bg-green-500 text-white p-2">
               Add
             </button>
           </div>
@@ -165,7 +151,7 @@ const ProductManagement: React.FC = () => {
             {productCompanies.map((pc) => (
               <li key={pc.company.company_id} className="flex justify-between p-1 border-b">
                 {pc.company.name}
-                <button onClick={() => removeCompanyFromProduct(pc.company.company_id)} className="text-red-500">X</button>
+                <button onClick={() => removeCompanyFromProduct(pc.product_id, pc.company.company_id)} className="text-red-500">X</button>
               </li>
             ))}
           </ul>
@@ -175,49 +161,34 @@ const ProductManagement: React.FC = () => {
           Add Product
         </button>
       </form>
-      <h2 className="text-xl font-bold mb-4">Product List</h2>
-      {/* Search Bar */}
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="border p-2 w-full mb-4"
-      />
 
-      {/* Products Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2">English Name</th>
-              <th className="border p-2">Spanish Name</th>
-              <th className="border p-2">Amount</th>
-              <th className="border p-2">Weight</th>
-              <th className="border p-2">Measurement</th>
-              <th className="border p-2">Companies</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedProducts.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="text-center p-4">No products found.</td>
-              </tr>
-            ) : (
-              paginatedProducts.map((product) => (
-                <tr key={product.product_id} className="border-b">
-                  <td className="border p-2">{product.english_name}</td>
-                  <td className="border p-2">{product.spanish_name}</td>
-                  <td className="border p-2">{product.amount}</td>
-                  <td className="border p-2">{product.weight} g</td>
-                  <td className="border p-2">{product.measurement}</td>
-                  <td className="border p-2">-</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <SimpleTable
+        title="Product List"
+        columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}
+        data={products}
+        searchableFields={["english_name", "spanish_name"]}
+        renderRow={(product) => (
+          <tr key={product.product_id} className="border-b">
+            <td className="border p-2">{product.english_name}</td>
+            <td className="border p-2">{product.spanish_name}</td>
+            <td className="border p-2">{product.amount}</td>
+            <td className="border p-2">{product.weight} g</td>
+            <td className="border p-2">{product.measurement}</td>
+            <td className="border p-2">
+              <ul>
+                {productCompanies
+                  .filter((pc) => pc.product_id === product.product_id)
+                  .map((pc) => (
+                    <li key={pc.company.company_id} className="flex justify-between">
+                      {pc.company.name}
+                      <button onClick={() => removeCompanyFromProduct(product.product_id!, pc.company.company_id)} className="text-red-500">X</button>
+                    </li>
+                  ))}
+              </ul>
+            </td>
+          </tr>
+        )}
+      />
     </div>
   );
 };

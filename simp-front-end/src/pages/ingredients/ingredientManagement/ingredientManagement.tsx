@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Ingredient } from "@/lib/types/ingredient";
 import { Product } from "@/lib/types/product";
 import { Nutrition } from "@/lib/types/nutrition";
-import SimpleTable from "@/components/dataVisualization/simpleTable";
+import SimpleTable from "@/components/managementComponent/simpleTable";
 
 const ITEMS_PER_PAGE = 20;
 
