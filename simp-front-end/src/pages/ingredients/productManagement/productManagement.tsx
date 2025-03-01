@@ -15,7 +15,7 @@ const mockCompanies: Company[] = [
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [productCompanies, setProductCompanies] = useState<{ product_id: string; company: Company }[]>([]);
+  const [productCompanies, setProductCompanies] = useState<{ company: Company }[]>([]);
   const [product, setProduct] = useState<Partial<Product>>({
     retail_id: undefined,
     src_product_id: undefined,
@@ -54,25 +54,26 @@ const ProductManagement: React.FC = () => {
       weight: 0,
       measurement: "",
     }); // Reset input fields
+    setProductCompanies([]); // Reset linked companies
   };
 
-  // Add Company Link
-  const addCompanyToProduct = (productId: string) => {
+  // Add Company to Product
+  const addCompanyToProduct = () => {
     const trimmedInput = companyInput.trim().toLowerCase();
     if (!trimmedInput) return;
 
     const company = mockCompanies.find((c) => c.name.toLowerCase() === trimmedInput);
-    if (company && !productCompanies.some((pc) => pc.product_id === productId && pc.company.company_id === company.company_id)) {
-      setProductCompanies([...productCompanies, { product_id: productId, company }]);
+    if (company && !productCompanies.some((pc) => pc.company.company_id === company.company_id)) {
+      setProductCompanies([...productCompanies, { company }]);
       setCompanyInput(""); // Reset input field
     } else {
       alert("Company not found or already linked.");
     }
   };
 
-  // Remove Company Link
-  const removeCompanyFromProduct = (productId: string, companyId: string) => {
-    setProductCompanies(productCompanies.filter((pc) => !(pc.product_id === productId && pc.company.company_id === companyId)));
+  // Remove Company from Product
+  const removeCompanyFromProduct = (companyId: string) => {
+    setProductCompanies(productCompanies.filter((pc) => pc.company.company_id !== companyId));
   };
 
   // Filter products based on search query
@@ -142,11 +143,39 @@ const ProductManagement: React.FC = () => {
           onChange={(e) => setProduct({ ...product, measurement: e.target.value })}
           className="border p-2 w-full"
         />
+
+        {/* Company Input Field */}
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">Link Product to Company</h3>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Enter Company Name"
+              value={companyInput}
+              onChange={(e) => setCompanyInput(e.target.value)}
+              className="border p-2 flex-1"
+            />
+            <button type="button" onClick={addCompanyToProduct} className="bg-green-500 text-white p-2">
+              Add
+            </button>
+          </div>
+
+          {/* Display Added Companies */}
+          <ul className="mt-2">
+            {productCompanies.map((pc) => (
+              <li key={pc.company.company_id} className="flex justify-between p-1 border-b">
+                {pc.company.name}
+                <button onClick={() => removeCompanyFromProduct(pc.company.company_id)} className="text-red-500">X</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         <button type="submit" className="bg-blue-500 text-white p-2 w-full">
           Add Product
         </button>
       </form>
-
+      <h2 className="text-xl font-bold mb-4">Product List</h2>
       {/* Search Bar */}
       <input
         type="text"
@@ -182,28 +211,7 @@ const ProductManagement: React.FC = () => {
                   <td className="border p-2">{product.amount}</td>
                   <td className="border p-2">{product.weight} g</td>
                   <td className="border p-2">{product.measurement}</td>
-                  <td className="border p-2">
-                    <ul>
-                      {productCompanies
-                        .filter((pc) => pc.product_id === product.product_id)
-                        .map((pc) => (
-                          <li key={pc.company.company_id} className="flex justify-between">
-                            {pc.company.name}
-                            <button onClick={() => removeCompanyFromProduct(product.product_id, pc.company.company_id)} className="text-red-500">X</button>
-                          </li>
-                        ))}
-                    </ul>
-                    <input
-                      type="text"
-                      placeholder="Enter Company Name"
-                      value={companyInput}
-                      onChange={(e) => setCompanyInput(e.target.value)}
-                      className="border p-2 w-full mt-1"
-                    />
-                    <button type="button" onClick={() => addCompanyToProduct(product.product_id)} className="bg-green-500 text-white p-2 w-full mt-1">
-                      Add Company
-                    </button>
-                  </td>
+                  <td className="border p-2">-</td>
                 </tr>
               ))
             )}
