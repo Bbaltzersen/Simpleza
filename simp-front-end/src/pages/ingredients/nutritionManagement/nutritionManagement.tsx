@@ -41,8 +41,8 @@ const NutritionManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Manage Nutrition</h2>
+    <div>
+      <h2>Manage Nutrition</h2>
 
       {/* Use Reusable Form */}
       <SimpleForm

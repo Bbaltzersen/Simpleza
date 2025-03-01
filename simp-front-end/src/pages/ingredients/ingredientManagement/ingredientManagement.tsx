@@ -60,7 +60,7 @@ const IngredientManagement: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Manage Ingredients</h2>
+      <h2>Manage Ingredients</h2>
 
       {/* Use Reusable Form */}
       <SimpleForm

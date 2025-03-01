@@ -72,10 +72,9 @@ const ProductManagement: React.FC = () => {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Manage Products</h2>
+    <div>
+      <h2>Manage Products</h2>
 
-      {/* Use Reusable Form */}
       <SimpleForm
         title="Add Product"
         fields={productFields}
@@ -85,7 +84,6 @@ const ProductManagement: React.FC = () => {
         submitLabel="Add Product"
       />
 
-      {/* Use Reusable EntityLinkForm */}
       <EntityLinkForm
         title="Link Product to Company"
         placeholder="Enter Company Name"
@@ -107,7 +105,6 @@ const ProductManagement: React.FC = () => {
         }
       />
 
-      {/* Use Reusable Table */}
       <SimpleTable
         title="Product List"
         columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}

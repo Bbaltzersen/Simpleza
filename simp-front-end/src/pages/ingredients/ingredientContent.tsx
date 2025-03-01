@@ -1,35 +1,37 @@
 "use client";
 
 import React, { useState } from "react";
+import styles from "./ingredientContent.module.css"; // Import CSS module
 
 import IngredientManagement from "./ingredientManagement/ingredientManagement";
 import NutritionManagement from "./nutritionManagement/nutritionManagement";
 import ProductManagement from "./productManagement/productManagement";
 import CompanyManagement from "./companyManagement/companyManagement";
 
-function IngredientContent() {
-  const [selectedEntity, setSelectedEntity] = useState<"Nutrition" | "Products" | "Ingredients" | "Companies">(
-    "Ingredients"
-  );
+// Define entity names as a type
+type EntityType = "Ingredients" | "Products" | "Nutrition" | "Companies";
+
+const entityNames: EntityType[] = ["Ingredients", "Nutrition", "Products", "Companies"];
+
+const IngredientContent: React.FC = () => {
+  const [selectedEntity, setSelectedEntity] = useState<EntityType>("Ingredients");
 
   return (
     <div className="p-4">
-      {/* Entity Selection Menu (At the Top) */}
-      <div className="flex space-x-4 mb-4 border-b pb-2">
-        {["Ingredients", "Nutrition", "Products", "Companies"].map((entity) => (
-          <button
+      {/* Horizontal Tabs with CSS Module */}
+      <div className={styles.tabMenu}>
+        {entityNames.map((entity) => (
+          <div
             key={entity}
-            className={`p-2 ${
-              selectedEntity === entity ? "bg-gray-200 font-bold" : "bg-white"
-            }`}
-            onClick={() => setSelectedEntity(entity as "Nutrition" | "Products" | "Ingredients" | "Companies")}
+            className={`${styles.tab} ${selectedEntity === entity ? styles.activeTab : ""}`}
+            onClick={() => setSelectedEntity(entity)}
           >
             {entity}
-          </button>
+          </div>
         ))}
       </div>
 
-      {/* Display the Selected Entity's Management Component */}
+      {/* Display Selected Entity */}
       <div className="mt-4">
         {selectedEntity === "Ingredients" && <IngredientManagement />}
         {selectedEntity === "Products" && <ProductManagement />}
@@ -38,6 +40,6 @@ function IngredientContent() {
       </div>
     </div>
   );
-}
+};
 
 export default IngredientContent;

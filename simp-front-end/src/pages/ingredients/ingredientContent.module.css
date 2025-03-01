@@ -1,0 +1,31 @@
+/* ingredientContent.module.css */
+
+/* Container for the tab menu */
+.tabMenu {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid #e2e8f0; /* Light gray border */
+    padding-bottom: 8px;
+  }
+  
+  /* Each individual tab */
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+  }
+  
+  /* Active tab with blue underline */
+  .activeTab {
+    border-bottom: 2px solid #54755e; /* Blue underline */
+    font-weight: bold;
+    color: #54755e; /* Blue text */
+  }
+  
+  /* Hover effect */
+  .tab:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.125rem;
+  }
+  
