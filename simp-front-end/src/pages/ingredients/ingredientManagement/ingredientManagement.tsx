@@ -5,6 +5,8 @@ import { Ingredient } from "@/lib/types/ingredient";
 import { Product } from "@/lib/types/product";
 import { Nutrition } from "@/lib/types/nutrition";
 
+const ITEMS_PER_PAGE = 20;
+
 // Mock existing products and nutrition values (Replace with API calls later)
 const mockProducts: Product[] = [
   { product_id: "1", english_name: "Milk", spanish_name: "Leche", amount: 1, weight: 1000, measurement: "ml" },
@@ -32,6 +34,21 @@ const IngredientManagement: React.FC = () => {
   const [nutritionInput, setNutritionInput] = useState<string>("");
   const [nutritionAmount, setNutritionAmount] = useState<number>(0);
 
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Filter ingredients based on search query
+  const filteredIngredients = ingredients.filter((ing) =>
+    ing.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Paginate the results
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  const paginatedIngredients = filteredIngredients.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+
   // Handle Ingredient Submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,11 +58,17 @@ const IngredientManagement: React.FC = () => {
 
   // Add Product by Name
   const addProduct = () => {
-    const product = mockProducts.find((p) => p.english_name.toLowerCase() === productInput.toLowerCase());
+    const trimmedInput = productInput.trim().toLowerCase();
+    if (!trimmedInput) return;
+
+    const product = mockProducts.find((p) => p.english_name.toLowerCase() === trimmedInput);
+    
     if (product && !selectedProducts.some((p) => p.product_id === product.product_id)) {
       setSelectedProducts([...selectedProducts, product]);
+      setProductInput(""); // Reset input field
+    } else {
+      alert("Product not found or already added.");
     }
-    setProductInput(""); // Reset input field
   };
 
   // Remove Product
@@ -55,12 +78,21 @@ const IngredientManagement: React.FC = () => {
 
   // Add Nutrition by Name
   const addNutrition = () => {
-    const nutrition = mockNutritions.find((n) => n.name.toLowerCase() === nutritionInput.toLowerCase());
-    if (nutrition && nutritionAmount > 0) {
-      setSelectedNutritions([...selectedNutritions, { nutrition, amount: nutritionAmount }]);
+    const trimmedInput = nutritionInput.trim().toLowerCase();
+    if (!trimmedInput || nutritionAmount <= 0) {
+      alert("Enter a valid nutrition and amount.");
+      return;
     }
-    setNutritionInput(""); // Reset input field
-    setNutritionAmount(0);
+
+    const nutrition = mockNutritions.find((n) => n.name.toLowerCase() === trimmedInput);
+    
+    if (nutrition && !selectedNutritions.some((n) => n.nutrition.nutrition_id === nutrition.nutrition_id)) {
+      setSelectedNutritions([...selectedNutritions, { nutrition, amount: nutritionAmount }]);
+      setNutritionInput(""); // Reset input field
+      setNutritionAmount(0);
+    } else {
+      alert("Nutrition not found or already added.");
+    }
   };
 
   // Remove Nutrition
@@ -69,6 +101,7 @@ const IngredientManagement: React.FC = () => {
   };
 
   return (
+    <div>
     <div>
       <h2 className="text-xl font-bold mb-4">Manage Ingredients</h2>
 
@@ -163,6 +196,70 @@ const IngredientManagement: React.FC = () => {
         </button>
       </form>
     </div>
+    <div className="p-4">
+    <h2 className="text-xl font-bold mb-4">Ingredient List</h2>
+
+    {/* Search Bar */}
+    <input
+      type="text"
+      placeholder="Search ingredients..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="border p-2 w-full mb-4"
+    />
+
+    {/* Ingredients Table */}
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-200">
+            <th className="border p-2">Name</th>
+            <th className="border p-2">Default Unit</th>
+            <th className="border p-2">Calories per 100g</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedIngredients.length === 0 ? (
+            <tr>
+              <td colSpan={3} className="text-center p-4">
+                No ingredients found.
+              </td>
+            </tr>
+          ) : (
+            paginatedIngredients.map((ingredient) => (
+              <tr key={ingredient.ingredient_id} className="border-b">
+                <td className="border p-2">{ingredient.name}</td>
+                <td className="border p-2">{ingredient.default_unit}</td>
+                <td className="border p-2">{ingredient.calories_per_100g}</td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Pagination */}
+    <div className="flex justify-between mt-4">
+      <button
+        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        disabled={currentPage === 1}
+        className={`p-2 ${currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"}`}
+      >
+        Previous
+      </button>
+      <span className="p-2">
+        Page {currentPage} of {Math.ceil(filteredIngredients.length / ITEMS_PER_PAGE)}
+      </span>
+      <button
+        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(filteredIngredients.length / ITEMS_PER_PAGE)))}
+        disabled={currentPage >= Math.ceil(filteredIngredients.length / ITEMS_PER_PAGE)}
+        className={`p-2 ${currentPage >= Math.ceil(filteredIngredients.length / ITEMS_PER_PAGE) ? "bg-gray-300" : "bg-blue-500 text-white"}`}
+      >
+        Next
+      </button>
+    </div>
+  </div>
+  </div>
   );
 };
 
