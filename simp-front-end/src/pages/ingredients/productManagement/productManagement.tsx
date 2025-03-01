@@ -2,9 +2,23 @@
 
 import React, { useState } from "react";
 import { Product } from "@/lib/types/product";
+import { Company } from "@/lib/types/company";
+
+const ITEMS_PER_PAGE = 20;
+
+// Mock Companies (Replace with API call later)
+const mockCompanies: Company[] = [
+  { company_id: "1", name: "Nestle" },
+  { company_id: "2", name: "PepsiCo" },
+  { company_id: "3", name: "Unilever" },
+];
 
 const ProductManagement: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productCompanies, setProductCompanies] = useState<{ product_id: string; company: Company }[]>([]);
   const [product, setProduct] = useState<Partial<Product>>({
+    retail_id: undefined,
+    src_product_id: undefined,
     english_name: "",
     spanish_name: "",
     amount: 1,
@@ -12,16 +26,85 @@ const ProductManagement: React.FC = () => {
     measurement: "",
   });
 
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  const [companyInput, setCompanyInput] = useState<string>("");
+
+  // Handle Product Submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("New Product:", product);
+    const newProduct: Product = {
+      product_id: crypto.randomUUID(),
+      retail_id: product.retail_id || null,
+      src_product_id: product.src_product_id || null,
+      english_name: product.english_name || "",
+      spanish_name: product.spanish_name || "",
+      amount: product.amount || 1,
+      weight: product.weight || 0,
+      measurement: product.measurement || "",
+    };
+    setProducts([...products, newProduct]); // Add product to list
+    setProduct({
+      retail_id: undefined,
+      src_product_id: undefined,
+      english_name: "",
+      spanish_name: "",
+      amount: 1,
+      weight: 0,
+      measurement: "",
+    }); // Reset input fields
   };
 
+  // Add Company Link
+  const addCompanyToProduct = (productId: string) => {
+    const trimmedInput = companyInput.trim().toLowerCase();
+    if (!trimmedInput) return;
+
+    const company = mockCompanies.find((c) => c.name.toLowerCase() === trimmedInput);
+    if (company && !productCompanies.some((pc) => pc.product_id === productId && pc.company.company_id === company.company_id)) {
+      setProductCompanies([...productCompanies, { product_id: productId, company }]);
+      setCompanyInput(""); // Reset input field
+    } else {
+      alert("Company not found or already linked.");
+    }
+  };
+
+  // Remove Company Link
+  const removeCompanyFromProduct = (productId: string, companyId: string) => {
+    setProductCompanies(productCompanies.filter((pc) => !(pc.product_id === productId && pc.company.company_id === companyId)));
+  };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter((p) =>
+    p.english_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    p.spanish_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Paginate the results
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   return (
-    <div>
+    <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Manage Products</h2>
 
+      {/* Product Form */}
       <form onSubmit={handleSubmit} className="mb-4 space-y-2">
+        <input
+          type="number"
+          placeholder="Retail ID (Optional)"
+          value={product.retail_id || ""}
+          onChange={(e) => setProduct({ ...product, retail_id: Number(e.target.value) })}
+          className="border p-2 w-full"
+        />
+        <input
+          type="text"
+          placeholder="Source Product ID (Optional)"
+          value={product.src_product_id || ""}
+          onChange={(e) => setProduct({ ...product, src_product_id: e.target.value })}
+          className="border p-2 w-full"
+        />
         <input
           type="text"
           placeholder="English Name"
@@ -63,6 +146,70 @@ const ProductManagement: React.FC = () => {
           Add Product
         </button>
       </form>
+
+      {/* Search Bar */}
+      <input
+        type="text"
+        placeholder="Search products..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="border p-2 w-full mb-4"
+      />
+
+      {/* Products Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border p-2">English Name</th>
+              <th className="border p-2">Spanish Name</th>
+              <th className="border p-2">Amount</th>
+              <th className="border p-2">Weight</th>
+              <th className="border p-2">Measurement</th>
+              <th className="border p-2">Companies</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedProducts.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center p-4">No products found.</td>
+              </tr>
+            ) : (
+              paginatedProducts.map((product) => (
+                <tr key={product.product_id} className="border-b">
+                  <td className="border p-2">{product.english_name}</td>
+                  <td className="border p-2">{product.spanish_name}</td>
+                  <td className="border p-2">{product.amount}</td>
+                  <td className="border p-2">{product.weight} g</td>
+                  <td className="border p-2">{product.measurement}</td>
+                  <td className="border p-2">
+                    <ul>
+                      {productCompanies
+                        .filter((pc) => pc.product_id === product.product_id)
+                        .map((pc) => (
+                          <li key={pc.company.company_id} className="flex justify-between">
+                            {pc.company.name}
+                            <button onClick={() => removeCompanyFromProduct(product.product_id, pc.company.company_id)} className="text-red-500">X</button>
+                          </li>
+                        ))}
+                    </ul>
+                    <input
+                      type="text"
+                      placeholder="Enter Company Name"
+                      value={companyInput}
+                      onChange={(e) => setCompanyInput(e.target.value)}
+                      className="border p-2 w-full mt-1"
+                    />
+                    <button type="button" onClick={() => addCompanyToProduct(product.product_id)} className="bg-green-500 text-white p-2 w-full mt-1">
+                      Add Company
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
