@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Product } from "@/lib/types/product";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
+import SimpleForm from "@/components/managementComponent/simpleform";
 
 // Mock Companies (Replace with API call later)
 const mockCompanies: Company[] = [
@@ -11,6 +12,13 @@ const mockCompanies: Company[] = [
   { company_id: "2", name: "PepsiCo" },
   { company_id: "3", name: "Unilever" },
 ];
+
+interface FormField {
+  name: keyof Product;
+  type: "text" | "number";
+  placeholder: string;
+  required?: boolean;
+}
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,6 +34,17 @@ const ProductManagement: React.FC = () => {
   });
 
   const [companyInput, setCompanyInput] = useState<string>("");
+
+  // Form Fields
+  const productFields: FormField[] = [
+    { name: "retail_id", type: "number", placeholder: "Retail ID (Optional)" },
+    { name: "src_product_id", type: "text", placeholder: "Source Product ID (Optional)" },
+    { name: "english_name", type: "text", placeholder: "English Name", required: true },
+    { name: "spanish_name", type: "text", placeholder: "Spanish Name", required: true },
+    { name: "amount", type: "number", placeholder: "Amount" },
+    { name: "weight", type: "number", placeholder: "Weight" },
+    { name: "measurement", type: "text", placeholder: "Measurement Unit" },
+  ];
 
   // Handle Product Submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,92 +95,44 @@ const ProductManagement: React.FC = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Manage Products</h2>
 
-      {/* Product Form */}
-      <form onSubmit={handleSubmit} className="mb-4 space-y-2">
-        <input
-          type="number"
-          placeholder="Retail ID (Optional)"
-          value={product.retail_id || ""}
-          onChange={(e) => setProduct({ ...product, retail_id: Number(e.target.value) })}
-          className="border p-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Source Product ID (Optional)"
-          value={product.src_product_id || ""}
-          onChange={(e) => setProduct({ ...product, src_product_id: e.target.value })}
-          className="border p-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="English Name"
-          value={product.english_name || ""}
-          onChange={(e) => setProduct({ ...product, english_name: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Spanish Name"
-          value={product.spanish_name || ""}
-          onChange={(e) => setProduct({ ...product, spanish_name: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={product.amount || ""}
-          onChange={(e) => setProduct({ ...product, amount: Number(e.target.value) })}
-          className="border p-2 w-full"
-        />
-        <input
-          type="number"
-          placeholder="Weight"
-          value={product.weight || ""}
-          onChange={(e) => setProduct({ ...product, weight: Number(e.target.value) })}
-          className="border p-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Measurement Unit"
-          value={product.measurement || ""}
-          onChange={(e) => setProduct({ ...product, measurement: e.target.value })}
-          className="border p-2 w-full"
-        />
+      {/* Use Reusable Form */}
+      <SimpleForm
+        title="Add Product"
+        fields={productFields}
+        state={product}
+        setState={setProduct}
+        onSubmit={handleSubmit}
+        submitLabel="Add Product"
+      />
 
-        {/* Company Input Field */}
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Link Product to Company</h3>
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              placeholder="Enter Company Name"
-              value={companyInput}
-              onChange={(e) => setCompanyInput(e.target.value)}
-              className="border p-2 flex-1"
-            />
-            <button type="button" onClick={() => addCompanyToProduct(product.product_id!)} className="bg-green-500 text-white p-2">
-              Add
-            </button>
-          </div>
-
-          {/* Display Added Companies */}
-          <ul className="mt-2">
-            {productCompanies.map((pc) => (
-              <li key={pc.company.company_id} className="flex justify-between p-1 border-b">
-                {pc.company.name}
-                <button onClick={() => removeCompanyFromProduct(pc.product_id, pc.company.company_id)} className="text-red-500">X</button>
-              </li>
-            ))}
-          </ul>
+      {/* Company Input Field */}
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">Link Product to Company</h3>
+        <div className="flex space-x-2">
+          <input
+            type="text"
+            placeholder="Enter Company Name"
+            value={companyInput}
+            onChange={(e) => setCompanyInput(e.target.value)}
+            className="border p-2 flex-1"
+          />
+          <button type="button" onClick={() => addCompanyToProduct(product.product_id!)} className="bg-green-500 text-white p-2">
+            Add
+          </button>
         </div>
 
-        <button type="submit" className="bg-blue-500 text-white p-2 w-full">
-          Add Product
-        </button>
-      </form>
+        {/* Display Added Companies */}
+        <ul className="mt-2">
+          {productCompanies.map((pc) => (
+            <li key={pc.company.company_id} className="flex justify-between p-1 border-b">
+              {pc.company.name}
+              <button onClick={() => removeCompanyFromProduct(pc.product_id, pc.company.company_id)} className="text-red-500">X</button>
+            </li>
+          ))}
+        </ul>
+      </div>
 
+      {/* Use Reusable Table */}
       <SimpleTable
         title="Product List"
         columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}

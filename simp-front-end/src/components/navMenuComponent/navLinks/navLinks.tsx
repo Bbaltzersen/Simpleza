@@ -11,12 +11,17 @@ export default function NavLinks() {
         <>
           <a href="/profile" className={styles.navLink}>Profile</a>
           <a href="/dashboard" className={styles.navLink}>Dashboard</a>
-          {user.role === "admin" && (
-            <a href="/ingredients" className={styles.navLink}>Ingredients</a>
-          )}
         </>
       )}
       <a href="/findrecipes" className={styles.navLink}>Find Recipes</a>
+      {user && (
+        <>
+            {user.role === "admin" && (
+              <a href="/ingredients" className={styles.navLink}>Ingredients</a>
+            )}
+            </>
+          
+      )}
     </>
   );
 }

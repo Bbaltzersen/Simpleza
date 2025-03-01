@@ -3,12 +3,25 @@
 import React, { useState } from "react";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
+import SimpleForm from "@/components/managementComponent/simpleform";
+
+interface FormField {
+  name: keyof Company;
+  type: "text";
+  placeholder: string;
+  required?: boolean;
+}
 
 const CompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [company, setCompany] = useState<Partial<Company>>({
     name: "",
   });
+
+  // Form Fields
+  const companyFields: FormField[] = [
+    { name: "name", type: "text", placeholder: "Company Name", required: true },
+  ];
 
   // Handle Company Submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,21 +38,17 @@ const CompanyManagement: React.FC = () => {
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">Manage Companies</h2>
 
-      {/* Company Form */}
-      <form onSubmit={handleSubmit} className="mb-4 space-y-2">
-        <input
-          type="text"
-          placeholder="Company Name"
-          value={company.name || ""}
-          onChange={(e) => setCompany({ ...company, name: e.target.value })}
-          className="border p-2 w-full"
-          required
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 w-full">
-          Add Company
-        </button>
-      </form>
+      {/* Use Reusable Form */}
+      <SimpleForm
+        title="Add Company"
+        fields={companyFields}
+        state={company}
+        setState={setCompany}
+        onSubmit={handleSubmit}
+        submitLabel="Add Company"
+      />
 
+      {/* Use Reusable Table */}
       <SimpleTable
         title="Company List"
         columns={["Company Name"]}
