@@ -1,5 +1,11 @@
 "use client";
+
 import React, { useState } from "react";
+
+import IngredientManagement from "./ingredientManagement/ingredientManagement";
+import NutritionManagement from "./nutritionManagement/nutritionManagement";
+import ProductManagement from "./productManagement/productManagement";
+import CompanyManagement from "./companyManagement/companyManagement";
 
 function IngredientContent() {
   const [selectedEntity, setSelectedEntity] = useState<"Nutrition" | "Products" | "Ingredients"  | "Companies">(
