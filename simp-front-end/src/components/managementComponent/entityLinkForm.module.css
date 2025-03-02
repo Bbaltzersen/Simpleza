@@ -1,0 +1,66 @@
+/* entityLinkForm.module.css */
+
+.container {
+    margin-top: 1rem;
+  }
+  
+  .title {
+    margin-bottom: 8px;
+  }
+  
+  .inputContainer {
+    display: flex;
+    gap: 8px; /* Equivalent to Tailwind's space-x-2 */
+    margin-bottom: 8px;
+    margin-top: 8px;
+  }
+  
+  .input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    flex: 1;
+  }
+  
+  .inputSmall {
+    padding: 8px;
+    width: 20rem;
+    border: 1px solid #ccc;
+  }
+  
+  .addButton {
+    background-color: #54755e;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .addButton:hover {
+    background-color: #304436;
+  }
+  
+  .list {
+    margin-top: 8px;
+    list-style: none;
+    padding: 0;
+  }
+  
+  .listItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .removeButton {
+    color: red;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .removeButton:hover {
+    color: darkred;
+  }
+  

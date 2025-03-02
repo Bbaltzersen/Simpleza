@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import styles from "./entityLinkForm.module.css"; // Import the CSS module
 
 // Base entity type
 interface BaseEntity {
@@ -10,7 +11,7 @@ interface BaseEntity {
 
 // Entity type that includes quantity
 interface QuantityEntity extends BaseEntity {
-  quantity: number;
+  quantity: number | undefined;
 }
 
 // Generic Props for the EntityLinkForm
@@ -65,15 +66,15 @@ const EntityLinkForm = <T extends BaseEntity>({
   };
 
   return (
-    <div className="mt-4">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <div className="flex space-x-2">
+    <div className={styles.container}>
+      <div className={styles.title}>{title}</div>
+      <div className={styles.inputContainer}>
         <input
           type="text"
           placeholder={placeholder}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="border p-2 flex-1"
+          className={styles.input}
         />
         {allowQuantity && (
           <input
@@ -82,20 +83,22 @@ const EntityLinkForm = <T extends BaseEntity>({
             min={1}
             value={quantity}
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
-            className="border p-2 w-24"
+            className={styles.inputSmall}
           />
         )}
-        <button type="button" onClick={addEntity} className="bg-green-500 text-white p-2">
+        <button type="button" onClick={addEntity} className={styles.addButton}>
           Add
         </button>
       </div>
 
       {/* Display Linked Entities */}
-      <ul className="mt-2">
+      <ul className={styles.list}>
         {selectedEntities.map((entity) => (
-          <li key={entity.id} className="flex justify-between p-1 border-b">
+          <li key={entity.id} className={styles.listItem}>
             {entity.name} {isQuantityEntity(entity) ? `(${entity.quantity})` : ""}
-            <button onClick={() => removeEntity(entity.id)} className="text-red-500">X</button>
+            <button onClick={() => removeEntity(entity.id)} className={styles.removeButton}>
+              X
+            </button>
           </li>
         ))}
       </ul>

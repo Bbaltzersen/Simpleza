@@ -69,7 +69,7 @@ const IngredientManagement: React.FC = () => {
             />
 
             <EntityLinkForm
-                title="Add Existing Product"
+                title="Link product to Ingredient"
                 placeholder="Enter Product Name"
                 availableEntities={mockProducts.map((p) => ({ id: p.product_id, name: p.english_name }))}
                 selectedEntities={selectedProducts}
@@ -77,7 +77,7 @@ const IngredientManagement: React.FC = () => {
             />
 
             <EntityLinkForm
-                title="Add Existing Nutrition"
+                title="Link Nutrition to Ingredient"
                 placeholder="Enter Nutrition Name"
                 availableEntities={mockNutritions.map((n) => ({ id: n.nutrition_id, name: n.name, quantity: 0 }))}
                 selectedEntities={selectedNutritions}
