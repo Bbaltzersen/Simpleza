@@ -10,11 +10,23 @@ interface TableProps<T> {
   renderRow: (item: T) => JSX.Element;
   searchableFields: (keyof T)[];
   itemsPerPage?: number;
+  totalItems: number;
+  currentPage: number;
+  onPageChange: (page: number) => void;
 }
 
-const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, itemsPerPage = 20 }: TableProps<T>) => {
+const SimpleTable = <T,>({
+  title,
+  columns,
+  data,
+  renderRow,
+  searchableFields,
+  itemsPerPage = 10,
+  totalItems,
+  currentPage,
+  onPageChange,
+}: TableProps<T>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   // Search Functionality
   const filteredData = data.filter((item) =>
@@ -23,13 +35,11 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
     )
   );
 
-  // Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  // Pagination Calculation
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
   return (
     <div className={styles.container}>
-      {/* Table Title */}
       <h3>{title}</h3>
 
       {/* Search Bar */}
@@ -52,12 +62,12 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
             </tr>
           </thead>
           <tbody>
-            {paginatedData.length === 0 ? (
+            {filteredData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className={styles.noData}>No data found.</td>
               </tr>
             ) : (
-              paginatedData.map(renderRow)
+              filteredData.map(renderRow)
             )}
           </tbody>
         </table>
@@ -65,23 +75,9 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
 
       {/* Pagination */}
       <div className={styles.pagination}>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className={`${styles.paginationButton} ${currentPage === 1 ? styles.disabled : ""}`}
-        >
-          Previous
-        </button>
-        <span className={styles.pageInfo}>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage >= totalPages}
-          className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.disabled : ""}`}
-        >
-          Next
-        </button>
+        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={styles.paginationButton}>Previous</button>
+        <span className={styles.pageInfo}>Page {currentPage} of {totalPages}</span>
+        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages} className={styles.paginationButton}>Next</button>
       </div>
     </div>
   );

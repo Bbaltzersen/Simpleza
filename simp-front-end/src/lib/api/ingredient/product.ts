@@ -8,6 +8,11 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+export type ProductCompanyDetail = {
+    company_name: string; // The name of the company
+    price: number; // The price of the product in this company
+  };
+  
 /**
  * Fetch all products with pagination
  */
@@ -35,6 +40,17 @@ export const fetchProductById = async (productId: string): Promise<Product | nul
     return null;
   }
 };
+
+
+export async function fetchProductCompanies(product_id: string): Promise<ProductCompanyDetail[]> {
+    try {
+      const response = await apiClient.get<ProductCompanyDetail[]>(`/${product_id}/companies`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching companies for product ${product_id}:`, error);
+      return [];
+    }
+  }
 
 /**
  * Create a new product

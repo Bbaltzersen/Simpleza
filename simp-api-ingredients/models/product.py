@@ -1,9 +1,10 @@
 import uuid
 from sqlalchemy import Column, Numeric
-from sqlalchemy.dialects.postgresql import UUID, TEXT, VARCHAR
+from sqlalchemy.dialects.postgresql import UUID, TEXT
 from .base import Base
 
 class Product(Base):
+    """Database model for storing product details."""
     __tablename__ = "products"
 
     product_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

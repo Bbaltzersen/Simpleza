@@ -1,97 +1,54 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { Product, ProductCreate } from "@/lib/types/product";
+import React, { useEffect, useState } from "react";
+import { Product, ProductCreate, ProductCompanyDetail } from "@/lib/types/product";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
-import { fetchProducts, createProduct } from "@/lib/api/ingredient/product";
-import { fetchCompanies } from "@/lib/api/ingredient/company";
+import { fetchProducts, createProduct, fetchProductCompanies } from "@/lib/api/ingredient/product";
 
 const ITEMS_PER_PAGE = 10;
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // State for product being added
   const [product, setProduct] = useState<Partial<Product>>({
-    retail_id: undefined,
-    src_product_id: undefined,
     english_name: "",
     spanish_name: "",
-    amount: undefined,
-    weight: undefined,
+    amount: 1,
+    weight: 0,
     measurement: "",
   });
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
-
-  // Prevent multiple fetches & track initial render
-  const isProductsFetched = useRef(false);
-  const isCompaniesFetched = useRef(false);
-  const isFirstRender = useRef(true);
-
-  // Fetch products when page changes
+  // Fetch products when the page changes
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false; // ✅ Prevent unnecessary fetch on first render
-      return;
-    }
-
-    if (isProductsFetched.current) return; // ✅ Prevent duplicate fetch
-    isProductsFetched.current = true;
-
-    const controller = new AbortController();
-
     const loadProducts = async () => {
       try {
         const { products, total } = await fetchProducts(currentPage, ITEMS_PER_PAGE);
-        setProducts(products);
+        
+        // Fetch linked companies for each product
+        const productsWithCompanies = await Promise.all(
+          products.map(async (p) => {
+            const companies = await fetchProductCompanies(p.product_id);
+            return { ...p, companies };
+          })
+        );
+
+        setProducts(productsWithCompanies);
         setTotalProducts(total);
       } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") console.error("Error fetching products:", error);
+        console.error("Error fetching products:", error);
       }
     };
 
     loadProducts();
-
-    return () => {
-      controller.abort();
-      isProductsFetched.current = false; // ✅ Reset flag when unmounting
-    };
   }, [currentPage]);
-
-  // Fetch companies only once
-  useEffect(() => {
-    if (isCompaniesFetched.current) return; // ✅ Prevent duplicate fetch
-    isCompaniesFetched.current = true;
-
-    const controller = new AbortController();
-
-    const loadCompanies = async () => {
-      try {
-        const fetchedCompanies = await fetchCompanies();
-        setCompanies(fetchedCompanies);
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") console.error("Error fetching companies:", error);
-      }
-    };
-
-    loadCompanies();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  // Handle Pagination
-  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE);
-  const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const goToPrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   // Handle Product Submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,8 +57,8 @@ const ProductManagement: React.FC = () => {
 
     try {
       const newProductData: ProductCreate = {
-        retail_id: product.retail_id || null,
-        src_product_id: product.src_product_id || null,
+        retail_id: null,
+        src_product_id: null,
         english_name: product.english_name,
         spanish_name: product.spanish_name,
         amount: product.amount || 1,
@@ -115,10 +72,8 @@ const ProductManagement: React.FC = () => {
 
       const newProduct = await createProduct(newProductData);
       if (newProduct) {
-        setProducts((prev) => [...prev, newProduct]);
+        setProducts((prev) => [...prev, { ...newProduct, companies: [] }]);
         setProduct({
-          retail_id: undefined,
-          src_product_id: undefined,
           english_name: "",
           spanish_name: "",
           amount: 1,
@@ -126,6 +81,7 @@ const ProductManagement: React.FC = () => {
           measurement: "",
         });
         setSelectedCompanies([]);
+        setTotalProducts((prev) => prev + 1);
       }
     } catch (error) {
       console.error("Error creating product:", error);
@@ -137,8 +93,6 @@ const ProductManagement: React.FC = () => {
       {/* Product Form */}
       <SimpleForm
         fields={[
-          { name: "retail_id", type: "number", placeholder: "Retail ID (Optional)" },
-          { name: "src_product_id", type: "text", placeholder: "Source Product ID (Optional)" },
           { name: "english_name", type: "text", placeholder: "English Name", required: true },
           { name: "spanish_name", type: "text", placeholder: "Spanish Name", required: true },
           { name: "amount", type: "number", placeholder: "Amount" },
@@ -154,22 +108,17 @@ const ProductManagement: React.FC = () => {
       {/* Company Linking */}
       <EntityLinkForm
         title="Link Product to Company"
-        placeholder="Enter Company Name"
-        availableEntities={companies.map((c) => ({
-          id: c.company_id,
-          name: c.name,
+        placeholder="Insert Company Name"
+        availableEntities={products.flatMap((p) => p.companies || []).map((c) => ({
+          id: c.company_name, // Company name as unique key
+          name: c.company_name,
         }))}
         selectedEntities={selectedCompanies.map((c) => ({
           id: c.company_id,
           name: c.name,
         }))}
         setSelectedEntities={(updatedCompanies) =>
-          setSelectedCompanies(
-            updatedCompanies.map((c) => ({
-              company_id: c.id,
-              name: c.name,
-            }))
-          )
+          setSelectedCompanies(updatedCompanies.map((c) => ({ company_id: c.id, name: c.name })))
         }
       />
 
@@ -178,15 +127,19 @@ const ProductManagement: React.FC = () => {
         title="Product List"
         columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}
         data={products}
+        totalItems={totalProducts}
+        itemsPerPage={ITEMS_PER_PAGE}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         searchableFields={["english_name", "spanish_name"]}
         renderRow={(product) => (
-          <tr key={product.product_id} className="border-b">
-            <td className="border p-2">{product.english_name}</td>
-            <td className="border p-2">{product.spanish_name}</td>
-            <td className="border p-2">{product.amount}</td>
-            <td className="border p-2">{product.weight} g</td>
-            <td className="border p-2">{product.measurement}</td>
-            <td className="border p-2">
+          <tr key={product.product_id}>
+            <td>{product.english_name}</td>
+            <td>{product.spanish_name}</td>
+            <td>{product.amount}</td>
+            <td>{product.weight} g</td>
+            <td>{product.measurement}</td>
+            <td>
               <ul>
                 {product.companies?.map((company) => (
                   <li key={company.company_name}>{company.company_name} - ${company.price}</li>
@@ -196,19 +149,6 @@ const ProductManagement: React.FC = () => {
           </tr>
         )}
       />
-
-      {/* Pagination Controls */}
-      <div className="flex justify-between mt-4">
-        <button onClick={goToPrevPage} disabled={currentPage === 1} className="px-4 py-2 border rounded">
-          Previous
-        </button>
-        <span className="text-lg">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button onClick={goToNextPage} disabled={currentPage === totalPages} className="px-4 py-2 border rounded">
-          Next
-        </button>
-      </div>
     </ManagementContainer>
   );
 };

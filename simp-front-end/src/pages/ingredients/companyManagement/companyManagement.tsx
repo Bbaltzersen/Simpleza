@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
@@ -14,27 +14,28 @@ interface FormField {
   required?: boolean;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 const CompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [company, setCompany] = useState<Partial<Company>>({ name: "" });
-  const isFetched = useRef(false); // Prevent multiple fetch calls in development mode
+  const [totalCompanies, setTotalCompanies] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch companies when component loads
+  // Fetch companies when the page changes
   useEffect(() => {
-    if (isFetched.current) return; // Prevent duplicate fetch
-    isFetched.current = true;
-
     const loadCompanies = async () => {
       try {
-        const fetchedCompanies = await fetchCompanies();
-        setCompanies(fetchedCompanies);
+        const { companies, total } = await fetchCompanies(currentPage, ITEMS_PER_PAGE);
+        setCompanies(companies);
+        setTotalCompanies(total);
       } catch (error) {
         console.error("Failed to fetch companies:", error);
       }
     };
 
     loadCompanies();
-  }, []);
+  }, [currentPage]); // ✅ Runs on page change
 
   // Form Fields
   const companyFields: FormField[] = [{ name: "name", type: "text", placeholder: "Company Name", required: true }];
@@ -47,8 +48,16 @@ const CompanyManagement: React.FC = () => {
     try {
       const newCompany = await createCompany({ name: company.name.trim() });
       if (newCompany) {
-        setCompanies((prev) => [...prev, newCompany]);
+        // If the current page is full, move to the next page
+        const isLastPage = companies.length >= ITEMS_PER_PAGE;
+        if (isLastPage) {
+          setCurrentPage((prev) => prev + 1);
+        } else {
+          setCompanies((prev) => [...prev, newCompany]);
+        }
+
         setCompany({ name: "" }); // Reset input field
+        setTotalCompanies((prev) => prev + 1);
       }
     } catch (error) {
       console.error("Failed to create company:", error);
@@ -61,6 +70,7 @@ const CompanyManagement: React.FC = () => {
       const success = await deleteCompany(company_id);
       if (success) {
         setCompanies((prev) => prev.filter((c) => c.company_id !== company_id));
+        setTotalCompanies((prev) => prev - 1);
       }
     } catch (error) {
       console.error("Failed to delete company:", error);
@@ -78,17 +88,21 @@ const CompanyManagement: React.FC = () => {
         submitLabel="Add Company"
       />
 
-      {/* Use Reusable Table */}
+      {/* Company Table with Pagination */}
       <SimpleTable
         title="Company List"
-        columns={["Company Name"]}
+        columns={["Company Name", "Actions"]}
         data={companies}
+        totalItems={totalCompanies}
+        itemsPerPage={ITEMS_PER_PAGE}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
         searchableFields={["name"]}
         renderRow={(company) => (
           <tr key={company.company_id}>
             <td>{company.name}</td>
             <td>
-              <button onClick={() => handleDelete(company.company_id)}>Delete</button>
+              <button onClick={() => handleDelete(company.company_id)} className="text-red-600">Delete</button>
             </td>
           </tr>
         )}

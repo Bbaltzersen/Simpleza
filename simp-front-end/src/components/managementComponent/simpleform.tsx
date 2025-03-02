@@ -11,7 +11,6 @@ interface FormField<T> {
 }
 
 interface FormProps<T> {
-  // title: string;
   fields: FormField<T>[];
   state: Partial<T>;
   setState: (state: Partial<T>) => void;
@@ -19,16 +18,15 @@ interface FormProps<T> {
   submitLabel: string;
 }
 
-const SimpleForm = <T,>({fields, state, setState, onSubmit, submitLabel }: FormProps<T>) => {
+const SimpleForm = <T,>({ fields, state, setState, onSubmit, submitLabel }: FormProps<T>) => {
   return (
     <form onSubmit={onSubmit} className={styles.form}>
-      {/* <h4 className={styles.title}>{title}</h4> */}
       {fields.map((field) => (
         <input
           key={field.name as string}
           type={field.type}
           placeholder={field.placeholder}
-          value={(state[field.name] as string | number) ?? ""}
+          value={state[field.name] ? String(state[field.name]) : ""}
           onChange={(e) =>
             setState({
               ...state,
