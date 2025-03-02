@@ -8,7 +8,7 @@ from models.company import Company
 from models.product_company import ProductCompany
 from schemas.product import ProductCreate, ProductOut
 
-router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter(prefix="", tags=["Products"])
 
 def get_db():
     db = SessionLocal()
@@ -65,8 +65,9 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
         companies=linked_companies
     )
 
-@router.get("/", response_model=list[ProductOut])
-def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@router.get("/", response_model=dict)
+def read_products(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    total_count = db.query(Product).count()  # Get total count for pagination
     products = db.query(Product).offset(skip).limit(limit).all()
     product_list = []
 
@@ -85,7 +86,8 @@ def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
             companies=company_prices
         ))
 
-    return product_list
+    return {"products": product_list, "total": total_count}
+
 
 @router.get("/{product_id}", response_model=ProductOut)
 def read_product(product_id: uuid.UUID, db: Session = Depends(get_db)):

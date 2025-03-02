@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
@@ -17,13 +17,22 @@ interface FormField {
 const CompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [company, setCompany] = useState<Partial<Company>>({ name: "" });
+  const isFetched = useRef(false); // Prevent multiple fetch calls in development mode
 
   // Fetch companies when component loads
   useEffect(() => {
+    if (isFetched.current) return; // Prevent duplicate fetch
+    isFetched.current = true;
+
     const loadCompanies = async () => {
-      const fetchedCompanies = await fetchCompanies();
-      setCompanies(fetchedCompanies);
+      try {
+        const fetchedCompanies = await fetchCompanies();
+        setCompanies(fetchedCompanies);
+      } catch (error) {
+        console.error("Failed to fetch companies:", error);
+      }
     };
+
     loadCompanies();
   }, []);
 
@@ -33,18 +42,28 @@ const CompanyManagement: React.FC = () => {
   // Handle Company Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newCompany = await createCompany({ name: company.name || "" });
-    if (newCompany) {
-      setCompanies((prev) => [...prev, newCompany]);
-      setCompany({ name: "" }); // Reset input field
+    if (!company.name?.trim()) return;
+
+    try {
+      const newCompany = await createCompany({ name: company.name.trim() });
+      if (newCompany) {
+        setCompanies((prev) => [...prev, newCompany]);
+        setCompany({ name: "" }); // Reset input field
+      }
+    } catch (error) {
+      console.error("Failed to create company:", error);
     }
   };
 
   // Handle Company Deletion
   const handleDelete = async (company_id: string) => {
-    const success = await deleteCompany(company_id);
-    if (success) {
-      setCompanies((prev) => prev.filter((c) => c.company_id !== company_id));
+    try {
+      const success = await deleteCompany(company_id);
+      if (success) {
+        setCompanies((prev) => prev.filter((c) => c.company_id !== company_id));
+      }
+    } catch (error) {
+      console.error("Failed to delete company:", error);
     }
   };
 
@@ -68,6 +87,9 @@ const CompanyManagement: React.FC = () => {
         renderRow={(company) => (
           <tr key={company.company_id}>
             <td>{company.name}</td>
+            <td>
+              <button onClick={() => handleDelete(company.company_id)}>Delete</button>
+            </td>
           </tr>
         )}
       />

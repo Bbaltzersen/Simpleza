@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Company } from "@/lib/types/company";
 
-const API_BASE_URL = process.env.AUTH_API || "http://localhost:8010/v1";
+const API_BASE_URL = process.env.INGREDIENTS_API_URL || "http://localhost:8010/v1";
 
 const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/companies`,
