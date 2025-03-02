@@ -10,10 +10,6 @@ class IngredientCreate(BaseModel):
     name: str
     default_unit: str = "g"
     calories_per_100g: Optional[float] = None
-    product_ids: Optional[List[uuid.UUID]] = []  # List of product IDs
-    nutrition_names: Optional[List[str]] = []  # List of nutrition names
-    approximate_measurements: Optional[List[ApproximateMeasurementCreate]] = []  # List of measurement mappings
-    density: Optional[float] = None  # Density in g/ml
 
 # Response model for returning ingredient data
 class IngredientOut(BaseModel):
@@ -29,21 +25,7 @@ class IngredientOut(BaseModel):
     class Config:
         from_attributes = True
 
-class IngredientCreate(BaseModel):
-    name: str
-    default_unit: str = "g"
-    calories_per_100g: Optional[Decimal] = Field(None, max_digits=10, decimal_places=2)
-
 class IngredientUpdate(BaseModel):
     name: Optional[str] = None
     default_unit: Optional[str] = None
     calories_per_100g: Optional[Decimal] = Field(None, max_digits=10, decimal_places=2)
-
-class IngredientOut(BaseModel):
-    ingredient_id: uuid.UUID
-    name: str
-    default_unit: str
-    calories_per_100g: Optional[Decimal] = None
-
-    class Config:
-        from_attributes = True

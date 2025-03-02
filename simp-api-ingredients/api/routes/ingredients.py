@@ -4,7 +4,9 @@ from typing import List, Dict
 import uuid
 
 from database.connection import SessionLocal
-from models.ingredient import Ingredient, IngredientProduct, IngredientNutrition
+from models.ingredient import Ingredient
+from models.ingredient_nutrition import IngredientNutrition
+from models.ingredient_product import IngredientProduct
 from models.nutrition import Nutrition
 from models.product import Product
 from schemas.ingredient import IngredientCreate, IngredientOut
@@ -22,29 +24,24 @@ def get_db():
 def create_ingredient(ingredient: IngredientCreate, db: Session = Depends(get_db)):
     existing_ingredient = db.query(Ingredient).filter(Ingredient.name == ingredient.name).first()
     if existing_ingredient:
-        raise HTTPException(status_code=400, detail="Ingredient already exists")
+        return existing_ingredient  
 
     new_ingredient = Ingredient(
         name=ingredient.name,
         default_unit=ingredient.default_unit,
         calories_per_100g=ingredient.calories_per_100g
     )
+
     db.add(new_ingredient)
     db.commit()
     db.refresh(new_ingredient)
 
-    if ingredient.product_ids:
-        for product_id in ingredient.product_ids:
-            db.add(IngredientProduct(ingredient_id=new_ingredient.ingredient_id, product_id=product_id))
-
-    if ingredient.nutrition_names:
-        for name in ingredient.nutrition_names:
-            nutrition = db.query(Nutrition).filter(Nutrition.name == name).first()
-            if nutrition:
-                db.add(IngredientNutrition(ingredient_id=new_ingredient.ingredient_id, nutrition_id=nutrition.nutrition_id))
-
-    db.commit()
-    return new_ingredient
+    return IngredientOut(
+        ingredient_id=new_ingredient.ingredient_id,
+        name=new_ingredient.name,
+        default_unit=new_ingredient.default_unit,
+        calories_per_100g=float(new_ingredient.calories_per_100g) if new_ingredient.calories_per_100g is not None else None
+    )
 
 @router.get("/", response_model=Dict[str, List[IngredientOut] | int])
 def read_ingredients(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
