@@ -1,0 +1,8 @@
+/* managementContainer.module.css */
+
+.container {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
+import ManagementContainer from "@/components/managementComponent/managementContainer";
 
 interface FormField {
   name: keyof Company;
@@ -17,28 +18,23 @@ const CompanyManagement: React.FC = () => {
   const [company, setCompany] = useState<Partial<Company>>({
     name: "",
   });
-
-  // Form Fields
+  
   const companyFields: FormField[] = [
     { name: "name", type: "text", placeholder: "Company Name", required: true },
   ];
 
-  // Handle Company Submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newCompany: Company = {
       company_id: crypto.randomUUID(),
       name: company.name || "",
     };
-    setCompanies([...companies, newCompany]); // Add company to list
-    setCompany({ name: "" }); // Reset input field
+    setCompanies([...companies, newCompany]); 
+    setCompany({ name: "" }); 
   };
 
   return (
-    <div>
-      <h2>Manage Companies</h2>
-
-      {/* Use Reusable Form */}
+    <ManagementContainer title="Manage Companies">
       <SimpleForm
         title="Add Company"
         fields={companyFields}
@@ -48,7 +44,6 @@ const CompanyManagement: React.FC = () => {
         submitLabel="Add Company"
       />
 
-      {/* Use Reusable Table */}
       <SimpleTable
         title="Company List"
         columns={["Company Name"]}
@@ -60,7 +55,7 @@ const CompanyManagement: React.FC = () => {
           </tr>
         )}
       />
-    </div>
+    </ManagementContainer>
   );
 };
 

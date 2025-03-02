@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Nutrition } from "@/lib/types/nutrition";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
+import ManagementContainer from "@/components/managementComponent/managementContainer";
 
 interface FormField {
   name: keyof Nutrition;
@@ -41,10 +42,7 @@ const NutritionManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Manage Nutrition</h2>
-
-      {/* Use Reusable Form */}
+    <ManagementContainer title="Manage Nutrition">
       <SimpleForm
         title="Add Nutrition"
         fields={nutritionFields}
@@ -54,7 +52,6 @@ const NutritionManagement: React.FC = () => {
         submitLabel="Add Nutrition"
       />
 
-      {/* Use Reusable Table */}
       <SimpleTable
         title="Nutrition List"
         columns={["Name", "Measurement", "Recommended Intake"]}
@@ -68,7 +65,7 @@ const NutritionManagement: React.FC = () => {
           </tr>
         )}
       />
-    </div>
+    </ManagementContainer>
   );
 };
 

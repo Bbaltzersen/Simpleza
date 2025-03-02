@@ -6,6 +6,7 @@ import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
+import ManagementContainer from "@/components/managementComponent/managementContainer";
 
 // Mock Companies (Replace with API call later)
 const mockCompanies: Company[] = [
@@ -72,9 +73,7 @@ const ProductManagement: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Manage Products</h2>
-
+    <ManagementContainer title="Manage Products">
       <SimpleForm
         title="Add Product"
         fields={productFields}
@@ -127,7 +126,7 @@ const ProductManagement: React.FC = () => {
           </tr>
         )}
       />
-    </div>
+    </ManagementContainer>
   );
 };
 
