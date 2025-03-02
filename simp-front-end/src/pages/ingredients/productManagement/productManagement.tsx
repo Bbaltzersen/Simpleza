@@ -30,8 +30,8 @@ const ProductManagement: React.FC = () => {
     src_product_id: undefined,
     english_name: "",
     spanish_name: "",
-    amount: 1,
-    weight: 0,
+    amount: undefined,
+    weight: undefined,
     measurement: "",
   });
 
@@ -55,7 +55,7 @@ const ProductManagement: React.FC = () => {
       src_product_id: product.src_product_id || null,
       english_name: product.english_name || "",
       spanish_name: product.spanish_name || "",
-      amount: product.amount || 1,
+      amount: product.amount || 0,
       weight: product.weight || 0,
       measurement: product.measurement || "",
     };
@@ -73,9 +73,9 @@ const ProductManagement: React.FC = () => {
   };
 
   return (
-    <ManagementContainer title="Manage Products">
+    <ManagementContainer title="Manage Product">
       <SimpleForm
-        title="Add Product"
+        // title="Add Product"
         fields={productFields}
         state={product}
         setState={setProduct}

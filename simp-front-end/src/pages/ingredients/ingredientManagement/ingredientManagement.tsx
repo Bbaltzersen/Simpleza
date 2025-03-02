@@ -5,9 +5,9 @@ import { Ingredient } from "@/lib/types/ingredient";
 import { Product } from "@/lib/types/product";
 import { Nutrition } from "@/lib/types/nutrition";
 import SimpleTable from "@/components/managementComponent/simpleTable";
-import SimpleForm from "@/components/managementComponent/simpleform";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
+import SimpleForm from "@/components/managementComponent/simpleform";
 
 interface FormField<T> {
     name: keyof T;
@@ -31,7 +31,7 @@ const mockNutritions: Nutrition[] = [
 const IngredientManagement: React.FC = () => {
     const [ingredient, setIngredient] = useState<Partial<Ingredient>>({
         name: "",
-        default_unit: "g",
+        default_unit: "",
         calories_per_100g: undefined,
     });
 
@@ -58,9 +58,9 @@ const IngredientManagement: React.FC = () => {
     };
 
     return (
-        <ManagementContainer title="Manage Ingredients">
+        <ManagementContainer title="Manage Ingredient">
             <SimpleForm
-                title="Add Ingredient"
+                // title="Ingredient Information"
                 fields={ingredientFields}
                 state={ingredient}
                 setState={setIngredient}

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import styles from "./simpleform.module.css"; // Import CSS Module
 
 interface FormField<T> {
   name: keyof T;
@@ -10,7 +11,7 @@ interface FormField<T> {
 }
 
 interface FormProps<T> {
-  title: string;
+  // title: string;
   fields: FormField<T>[];
   state: Partial<T>;
   setState: (state: Partial<T>) => void;
@@ -18,10 +19,10 @@ interface FormProps<T> {
   submitLabel: string;
 }
 
-const SimpleForm = <T,>({ title, fields, state, setState, onSubmit, submitLabel }: FormProps<T>) => {
+const SimpleForm = <T,>({fields, state, setState, onSubmit, submitLabel }: FormProps<T>) => {
   return (
-    <form onSubmit={onSubmit} className="mb-4 space-y-2">
-      <h3 className="text-lg font-semibold">{title}</h3>
+    <form onSubmit={onSubmit} className={styles.form}>
+      {/* <h4 className={styles.title}>{title}</h4> */}
       {fields.map((field) => (
         <input
           key={field.name as string}
@@ -34,13 +35,11 @@ const SimpleForm = <T,>({ title, fields, state, setState, onSubmit, submitLabel 
               [field.name]: field.type === "number" ? Number(e.target.value) : e.target.value,
             })
           }
-          className="border p-2 w-full"
+          className={styles.input}
           required={field.required ?? false}
         />
       ))}
-      <button type="submit" className="bg-blue-500 text-white p-2 w-full">
-        {submitLabel}
-      </button>
+      <input type="submit" value={submitLabel} className={styles.submit} />
     </form>
   );
 };

@@ -11,7 +11,7 @@ interface ManagementContainerProps {
 const ManagementContainer: React.FC<ManagementContainerProps> = ({ title, children }) => {
   return (
     <div className={styles.container}>
-      <h2>{title}</h2>
+      <h2 className={styles.title}>{title}</h2>
       <div>{children}</div>
     </div>
   );

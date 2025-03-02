@@ -18,7 +18,7 @@ const CompanyManagement: React.FC = () => {
   const [company, setCompany] = useState<Partial<Company>>({
     name: "",
   });
-  
+
   const companyFields: FormField[] = [
     { name: "name", type: "text", placeholder: "Company Name", required: true },
   ];
@@ -34,9 +34,9 @@ const CompanyManagement: React.FC = () => {
   };
 
   return (
-    <ManagementContainer title="Manage Companies">
+    <ManagementContainer title="Manage Company">
       <SimpleForm
-        title="Add Company"
+        // title="Add Company"
         fields={companyFields}
         state={company}
         setState={setCompany}

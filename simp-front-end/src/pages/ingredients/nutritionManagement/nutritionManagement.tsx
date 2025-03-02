@@ -44,7 +44,7 @@ const NutritionManagement: React.FC = () => {
   return (
     <ManagementContainer title="Manage Nutrition">
       <SimpleForm
-        title="Add Nutrition"
+        // title="Add Nutrition"
         fields={nutritionFields}
         state={nutrition}
         setState={setNutrition}
