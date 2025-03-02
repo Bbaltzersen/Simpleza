@@ -20,12 +20,23 @@
     border: 1px solid #ccc;
     flex: 1;
   }
+
+    .input:focus {
+        outline: none;
+        border-color: #54755e;
+    }
   
   .inputSmall {
     padding: 8px;
     width: 20rem;
-    border: 1px solid #ccc;
+    border: 1px 
+    solid #ccc;
   }
+
+    .inputSmall:focus {
+        outline: none;
+        border-color: #54755e;
+    }
   
   .addButton {
     background-color: #54755e;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { JSX, useState } from "react";
+import styles from "./simpleTable.module.css"; // Import CSS module
 
 interface TableProps<T> {
   title: string;
@@ -27,9 +28,9 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
-    <div className="p-4">
+    <div className={styles.container}>
       {/* Table Title */}
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      <h3>{title}</h3>
 
       {/* Search Bar */}
       <input
@@ -37,23 +38,23 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
         placeholder="Search..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="border p-2 w-full mb-4"
+        className={styles.searchInput}
       />
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
+      <div className={styles.tableWrapper}>
+        <table className={styles.table}>
           <thead>
-            <tr className="bg-gray-200">
+            <tr>
               {columns.map((col, index) => (
-                <th key={index} className="border p-2">{col}</th>
+                <th key={index} className={styles.th}>{col}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center p-4">No data found.</td>
+                <td colSpan={columns.length} className={styles.noData}>No data found.</td>
               </tr>
             ) : (
               paginatedData.map(renderRow)
@@ -63,21 +64,21 @@ const SimpleTable = <T,>({ title, columns, data, renderRow, searchableFields, it
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between mt-4">
+      <div className={styles.pagination}>
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className={`p-2 ${currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"}`}
+          className={`${styles.paginationButton} ${currentPage === 1 ? styles.disabled : ""}`}
         >
           Previous
         </button>
-        <span className="p-2">
+        <span className={styles.pageInfo}>
           Page {currentPage} of {totalPages}
         </span>
         <button
           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={currentPage >= totalPages}
-          className={`p-2 ${currentPage >= totalPages ? "bg-gray-300" : "bg-blue-500 text-white"}`}
+          className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.disabled : ""}`}
         >
           Next
         </button>

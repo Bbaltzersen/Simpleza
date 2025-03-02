@@ -87,13 +87,12 @@ const IngredientManagement: React.FC = () => {
 
             <SimpleTable
                 title="Ingredient List"
-                columns={["Name", "Default Unit", "Calories per 100g"]}
+                columns={["Name", "Calories per 100g"]}
                 data={ingredients}
                 searchableFields={["name"]}
                 renderRow={(ingredient) => (
                     <tr key={ingredient.ingredient_id} className="border-b">
                         <td className="border p-2">{ingredient.name}</td>
-                        <td className="border p-2">{ingredient.default_unit}</td>
                         <td className="border p-2">{ingredient.calories_per_100g}</td>
                     </tr>
                 )}
