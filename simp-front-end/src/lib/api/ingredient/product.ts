@@ -34,8 +34,7 @@ export const fetchProducts = async (page: number = 1, limit: number = 10): Promi
       console.error("Error fetching products:", error);
       return { products: [], total: 0 };
     }
-  };
-  
+  };  
 
 /**
  * Fetch a single product by ID
