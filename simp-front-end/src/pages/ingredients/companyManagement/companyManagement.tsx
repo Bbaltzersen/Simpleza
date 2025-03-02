@@ -62,15 +62,12 @@ const CompanyManagement: React.FC = () => {
       {/* Use Reusable Table */}
       <SimpleTable
         title="Company List"
-        columns={["Company Name", "Actions"]}
+        columns={["Company Name"]}
         data={companies}
         searchableFields={["name"]}
         renderRow={(company) => (
           <tr key={company.company_id}>
             <td>{company.name}</td>
-            <td>
-              <button onClick={() => handleDelete(company.company_id)}>Delete</button>
-            </td>
           </tr>
         )}
       />

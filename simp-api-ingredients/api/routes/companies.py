@@ -8,7 +8,7 @@ from models.company import Company
 
 from schemas.company import CompanyCreate, CompanyOut
 
-router = APIRouter(prefix="/companies", tags=["Companies"])
+router = APIRouter(prefix="", tags=["Companies"])
 
 def get_db():
     db = SessionLocal()

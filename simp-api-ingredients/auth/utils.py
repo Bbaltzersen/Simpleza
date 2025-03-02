@@ -1,16 +1,21 @@
 import os
-import jwt
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from database.connection import SessionLocal
 from database.handling import get_user_session
 from models import User
+from jwt import decode, ExpiredSignatureError, InvalidTokenError  # Explicit import
+import jwt  # Ensure using PyJWT
 
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
+
+# Ensure SECRET_KEY is loaded properly
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set in environment variables")
 
 
 def get_db():
@@ -32,7 +37,8 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"Token: {token}")  # Debugging token issues
+        payload = decode(token, SECRET_KEY, algorithms=[ALGORITHM])  # Using explicit import
         user_id = payload.get("sub")
 
         # Validate session using Redis
@@ -57,9 +63,9 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
             "role": user.role,
         }
 
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
+    except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
