@@ -15,7 +15,7 @@ REM Start Auth API in a new CMD window
 start cmd /k "cd /d simp-api-auth && venv\Scripts\Activate && uvicorn main:app --reload"
 
 REM Start Ingredient API in a new CMD window
-start cmd /k "cd /d simp-api-ingredients && venv\Scripts\Activate && uvicorn main:app --reload"
+start cmd /k "cd /d simp-api-ingredients && venv\Scripts\Activate && python main.py"
 
 REM Exit batch script without closing new CMD windows
 exit

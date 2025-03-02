@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
+import { fetchCompanies, createCompany, deleteCompany } from "@/lib/api/ingredient/company";
 
 interface FormField {
   name: keyof Company;
@@ -15,28 +16,42 @@ interface FormField {
 
 const CompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState<Partial<Company>>({
-    name: "",
-  });
+  const [company, setCompany] = useState<Partial<Company>>({ name: "" });
 
-  const companyFields: FormField[] = [
-    { name: "name", type: "text", placeholder: "Company Name", required: true },
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newCompany: Company = {
-      company_id: crypto.randomUUID(),
-      name: company.name || "",
+  // Fetch companies when component loads
+  useEffect(() => {
+    const loadCompanies = async () => {
+      const fetchedCompanies = await fetchCompanies();
+      setCompanies(fetchedCompanies);
     };
-    setCompanies([...companies, newCompany]); 
-    setCompany({ name: "" }); 
+    loadCompanies();
+  }, []);
+
+  // Form Fields
+  const companyFields: FormField[] = [{ name: "name", type: "text", placeholder: "Company Name", required: true }];
+
+  // Handle Company Submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newCompany = await createCompany({ name: company.name || "" });
+    if (newCompany) {
+      setCompanies((prev) => [...prev, newCompany]);
+      setCompany({ name: "" }); // Reset input field
+    }
+  };
+
+  // Handle Company Deletion
+  const handleDelete = async (company_id: string) => {
+    const success = await deleteCompany(company_id);
+    if (success) {
+      setCompanies((prev) => prev.filter((c) => c.company_id !== company_id));
+    }
   };
 
   return (
-    <ManagementContainer title="Manage Company">
+    <ManagementContainer title="Manage Companies">
+      {/* Use Reusable Form */}
       <SimpleForm
-        // title="Add Company"
         fields={companyFields}
         state={company}
         setState={setCompany}
@@ -44,14 +59,18 @@ const CompanyManagement: React.FC = () => {
         submitLabel="Add Company"
       />
 
+      {/* Use Reusable Table */}
       <SimpleTable
         title="Company List"
-        columns={["Company Name"]}
+        columns={["Company Name", "Actions"]}
         data={companies}
         searchableFields={["name"]}
         renderRow={(company) => (
-          <tr key={company.company_id} className="border-b">
-            <td className="border p-2">{company.name}</td>
+          <tr key={company.company_id}>
+            <td>{company.name}</td>
+            <td>
+              <button onClick={() => handleDelete(company.company_id)}>Delete</button>
+            </td>
           </tr>
         )}
       />
