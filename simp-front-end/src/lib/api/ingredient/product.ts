@@ -9,6 +9,7 @@ const apiClient = axios.create({
 });
 
 export type ProductCompanyDetail = {
+    company_id: any;
     company_name: string; // The name of the company
     price: number; // The price of the product in this company
   };
@@ -17,16 +18,24 @@ export type ProductCompanyDetail = {
  * Fetch all products with pagination
  */
 export const fetchProducts = async (page: number = 1, limit: number = 10): Promise<{ products: Product[]; total: number }> => {
-  try {
-    const response = await apiClient.get<{ products: Product[]; total: number }>(
-      `?skip=${(page - 1) * limit}&limit=${limit}`
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    return { products: [], total: 0 };
-  }
-};
+    try {
+      const response = await apiClient.get(`?skip=${(page - 1) * limit}&limit=${limit}`);
+      
+      if (!response.data || !Array.isArray(response.data.products)) {
+        console.error("Unexpected response structure:", response.data);
+        return { products: [], total: 0 };
+      }
+  
+      return {
+        products: response.data.products || [],
+        total: response.data.total || 0,
+      };
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      return { products: [], total: 0 };
+    }
+  };
+  
 
 /**
  * Fetch a single product by ID

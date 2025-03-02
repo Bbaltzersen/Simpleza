@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import Dict, List
 import uuid
 
 from database.connection import SessionLocal
@@ -19,16 +19,20 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/", response_model=List[ProductOut])
-def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Retrieve paginated products."""
+@router.get("/", response_model=Dict[str, List[ProductOut] | int])
+def read_products(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """Retrieve paginated products with their linked companies."""
+    total_products = db.query(Product).count()
     products = db.query(Product).offset(skip).limit(limit).all()
 
-    # Fetch product-company relationships
     product_list = []
     for product in products:
         company_data = (
-            db.query(ProductCompany.company_id, ProductCompany.price, Company.name)
+            db.query(ProductCompany.company_id, Company.name, ProductCompany.price)
             .join(Company, ProductCompany.company_id == Company.company_id)
             .filter(ProductCompany.product_id == product.product_id)
             .all()
@@ -36,7 +40,7 @@ def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 
         company_prices = [
             {"company_id": cid, "company_name": cname, "price": price}
-            for cid, price, cname in company_data
+            for cid, cname, price in company_data
         ]
 
         product_list.append(ProductOut(
@@ -51,7 +55,10 @@ def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
             companies=company_prices
         ))
 
-    return product_list
+    return {
+        "products": product_list,
+        "total": total_products
+    }
 
 @router.get("/{product_id}/companies", response_model=List[ProductCompanyOut])
 def get_product_companies(product_id: uuid.UUID, db: Session = Depends(get_db)):

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Product, ProductCreate, ProductCompanyDetail } from "@/lib/types/product";
+import { Product, ProductCreate } from "@/lib/types/product";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
@@ -17,7 +17,6 @@ const ProductManagement: React.FC = () => {
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // State for product being added
   const [product, setProduct] = useState<Partial<Product>>({
     english_name: "",
     spanish_name: "",
@@ -26,17 +25,24 @@ const ProductManagement: React.FC = () => {
     measurement: "",
   });
 
-  // Fetch products when the page changes
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const { products, total } = await fetchProducts(currentPage, ITEMS_PER_PAGE);
-        
-        // Fetch linked companies for each product
+        if (!products) {
+          console.error("No products found");
+          return;
+        }
+
         const productsWithCompanies = await Promise.all(
           products.map(async (p) => {
-            const companies = await fetchProductCompanies(p.product_id);
-            return { ...p, companies };
+            try {
+              const companies = await fetchProductCompanies(p.product_id);
+              return { ...p, companies };
+            } catch (error) {
+              console.error(`Error fetching companies for product ${p.product_id}:`, error);
+              return { ...p, companies: [] };
+            }
           })
         );
 
@@ -50,7 +56,6 @@ const ProductManagement: React.FC = () => {
     loadProducts();
   }, [currentPage]);
 
-  // Handle Product Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product.english_name || !product.spanish_name) return;
@@ -65,7 +70,7 @@ const ProductManagement: React.FC = () => {
         weight: product.weight || 0,
         measurement: product.measurement || "",
         company_prices: selectedCompanies.reduce((acc, company) => {
-          acc[company.name] = 0; // Default price, can be modified
+          acc[company.name] = 0;
           return acc;
         }, {} as Record<string, number>),
       };
@@ -90,7 +95,6 @@ const ProductManagement: React.FC = () => {
 
   return (
     <ManagementContainer title="Manage Products">
-      {/* Product Form */}
       <SimpleForm
         fields={[
           { name: "english_name", type: "text", placeholder: "English Name", required: true },
@@ -105,12 +109,11 @@ const ProductManagement: React.FC = () => {
         submitLabel="Add Product"
       />
 
-      {/* Company Linking */}
       <EntityLinkForm
         title="Link Product to Company"
         placeholder="Insert Company Name"
         availableEntities={products.flatMap((p) => p.companies || []).map((c) => ({
-          id: c.company_name, // Company name as unique key
+          id: c.company_name,
           name: c.company_name,
         }))}
         selectedEntities={selectedCompanies.map((c) => ({
@@ -122,7 +125,6 @@ const ProductManagement: React.FC = () => {
         }
       />
 
-      {/* Product Table */}
       <SimpleTable
         title="Product List"
         columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}
