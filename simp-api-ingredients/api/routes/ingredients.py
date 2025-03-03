@@ -10,6 +10,8 @@ from models.ingredient_product import IngredientProduct
 from models.nutrition import Nutrition
 from models.product import Product
 from schemas.ingredient import IngredientCreate, IngredientOut
+from schemas.product import ProductOut
+from schemas.nutrition import NutritionOut
 
 router = APIRouter(prefix="", tags=["Ingredients"])
 
@@ -36,12 +38,7 @@ def create_ingredient(ingredient: IngredientCreate, db: Session = Depends(get_db
     db.commit()
     db.refresh(new_ingredient)
 
-    return IngredientOut(
-        ingredient_id=new_ingredient.ingredient_id,
-        name=new_ingredient.name,
-        default_unit=new_ingredient.default_unit,
-        calories_per_100g=float(new_ingredient.calories_per_100g) if new_ingredient.calories_per_100g is not None else None
-    )
+    return new_ingredient
 
 @router.get("/", response_model=Dict[str, List[IngredientOut] | int])
 def read_ingredients(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
@@ -83,3 +80,73 @@ def delete_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
     db.delete(ingredient)
     db.commit()
     return None
+
+@router.post("/{ingredient_id}/link-product/{product_id}", status_code=status.HTTP_201_CREATED)
+def link_ingredient_to_product(ingredient_id: uuid.UUID, product_id: uuid.UUID, db: Session = Depends(get_db)):
+    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
+    product = db.query(Product).filter(Product.product_id == product_id).first()
+
+    if not ingredient or not product:
+        raise HTTPException(status_code=404, detail="Ingredient or Product not found")
+
+    existing_link = db.query(IngredientProduct).filter(
+        IngredientProduct.ingredient_id == ingredient_id,
+        IngredientProduct.product_id == product_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Link already exists")
+
+    new_link = IngredientProduct(ingredient_id=ingredient_id, product_id=product_id)
+    db.add(new_link)
+    db.commit()
+    return {"message": "Product linked successfully"}
+
+@router.post("/{ingredient_id}/link-nutrition/{nutrition_id}", status_code=status.HTTP_201_CREATED)
+def link_ingredient_to_nutrition(ingredient_id: uuid.UUID, nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
+    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.nutrition_id == nutrition_id).first()
+
+    if not ingredient or not nutrition:
+        raise HTTPException(status_code=404, detail="Ingredient or Nutrition not found")
+
+    existing_link = db.query(IngredientNutrition).filter(
+        IngredientNutrition.ingredient_id == ingredient_id,
+        IngredientNutrition.nutrition_id == nutrition_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Link already exists")
+
+    new_link = IngredientNutrition(ingredient_id=ingredient_id, nutrition_id=nutrition_id)
+    db.add(new_link)
+    db.commit()
+    return {"message": "Nutrition linked successfully"}
+
+@router.get("/{ingredient_id}/products", response_model=List[ProductOut])
+def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    linked_products = (
+        db.query(Product)
+        .join(IngredientProduct, Product.product_id == IngredientProduct.product_id)
+        .filter(IngredientProduct.ingredient_id == ingredient_id)
+        .all()
+    )
+    
+    if not linked_products:
+        raise HTTPException(status_code=404, detail="No products linked to this ingredient")
+
+    return linked_products
+
+@router.get("/{ingredient_id}/nutritions", response_model=List[NutritionOut])
+def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    linked_nutritions = (
+        db.query(Nutrition)
+        .join(IngredientNutrition, Nutrition.nutrition_id == IngredientNutrition.nutrition_id)
+        .filter(IngredientNutrition.ingredient_id == ingredient_id)
+        .all()
+    )
+
+    if not linked_nutritions:
+        raise HTTPException(status_code=404, detail="No nutritions linked to this ingredient")
+
+    return linked_nutritions

@@ -39,3 +39,55 @@ export async function deleteIngredient(ingredient_id: string): Promise<boolean> 
     return false;
   }
 }
+
+/** 
+ * Fetch products linked to a specific ingredient 
+ */
+export async function fetchIngredientProducts(ingredient_id: string): Promise<string[]> {
+  try {
+    const response = await apiClient.get<string[]>(`/${ingredient_id}/products`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ingredient products:", error);
+    return [];
+  }
+}
+
+/** 
+ * Fetch nutrition linked to a specific ingredient 
+ */
+export async function fetchIngredientNutritions(ingredient_id: string): Promise<string[]> {
+  try {
+    const response = await apiClient.get<string[]>(`/${ingredient_id}/nutritions`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ingredient nutrition:", error);
+    return [];
+  }
+}
+
+/** 
+ * Link a single product to an ingredient when "Add" is clicked 
+ */
+export async function linkIngredientToProduct(ingredient_id: string, product_id: string): Promise<boolean> {
+  try {
+    await apiClient.post(`/${ingredient_id}/products`, { product_id });
+    return true;
+  } catch (error) {
+    console.error("Error linking ingredient to product:", error);
+    return false;
+  }
+}
+
+/** 
+ * Link a single nutrition to an ingredient when "Add" is clicked 
+ */
+export async function linkIngredientToNutrition(ingredient_id: string, nutrition_id: string, quantity: number): Promise<boolean> {
+  try {
+    await apiClient.post(`/${ingredient_id}/nutritions`, { nutrition_id, quantity });
+    return true;
+  } catch (error) {
+    console.error("Error linking ingredient to nutrition:", error);
+    return false;
+  }
+}
