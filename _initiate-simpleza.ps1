@@ -10,9 +10,9 @@ $IngredientAPIPath = Join-Path $PSScriptRoot "simp-api-ingredients"
 Write-Host "Starting FastAPI instances..."
 
 # Start Auth API
-Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$AuthAPIPath'; & venv\Scripts\Activate; uvicorn main:app --reload`""
+Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$AuthAPIPath'; & venv\Scripts\Activate; uvicorn main:app --log-level error`""
 
 # Start Ingredient API
-Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$IngredientAPIPath'; & venv\Scripts\Activate; uvicorn main:app --reload`""
+Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$IngredientAPIPath'; & venv\Scripts\Activate; uvicorn main:app --log-level error`""
 
 Write-Host "All services started successfully."
