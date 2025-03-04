@@ -41,21 +41,32 @@ const EntityLinkForm = <T extends BaseEntity>({
   const isExtraFieldEntity = (entity: BaseEntity): entity is ExtraFieldEntity =>
     extraFieldName !== undefined && (entity as ExtraFieldEntity).extraField !== undefined;
 
-  const addEntity = () => {
-    if (disabled) return;
+const addEntity = () => {
+  if (disabled) {
+    console.log("Add button is disabled, skipping...");
+    return;
+  }
 
-    const trimmedInput = inputValue.trim().toLowerCase();
-    if (!trimmedInput) return;
+  console.log("Add button clicked!");
+  const trimmedInput = inputValue.trim().toLowerCase();
+  if (!trimmedInput) {
+    console.log("Input is empty or whitespace, skipping...");
+    return;
+  }
 
-    const entity = availableEntities.find((e) => e.name.toLowerCase() === trimmedInput);
+  const entity = availableEntities.find((e) => e.name.toLowerCase() === trimmedInput);
 
-    if (entity && !selectedEntities.some((e) => e.id === entity.id)) {
-      const newEntity = extraFieldName ? ({ ...entity, extraField: extraFieldValue } as ExtraFieldEntity) : entity;
-      setSelectedEntities([...selectedEntities, newEntity as T]);
-      setInputValue("");
-      setExtraFieldValue(extraFieldMin);
-    }
-  };
+  if (entity && !selectedEntities.some((e) => e.id === entity.id)) {
+    const newEntity = extraFieldName ? ({ ...entity, extraField: extraFieldValue } as ExtraFieldEntity) : entity;
+    console.log("Adding entity:", newEntity);
+    setSelectedEntities([...selectedEntities, newEntity as T]);
+    setInputValue("");
+    setExtraFieldValue(extraFieldMin);
+  } else {
+    console.log("Entity already selected or not found.");
+  }
+};
+
 
   const removeEntity = (id: string) => {
     if (disabled) return;
@@ -90,7 +101,7 @@ const EntityLinkForm = <T extends BaseEntity>({
           type="button"
           onClick={addEntity}
           className={`${styles.addButton} ${disabled ? styles.disabled : ""}`}
-          disabled={disabled}
+          disabled={false}
         >
           Add
         </button>
