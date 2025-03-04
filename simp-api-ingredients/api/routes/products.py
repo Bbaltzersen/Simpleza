@@ -74,6 +74,18 @@ def get_product_companies(product_id: uuid.UUID, db: Session = Depends(get_db)):
         .all()
     )
 
+    return [
+        {
+            "product_id": product_id,  # Include the product_id
+            "company_id": company_id,
+            "price": price,
+            "company_name": company_name
+        }
+        for company_id, price, company_name in company_data
+    ]
+
+
+
 
 @router.post("/{product_id}/link-company/{company_name}", response_model=ProductCompanyOut, status_code=status.HTTP_201_CREATED)
 def link_product_to_company(

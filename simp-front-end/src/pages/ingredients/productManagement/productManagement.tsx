@@ -118,19 +118,6 @@ useEffect(() => {
       weight: product.weight,
       measurement: product.measurement,
     });
-
-    try {
-      const linkedCompanies = await fetchProductCompanies(product.product_id);
-      setSelectedCompanies(
-        linkedCompanies.map((c) => ({
-          id: c.company_id,
-          name: c.company_name,
-        }))
-      );
-    } catch (error) {
-      console.error("Failed to fetch linked companies:", error);
-      setSelectedCompanies([]);
-    }
   };
 
   return (
