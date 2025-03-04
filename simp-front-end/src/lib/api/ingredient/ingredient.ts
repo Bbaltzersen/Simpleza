@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Ingredient } from "@/lib/types/ingredient";
 import { Nutrition } from "@/lib/types/nutrition";
+import { Product } from "@/lib/types/product";
 
 const API_BASE_URL = process.env.INGREDIENTS_API_URL || "http://localhost:8010/v1";
 
@@ -44,9 +45,9 @@ export async function deleteIngredient(ingredient_id: string): Promise<boolean> 
 /** 
  * Fetch products linked to a specific ingredient 
  */
-export async function fetchIngredientProducts(ingredient_id: string): Promise<string[]> {
+export async function fetchIngredientProducts(ingredient_id: string): Promise<Product[]> {
   try {
-    const response = await apiClient.get<string[]>(`/${ingredient_id}/products`);
+    const response = await apiClient.get<Product[]>(`/${ingredient_id}/products`);
     return response.data;
   } catch (error) {
     console.error("Error fetching ingredient products:", error);
@@ -59,13 +60,23 @@ export async function fetchIngredientProducts(ingredient_id: string): Promise<st
  */
 export async function fetchIngredientNutritions(ingredient_id: string): Promise<Nutrition[]> {
   try {
-    const response = await apiClient.get<Nutrition[]>(`/${ingredient_id}/nutritions`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching ingredient nutrition:", error);
-    return [];
+      const response = await apiClient.get<Nutrition[]>(`/${ingredient_id}/nutritions`);
+      return response.data;
+  } catch (error: any) {
+      if (error.response) {
+          // Server responded with a status code other than 2xx
+          console.error(`API Error (${error.response.status}) fetching nutrition for ingredient ${ingredient_id}:`, error.response.data);
+      } else if (error.request) {
+          // Request was made but no response received
+          console.error(`Network Error: No response received while fetching nutrition for ingredient ${ingredient_id}.`);
+      } else {
+          // Something else happened
+          console.error(`Unexpected Error fetching nutrition for ingredient ${ingredient_id}:`, error.message);
+      }
+      return []; // ✅ Always return an empty array to prevent frontend crashes
   }
 }
+
 
 /** 
  * Link a single product to an ingredient when "Add" is clicked 

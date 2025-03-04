@@ -52,14 +52,26 @@ export const fetchProductById = async (productId: string): Promise<Product | nul
 
 
 export async function fetchProductCompanies(product_id: string): Promise<ProductCompanyDetail[]> {
-    try {
+  try {
       const response = await apiClient.get<ProductCompanyDetail[]>(`/${product_id}/companies`);
       return response.data;
-    } catch (error) {
-      console.error(`Error fetching companies for product ${product_id}:`, error);
-      return [];
-    }
+  } catch (error: any) {
+      if (error.response) {
+          // Server responded with a status code other than 2xx
+          console.error(`API Error (${error.response.status}) fetching companies for product ${product_id}:`, error.response.data);
+      } else if (error.request) {
+          // Request was made but no response received
+          console.error(`Network Error: No response received while fetching companies for product ${product_id}.`);
+      } else {
+          // Something else happened
+          console.error(`Unexpected Error fetching companies for product ${product_id}:`, error.message);
+      }
+      return []; // ✅ Always return an empty array to prevent frontend crashes
   }
+}
+
+
+  
 
 /**
  * Create a new product

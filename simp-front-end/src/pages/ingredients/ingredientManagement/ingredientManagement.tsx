@@ -65,16 +65,16 @@ const IngredientManagement: React.FC = () => {
                 const linkedNutritions = await fetchIngredientNutritions(currentIngredientId);
 
                 setSelectedProducts(
-                    linkedProducts?.map((p) => ({
-                        id: p,
-                        name: products.find((prod) => prod.product_id === p)?.english_name || "Unknown",
+                    linkedProducts.map((p) => ({
+                        id: p.product_id,
+                        name: p.english_name,
                     })) || []
                 );
 
                 setSelectedNutritions(
                     linkedNutritions?.map((n) => ({
                         id: n.nutrition_id,
-                        name: nutritions.find((nut) => nut.nutrition_id === n.nutrition_id)?.name || "Unknown",
+                        name: n.name,
                     })) || []
                 );
             } catch (error) {
@@ -149,29 +149,6 @@ const IngredientManagement: React.FC = () => {
             default_unit: ingredient.default_unit,
             calories_per_100g: ingredient.calories_per_100g,
         });
-    
-        try {
-            const linkedProducts = await fetchIngredientProducts(ingredient.ingredient_id);
-            const linkedNutritions = await fetchIngredientNutritions(ingredient.ingredient_id);
-    
-            setSelectedProducts(linkedProducts.map((p) => {
-                const product = products.find((prod) => prod.product_id === p);
-                return {
-                    id: product?.product_id || p,
-                    name: product?.english_name || "Unknown"
-                };
-            }));
-    
-            setSelectedNutritions(linkedNutritions.map((n) => ({
-                id: n.nutrition_id,
-                name: n.name
-            })));
-    
-        } catch (error) {
-            console.error("Failed to fetch linked entities:", error);
-            setSelectedProducts([]);
-            setSelectedNutritions([]);
-        }
     };
 
     return (
@@ -218,9 +195,6 @@ const IngredientManagement: React.FC = () => {
                 }}
                 disabled={!currentIngredientId}
             />
-
-
-
 
             <SimpleTable
                 title="Ingredient List"

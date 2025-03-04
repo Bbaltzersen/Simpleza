@@ -127,17 +127,16 @@ def link_ingredient_to_nutrition(ingredient_id: uuid.UUID, nutrition_name: str, 
 
 @router.get("/{ingredient_id}/products", response_model=List[ProductOut])
 def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Retrieve all products linked to an ingredient."""
     linked_products = (
         db.query(Product)
         .join(IngredientProduct, Product.product_id == IngredientProduct.product_id)
         .filter(IngredientProduct.ingredient_id == ingredient_id)
         .all()
     )
-    
-    if not linked_products:
-        raise HTTPException(status_code=404, detail="No products linked to this ingredient")
 
-    return linked_products
+    return [ProductOut.from_orm(product) for product in linked_products] if linked_products else []
+
 
 @router.post("/link-nutrition")
 def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends(get_db)):
@@ -152,6 +151,7 @@ def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends
 
 @router.get("/{ingredient_id}/nutritions", response_model=List[NutritionOut])
 def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Retrieve all nutritions linked to an ingredient."""
     linked_nutritions = (
         db.query(Nutrition)
         .join(IngredientNutrition, Nutrition.nutrition_id == IngredientNutrition.nutrition_id)
@@ -159,7 +159,9 @@ def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(ge
         .all()
     )
 
+    # ✅ Return an empty list instead of raising 404
     if not linked_nutritions:
-        raise HTTPException(status_code=404, detail="No nutritions linked to this ingredient")
+        return []
 
-    return linked_nutritions
+    # ✅ Convert SQLAlchemy objects to Pydantic models
+    return [NutritionOut.from_orm(nutrition) for nutrition in linked_nutritions]

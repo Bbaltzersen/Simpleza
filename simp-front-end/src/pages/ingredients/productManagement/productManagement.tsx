@@ -7,7 +7,7 @@ import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
-import { fetchProducts, createProduct, fetchProductCompanies } from "@/lib/api/ingredient/product";
+import { fetchProducts, createProduct, fetchProductCompanies, linkProductToCompany } from "@/lib/api/ingredient/product";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -52,7 +52,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (!currentProductId) return;
-
+    
     const loadProductCompanies = async () => {
       try {
         const linkedCompanies = await fetchProductCompanies(currentProductId);
@@ -141,10 +141,19 @@ useEffect(() => {
         placeholder="Insert Company Name"
         availableEntities={companies.map((c) => ({ id: c.company_id, name: c.name }))}
         selectedEntities={selectedCompanies}
-        setSelectedEntities={async (updatedEntities) => {
-          const newCompany = updatedEntities.find((c) => !selectedCompanies.some((sc) => sc.id === c.id));
-          if (newCompany) setSelectedCompanies([...selectedCompanies, newCompany]);
-        }}
+        setSelectedEntities={(updatedEntities) => {
+          const newCompany = updatedEntities.find((n) => !selectedCompanies.some((sn) => sn.id === n.id));
+
+          if (newCompany) {
+              if (currentProductId) {
+                linkProductToCompany(currentProductId, newCompany.name).then((success) => {
+                    if (success) {
+                        setSelectedCompanies([...selectedCompanies, newCompany]); // ✅ Ensure state updates correctly
+                    }
+                });
+              }
+          }
+      }}
         disabled={!currentProductId}
       />
 

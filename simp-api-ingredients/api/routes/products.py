@@ -74,15 +74,18 @@ def get_product_companies(product_id: uuid.UUID, db: Session = Depends(get_db)):
         .all()
     )
 
+    # ✅ Correct unpacking
     return [
         {
-            "product_id": product_id,  # Include the product_id
+            "product_id": product_id,  # Ensure product_id is included
             "company_id": company_id,
             "price": price,
             "company_name": company_name
         }
-        for company_id, price, company_name in company_data
+        for company_id, price, company_name in company_data  # Corrected unpacking
     ]
+
+
 
 
 
