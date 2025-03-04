@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Ingredient } from "@/lib/types/ingredient";
+import { Nutrition } from "@/lib/types/nutrition";
 
 const API_BASE_URL = process.env.INGREDIENTS_API_URL || "http://localhost:8010/v1";
 
@@ -56,9 +57,9 @@ export async function fetchIngredientProducts(ingredient_id: string): Promise<st
 /** 
  * Fetch nutrition linked to a specific ingredient 
  */
-export async function fetchIngredientNutritions(ingredient_id: string): Promise<string[]> {
+export async function fetchIngredientNutritions(ingredient_id: string): Promise<Nutrition[]> {
   try {
-    const response = await apiClient.get<string[]>(`/${ingredient_id}/nutritions`);
+    const response = await apiClient.get<Nutrition[]>(`/${ingredient_id}/nutritions`);
     return response.data;
   } catch (error) {
     console.error("Error fetching ingredient nutrition:", error);
@@ -82,12 +83,23 @@ export async function linkIngredientToProduct(ingredient_id: string, product_id:
 /** 
  * Link a single nutrition to an ingredient when "Add" is clicked 
  */
-export async function linkIngredientToNutrition(ingredient_id: string, nutrition_id: string, quantity: number): Promise<boolean> {
+export async function linkIngredientToNutrition(ingredient_id: string, nutrition_name: string): Promise<boolean> {
   try {
-    await apiClient.post(`/${ingredient_id}/nutritions`, { nutrition_id, quantity });
-    return true;
+      await apiClient.post(`/${ingredient_id}/link-nutrition/${encodeURIComponent(nutrition_name)}`); // ✅ Send name
+      return true;
   } catch (error) {
-    console.error("Error linking ingredient to nutrition:", error);
-    return false;
+      console.error("Error linking ingredient to nutrition:", error);
+      return false;
+  }
+}
+
+
+export async function getNutritionsLinked(ingredient_id: string): Promise<string[]> {
+  try {
+    const response = await apiClient.get<string[]>(`/${ingredient_id}/linked-nutritions`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching linked nutritions:", error);
+    return [];
   }
 }

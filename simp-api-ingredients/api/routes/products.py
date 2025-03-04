@@ -74,7 +74,51 @@ def get_product_companies(product_id: uuid.UUID, db: Session = Depends(get_db)):
         .all()
     )
 
-    return [{"company_id": cid, "company_name": name, "price": price} for cid, price, name in company_data]
+
+@router.post("/{product_id}/link-company/{company_name}", response_model=ProductCompanyOut, status_code=status.HTTP_201_CREATED)
+def link_product_to_company(
+    product_id: uuid.UUID,
+    company_name: str,
+    price: float,
+    db: Session = Depends(get_db)
+):
+    """Link a company to a product based on company name."""
+    product = db.query(Product).filter(Product.product_id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    company = db.query(Company).filter(Company.name == company_name).first()
+    if not company:
+        company = Company(name=company_name)
+        db.add(company)
+        db.commit()
+        db.refresh(company)
+
+    existing_link = db.query(ProductCompany).filter(
+        ProductCompany.product_id == product_id,
+        ProductCompany.company_id == company.company_id
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=400, detail="Company already linked to this product")
+
+    product_company = ProductCompany(
+        product_id=product_id,
+        company_id=company.company_id,
+        price=price
+    )
+    db.add(product_company)
+    db.commit()
+    db.refresh(product_company)
+
+    return ProductCompanyOut(
+        product_id=product_company.product_id,
+        company_id=product_company.company_id,
+        company_name=company.name,
+        price=product_company.price
+    )
+
+
 
 @router.post("/", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
@@ -124,3 +168,5 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
         measurement=new_product.measurement,
         companies=linked_companies
     )
+
+

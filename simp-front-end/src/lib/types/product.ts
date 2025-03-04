@@ -17,6 +17,7 @@ export type ProductCompany = {
 };
 
 export type ProductCompanyDetail = {
+  company_id: string;
   company_name: string;
   price: number;
 };

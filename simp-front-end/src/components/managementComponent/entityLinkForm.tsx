@@ -8,8 +8,8 @@ interface BaseEntity {
   name: string;
 }
 
-interface QuantityEntity extends BaseEntity {
-  quantity: number;
+interface ExtraFieldEntity extends BaseEntity {
+  extraField?: number;
 }
 
 interface EntityLinkFormProps<T extends BaseEntity> {
@@ -18,7 +18,9 @@ interface EntityLinkFormProps<T extends BaseEntity> {
   availableEntities: T[];
   selectedEntities: T[];
   setSelectedEntities: (entities: T[]) => void;
-  allowQuantity?: boolean;
+  extraFieldName?: string;
+  extraFieldMin?: number;
+  extraFieldStep?: number;
   disabled?: boolean;
 }
 
@@ -28,17 +30,19 @@ const EntityLinkForm = <T extends BaseEntity>({
   availableEntities,
   selectedEntities,
   setSelectedEntities,
-  allowQuantity = false,
-  disabled = false, // Default: enabled
+  extraFieldName,
+  extraFieldMin = 1,
+  extraFieldStep = 1,
+  disabled = false,
 }: EntityLinkFormProps<T>) => {
   const [inputValue, setInputValue] = useState<string>("");
-  const [quantity, setQuantity] = useState<number>(1);
+  const [extraFieldValue, setExtraFieldValue] = useState<number>(extraFieldMin);
 
-  const isQuantityEntity = (entity: BaseEntity): entity is QuantityEntity =>
-    allowQuantity && (entity as QuantityEntity).quantity !== undefined;
+  const isExtraFieldEntity = (entity: BaseEntity): entity is ExtraFieldEntity =>
+    extraFieldName !== undefined && (entity as ExtraFieldEntity).extraField !== undefined;
 
   const addEntity = () => {
-    if (disabled) return; 
+    if (disabled) return;
 
     const trimmedInput = inputValue.trim().toLowerCase();
     if (!trimmedInput) return;
@@ -46,18 +50,15 @@ const EntityLinkForm = <T extends BaseEntity>({
     const entity = availableEntities.find((e) => e.name.toLowerCase() === trimmedInput);
 
     if (entity && !selectedEntities.some((e) => e.id === entity.id)) {
-      const newEntity = allowQuantity
-        ? ({ ...entity, quantity } as QuantityEntity)
-        : entity;
-
+      const newEntity = extraFieldName ? ({ ...entity, extraField: extraFieldValue } as ExtraFieldEntity) : entity;
       setSelectedEntities([...selectedEntities, newEntity as T]);
       setInputValue("");
-      setQuantity(1);
+      setExtraFieldValue(extraFieldMin);
     }
   };
 
   const removeEntity = (id: string) => {
-    if (disabled) return; 
+    if (disabled) return;
     setSelectedEntities(selectedEntities.filter((e) => e.id !== id));
   };
 
@@ -71,37 +72,37 @@ const EntityLinkForm = <T extends BaseEntity>({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           className={styles.input}
-          disabled={disabled} 
+          disabled={disabled}
         />
-        {allowQuantity && (
+        {extraFieldName && (
           <input
             type="number"
-            placeholder="Amount"
-            min={1}
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+            placeholder={extraFieldName}
+            min={extraFieldMin}
+            step={extraFieldStep}
+            value={extraFieldValue}
+            onChange={(e) => setExtraFieldValue(Math.max(extraFieldMin, Number(e.target.value) || extraFieldMin))}
             className={styles.inputSmall}
-            disabled={disabled} 
+            disabled={disabled}
           />
         )}
         <button
           type="button"
           onClick={addEntity}
-          className={`${styles.addButton} ${disabled ? styles.disabled : ""}`} // ✅ Apply disabled styles
-          disabled={disabled} 
+          className={`${styles.addButton} ${disabled ? styles.disabled : ""}`}
+          disabled={disabled}
         >
           Add
         </button>
       </div>
-
       <ul className={styles.list}>
         {selectedEntities.map((entity) => (
           <li key={entity.id} className={styles.listItem}>
-            {entity.name} {isQuantityEntity(entity) ? `(${(entity as QuantityEntity).quantity})` : ""}
+            {entity.name} {isExtraFieldEntity(entity) ? `(${(entity as ExtraFieldEntity).extraField} ${extraFieldName})` : ""}
             <button
               onClick={() => removeEntity(entity.id)}
               className={styles.removeButton}
-              disabled={disabled} 
+              disabled={disabled}
             >
               X
             </button>

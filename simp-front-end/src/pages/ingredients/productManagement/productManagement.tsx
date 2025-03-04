@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Product, ProductCreate } from "@/lib/types/product";
 import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
@@ -13,9 +13,11 @@ const ITEMS_PER_PAGE = 10;
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanies, setSelectedCompanies] = useState<{ id: string; name: string }[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentProductId, setCurrentProductId] = useState<string | null>(null);
 
   const [product, setProduct] = useState<Partial<Product>>({
     english_name: "",
@@ -25,36 +27,49 @@ const ProductManagement: React.FC = () => {
     measurement: "",
   });
 
+  const fetchedOnce = useRef(false);
+
+useEffect(() => {
+  const loadProducts = async () => {
+    try {
+      const { products, total } = await fetchProducts(currentPage, ITEMS_PER_PAGE);
+      if (!products) {
+        console.error("No products found");
+        return;
+      }
+      setProducts(products);
+      setTotalProducts(total);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  if (!fetchedOnce.current) {
+    loadProducts();
+    fetchedOnce.current = true;
+  }
+}, [currentPage]);
+
   useEffect(() => {
-    const loadProducts = async () => {
+    if (!currentProductId) return;
+
+    const loadProductCompanies = async () => {
       try {
-        const { products, total } = await fetchProducts(currentPage, ITEMS_PER_PAGE);
-        if (!products) {
-          console.error("No products found");
-          return;
-        }
-
-        const productsWithCompanies = await Promise.all(
-          products.map(async (p) => {
-            try {
-              const companies = await fetchProductCompanies(p.product_id);
-              return { ...p, companies };
-            } catch (error) {
-              console.error(`Error fetching companies for product ${p.product_id}:`, error);
-              return { ...p, companies: [] };
-            }
-          })
+        const linkedCompanies = await fetchProductCompanies(currentProductId);
+        setSelectedCompanies(
+          linkedCompanies.map((c) => ({
+            id: c.company_id,
+            name: c.company_name,
+          }))
         );
-
-        setProducts(productsWithCompanies);
-        setTotalProducts(total);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Failed to fetch linked companies:", error);
+        setSelectedCompanies([]);
       }
     };
 
-    loadProducts();
-  }, [currentPage]);
+    loadProductCompanies();
+  }, [currentProductId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,9 +102,34 @@ const ProductManagement: React.FC = () => {
         });
         setSelectedCompanies([]);
         setTotalProducts((prev) => prev + 1);
+        setCurrentProductId(newProduct.product_id);
       }
     } catch (error) {
       console.error("Error creating product:", error);
+    }
+  };
+
+  const handleRowClick = async (product: Product) => {
+    setCurrentProductId(product.product_id);
+    setProduct({
+      english_name: product.english_name,
+      spanish_name: product.spanish_name,
+      amount: product.amount,
+      weight: product.weight,
+      measurement: product.measurement,
+    });
+
+    try {
+      const linkedCompanies = await fetchProductCompanies(product.product_id);
+      setSelectedCompanies(
+        linkedCompanies.map((c) => ({
+          id: c.company_id,
+          name: c.company_name,
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to fetch linked companies:", error);
+      setSelectedCompanies([]);
     }
   };
 
@@ -112,43 +152,36 @@ const ProductManagement: React.FC = () => {
       <EntityLinkForm
         title="Link Product to Company"
         placeholder="Insert Company Name"
-        availableEntities={products.flatMap((p) => p.companies || []).map((c) => ({
-          id: c.company_name,
-          name: c.company_name,
-        }))}
-        selectedEntities={selectedCompanies.map((c) => ({
-          id: c.company_id,
-          name: c.name,
-        }))}
-        setSelectedEntities={(updatedCompanies) =>
-          setSelectedCompanies(updatedCompanies.map((c) => ({ company_id: c.id, name: c.name })))
-        }
+        availableEntities={companies.map((c) => ({ id: c.company_id, name: c.name }))}
+        selectedEntities={selectedCompanies}
+        setSelectedEntities={async (updatedEntities) => {
+          const newCompany = updatedEntities.find((c) => !selectedCompanies.some((sc) => sc.id === c.id));
+          if (newCompany) setSelectedCompanies([...selectedCompanies, newCompany]);
+        }}
+        disabled={!currentProductId}
       />
 
       <SimpleTable
         title="Product List"
         columns={["English Name", "Spanish Name", "Amount", "Weight", "Measurement", "Companies"]}
-        data={products}
+        data={products.map((product) => ({
+          ...product,
+          id: product.product_id,
+        }))}
         totalItems={totalProducts}
         itemsPerPage={ITEMS_PER_PAGE}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
         searchableFields={["english_name", "spanish_name"]}
-        renderRow={(product) => (
-          <tr key={product.product_id}>
+        onRowClick={handleRowClick}
+        renderRow={(product, onClick) => (
+          <>
             <td>{product.english_name}</td>
             <td>{product.spanish_name}</td>
             <td>{product.amount}</td>
             <td>{product.weight} g</td>
             <td>{product.measurement}</td>
-            <td>
-              <ul>
-                {product.companies?.map((company) => (
-                  <li key={company.company_name}>{company.company_name} - ${company.price}</li>
-                ))}
-              </ul>
-            </td>
-          </tr>
+          </>
         )}
       />
     </ManagementContainer>

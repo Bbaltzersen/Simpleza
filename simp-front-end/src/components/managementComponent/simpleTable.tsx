@@ -1,21 +1,22 @@
 "use client";
 
 import React, { JSX, useState } from "react";
-import styles from "./simpleTable.module.css"; // Import CSS module
+import styles from "./simpleTable.module.css";
 
-interface TableProps<T> {
+interface TableProps<T extends { id: string | number }> {
   title: string;
   columns: string[];
   data: T[];
-  renderRow: (item: T) => JSX.Element;
+  renderRow: (item: T, onClick: () => void) => JSX.Element;
   searchableFields: (keyof T)[];
   itemsPerPage?: number;
   totalItems: number;
   currentPage: number;
   onPageChange: (page: number) => void;
+  onRowClick: (item: T) => void; // Ensure row click is handled
 }
 
-const SimpleTable = <T,>({
+const SimpleTable = <T extends { id: string | number }>({
   title,
   columns,
   data,
@@ -25,17 +26,16 @@ const SimpleTable = <T,>({
   totalItems,
   currentPage,
   onPageChange,
+  onRowClick, // Capture row clicks
 }: TableProps<T>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Search Functionality
   const filteredData = data.filter((item) =>
     searchableFields.some((field) =>
       String(item[field]).toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
 
-  // Pagination Calculation
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
   return (
@@ -67,9 +67,21 @@ const SimpleTable = <T,>({
                 <td colSpan={columns.length} className={styles.noData}>No data found.</td>
               </tr>
             ) : (
-              filteredData.map(renderRow)
+              filteredData.map((item) => {
+                const rowContent = renderRow(item, () => onRowClick(item));
+                return (
+                  <tr
+                    key={String(item.id)}
+                    onClick={() => onRowClick(item)}
+                    className={styles.clickableRow}
+                  >
+                    {React.Children.toArray(rowContent)}
+                  </tr>
+                );
+              })
             )}
           </tbody>
+
         </table>
       </div>
 

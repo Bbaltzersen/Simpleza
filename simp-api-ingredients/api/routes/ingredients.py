@@ -9,7 +9,7 @@ from models.ingredient_nutrition import IngredientNutrition
 from models.ingredient_product import IngredientProduct
 from models.nutrition import Nutrition
 from models.product import Product
-from schemas.ingredient import IngredientCreate, IngredientOut
+from schemas.ingredient import IngredientCreate, IngredientOut, NutritionLink
 from schemas.product import ProductOut
 from schemas.nutrition import NutritionOut
 
@@ -102,23 +102,25 @@ def link_ingredient_to_product(ingredient_id: uuid.UUID, product_id: uuid.UUID, 
     db.commit()
     return {"message": "Product linked successfully"}
 
-@router.post("/{ingredient_id}/link-nutrition/{nutrition_id}", status_code=status.HTTP_201_CREATED)
-def link_ingredient_to_nutrition(ingredient_id: uuid.UUID, nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
+@router.post("/{ingredient_id}/link-nutrition/{nutrition_name}")
+def link_ingredient_to_nutrition(ingredient_id: uuid.UUID, nutrition_name: str, db: Session = Depends(get_db)):
     ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
-    nutrition = db.query(Nutrition).filter(Nutrition.nutrition_id == nutrition_id).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.name.ilike(nutrition_name)).first()  
 
-    if not ingredient or not nutrition:
-        raise HTTPException(status_code=404, detail="Ingredient or Nutrition not found")
+    if not ingredient:
+        raise HTTPException(status_code=404, detail="Ingredient not found")
+    if not nutrition:
+        raise HTTPException(status_code=404, detail="Nutrition not found")
 
     existing_link = db.query(IngredientNutrition).filter(
         IngredientNutrition.ingredient_id == ingredient_id,
-        IngredientNutrition.nutrition_id == nutrition_id
+        IngredientNutrition.nutrition_id == nutrition.nutrition_id
     ).first()
 
     if existing_link:
         raise HTTPException(status_code=400, detail="Link already exists")
 
-    new_link = IngredientNutrition(ingredient_id=ingredient_id, nutrition_id=nutrition_id)
+    new_link = IngredientNutrition(ingredient_id=ingredient_id, nutrition_id=nutrition.nutrition_id)
     db.add(new_link)
     db.commit()
     return {"message": "Nutrition linked successfully"}
@@ -136,6 +138,17 @@ def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="No products linked to this ingredient")
 
     return linked_products
+
+@router.post("/link-nutrition")
+def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends(get_db)):
+    ingredient_nutrition = IngredientNutrition(
+        ingredient_id=link_data.ingredient_id,
+        nutrition_id=link_data.nutrition_id
+    )
+
+    db.add(ingredient_nutrition)
+    db.commit()
+    return {"message": "Nutrition linked successfully"} 
 
 @router.get("/{ingredient_id}/nutritions", response_model=List[NutritionOut])
 def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):

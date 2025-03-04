@@ -27,7 +27,7 @@ const CompanyManagement: React.FC = () => {
     const loadCompanies = async () => {
       try {
         const { companies, total } = await fetchCompanies(currentPage, ITEMS_PER_PAGE);
-        setCompanies(companies);
+        setCompanies(companies.map(company => ({ ...company, id: company.company_id })));
         setTotalCompanies(total);
       } catch (error) {
         console.error("Failed to fetch companies:", error);
@@ -53,7 +53,7 @@ const CompanyManagement: React.FC = () => {
         if (isLastPage) {
           setCurrentPage((prev) => prev + 1);
         } else {
-          setCompanies((prev) => [...prev, newCompany]);
+          setCompanies((prev) => [...prev, { ...newCompany, id: newCompany.company_id }]);
         }
 
         setCompany({ name: "" }); // Reset input field
@@ -92,7 +92,7 @@ const CompanyManagement: React.FC = () => {
       <SimpleTable
         title="Company List"
         columns={["Company Name", "Actions"]}
-        data={companies}
+        data={companies.map(company => ({ ...company, id: company.company_id }))}
         totalItems={totalCompanies}
         itemsPerPage={ITEMS_PER_PAGE}
         currentPage={currentPage}
@@ -105,8 +105,9 @@ const CompanyManagement: React.FC = () => {
               <button onClick={() => handleDelete(company.company_id)} className="text-red-600">Delete</button>
             </td>
           </tr>
-        )}
-      />
+        )} onRowClick={function (item: { id: string; company_id: string; name: string; price: number; }): void {
+          throw new Error("Function not implemented.");
+        } }      />
     </ManagementContainer>
   );
 };

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Product, ProductCreate } from "@/lib/types/product";
+import { Company } from "@/lib/types/company";
 
 const API_BASE_URL = process.env.INGREDIENTS_API_URL || "http://localhost:8010/v1";
 
@@ -98,3 +99,15 @@ export const deleteProduct = async (productId: string): Promise<boolean> => {
     return false;
   }
 };
+
+
+///v1/products/{product_id}/link-company
+export async function linkProductToCompany(product_id: string, name: string): Promise<boolean> {
+  try {
+      await apiClient.post(`/${product_id}/link-nutrition/${encodeURIComponent(name)}`); // ✅ Send name
+      return true;
+  } catch (error) {
+      console.error("Error linking ingredient to nutrition:", error);
+      return false;
+  }
+}

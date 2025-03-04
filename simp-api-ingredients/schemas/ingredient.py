@@ -29,3 +29,8 @@ class IngredientUpdate(BaseModel):
     name: Optional[str] = None
     default_unit: Optional[str] = None
     calories_per_100g: Optional[Decimal] = Field(None, max_digits=10, decimal_places=2)
+
+
+class NutritionLink(BaseModel):
+    nutrition_id: uuid.UUID
+    ingredient_id: uuid.UUID
