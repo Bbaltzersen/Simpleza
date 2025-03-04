@@ -94,9 +94,9 @@ export async function linkIngredientToProduct(ingredient_id: string, product_id:
 /** 
  * Link a single nutrition to an ingredient when "Add" is clicked 
  */
-export async function linkIngredientToNutrition(ingredient_id: string, nutrition_name: string): Promise<boolean> {
+export async function linkIngredientToNutrition(ingredient_id: string, name: string): Promise<boolean> {
   try {
-      await apiClient.post(`/${ingredient_id}/link-nutrition/${encodeURIComponent(nutrition_name)}`); // ✅ Send name
+      await apiClient.post(`/${ingredient_id}/link-nutrition/${name}`); // ✅ Send name
       return true;
   } catch (error) {
       console.error("Error linking ingredient to nutrition:", error);

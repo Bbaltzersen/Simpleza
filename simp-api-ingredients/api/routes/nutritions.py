@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Dict
+from typing import List, Dict, Optional
 import uuid
 
 from database.connection import SessionLocal
@@ -76,3 +76,14 @@ def delete_nutrition(nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
     db.delete(nutrition)
     db.commit()
     return None
+
+@router.get("/retrieve/{nutrition_name}", response_model=NutritionOut)
+def get_nutrition_by_name(nutrition_name: str, db: Session = Depends(get_db)):
+    nutrition = db.query(Nutrition).filter(Nutrition.name == nutrition_name.lower()).first()
+
+    if not nutrition:
+        raise HTTPException(status_code=404, detail="Nutrition not found")
+
+    return nutrition
+
+

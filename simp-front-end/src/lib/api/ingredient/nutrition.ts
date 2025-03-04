@@ -39,3 +39,13 @@ export async function deleteNutrition(nutrition_id: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function getNutritionByName(name: string): Promise<Nutrition | null> {
+  try {
+    const response = await apiClient.get<Nutrition | null>(`/retrieve/${name}`);
+    return response.data || null;
+  } catch (error) {
+    console.error(`Error fetching nutrition by name (${name}):`, error);
+    return null;
+  }
+}
