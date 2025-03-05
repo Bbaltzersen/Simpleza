@@ -185,3 +185,14 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     )
 
 
+@router.get("/retail/{retail_id}", response_model=ProductOut)
+def get_product_by_retail_id(retail_id: str, db: Session = Depends(get_db)):
+    """
+    Fetch a product by its retail ID.
+    """
+    product = db.query(Product).filter(Product.retail_id == retail_id).first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    return product

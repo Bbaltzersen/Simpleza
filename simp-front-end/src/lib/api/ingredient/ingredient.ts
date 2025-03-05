@@ -81,10 +81,15 @@ export async function fetchIngredientNutritions(ingredient_id: string): Promise<
 /** 
  * Link a single product to an ingredient when "Add" is clicked 
  */
-export async function linkIngredientToProduct(ingredient_id: string, product_id: string): Promise<boolean> {
+export async function linkIngredientToProduct(
+  ingredientId: string,
+  name: string
+): Promise<boolean> {
   try {
-    await apiClient.post(`/${ingredient_id}/products`, { product_id });
-    return true;
+    await apiClient.post(
+      `/${ingredientId}/link-product/${name}`
+    );
+    return true
   } catch (error) {
     console.error("Error linking ingredient to product:", error);
     return false;

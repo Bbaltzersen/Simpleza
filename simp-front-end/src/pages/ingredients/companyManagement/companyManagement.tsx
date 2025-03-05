@@ -35,7 +35,7 @@ const CompanyManagement: React.FC = () => {
     };
 
     loadCompanies();
-  }, [currentPage]); // ✅ Runs on page change
+  }, [currentPage]);
 
   // Form Fields
   const companyFields: FormField[] = [{ name: "name", type: "text", placeholder: "Company Name", required: true }];

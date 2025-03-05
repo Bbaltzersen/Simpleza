@@ -71,6 +71,8 @@ export async function fetchProductCompanies(product_id: string): Promise<Product
 }
 
 
+
+
   
 
 /**
@@ -114,12 +116,32 @@ export const deleteProduct = async (productId: string): Promise<boolean> => {
 
 
 ///v1/products/{product_id}/link-company
-export async function linkProductToCompany(product_id: string, name: string): Promise<boolean> {
+export async function linkProductToCompany(product_id: string, companyName: string): Promise<boolean> {
   try {
-      await apiClient.post(`/${product_id}/link-nutrition/${encodeURIComponent(name)}`); // ✅ Send name
-      return true;
+    // Note the corrected endpoint path: "link-company" instead of "link-nutrition"
+    await apiClient.post(`/${product_id}/link-company/${encodeURIComponent(companyName)}`);
+    return true;
   } catch (error) {
-      console.error("Error linking ingredient to nutrition:", error);
-      return false;
+    console.error("Error linking product to company:", error);
+    return false;
+  }
+}
+
+export async function getProductByRetailId(retailId: string): Promise<Product | null> {
+  if (!retailId.trim()) {
+    console.error("Retail ID cannot be empty.");
+    return null;
+  }
+
+  try {
+    const response = await apiClient.get<Product>(`/retail/${encodeURIComponent(retailId)}`);
+    return response.data || null;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      console.log(`Product with retail ID "${retailId}" not found.`);
+    } else {
+      console.error(`Error fetching product by retail ID (${retailId}):`, error);
+    }
+    return null;
   }
 }

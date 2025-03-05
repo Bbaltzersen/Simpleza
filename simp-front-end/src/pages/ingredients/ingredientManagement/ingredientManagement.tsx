@@ -23,7 +23,7 @@ import {
     fetchIngredientProducts,
     fetchIngredientNutritions,
 } from "@/lib/api/ingredient/ingredient";
-import { fetchProducts } from "@/lib/api/ingredient/product";
+import { fetchProducts, getProductByRetailId } from "@/lib/api/ingredient/product";
 import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
 
 const ITEMS_PER_PAGE = 10;
@@ -135,23 +135,23 @@ const IngredientManagement: React.FC = () => {
     };
 
     // 5. Linking a product – or you can do the same logic as with nutritions
-    const onProductAdd = async (productName: string) => {
+    const onProductAdd = async (retail_id: string) => {
         // Check if an ingredient is selected
         if (!currentIngredientId) return null;
 
+        
+
         // Attempt to find the product in `products`
-        const matchedProduct = products.find(
-            (p) => p.english_name.toLowerCase() === productName.toLowerCase()
-        );
+        const matchedProduct = await getProductByRetailId(retail_id);
+
         if (!matchedProduct) {
-            console.log(`Product '${productName}' does not exist in the DB.`);
+            console.log(`Product '${retail_id}' does not exist in the DB.`);
             return null;
         }
 
         // Link
         try {
             await linkIngredientToProduct(currentIngredientId, matchedProduct.product_id);
-            // Return the object needed by EntityLinkForm
             return { id: matchedProduct.product_id, name: matchedProduct.english_name };
         } catch (error) {
             console.error("Failed to link product:", error);
