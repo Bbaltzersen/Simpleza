@@ -39,7 +39,7 @@ entityLinkForm.module.css
     }
   
   .addButton {
-    background-color: #54755e;
+    background-color: #dfbe00;
     color: white;
     padding: 8px 12px;
     border: none;
@@ -47,7 +47,7 @@ entityLinkForm.module.css
   }
   
   .addButton:hover {
-    background-color: #304436;
+    background-color: #816e00;
   }
   
   .list {

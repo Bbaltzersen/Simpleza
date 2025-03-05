@@ -1,23 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
-// Replace these with your own types
 import { Ingredient } from "@/lib/types/ingredient";
 import { Product } from "@/lib/types/product";
 import { Nutrition } from "@/lib/types/nutrition";
-
-// Your custom components
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
 import SimpleForm from "@/components/managementComponent/simpleform";
-
-// API Calls – adapt these to your actual API
 import {
     fetchIngredients,
     createIngredient,
-    deleteIngredient,
     linkIngredientToProduct,
     linkIngredientToNutrition,
     fetchIngredientProducts,
@@ -27,6 +20,7 @@ import {
 } from "@/lib/api/ingredient/ingredient";
 import { fetchProducts, getProductByRetailId } from "@/lib/api/ingredient/product";
 import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
+import { Plus } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -34,25 +28,19 @@ const IngredientManagement: React.FC = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [nutritions, setNutritions] = useState<Nutrition[]>([]);
-
-    // These arrays store the linked (selected) products and nutritions
     const [selectedProducts, setSelectedProducts] = useState<{ id: string; name: string }[]>([]);
     const [selectedNutritions, setSelectedNutritions] = useState<{ id: string; name: string }[]>([]);
-
     const [totalIngredients, setTotalIngredients] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [currentIngredientId, setCurrentIngredientId] = useState<string | null>(null);
-
     const [ingredient, setIngredient] = useState<Partial<Ingredient>>({
         name: "",
         default_unit: "",
         calories_per_100g: undefined,
     });
 
-    // Avoid multiple initial fetches
     const fetchedOnce = useRef(false);
 
-    // 1. Fetch the ingredient list (paging)
     useEffect(() => {
         const loadIngredients = async () => {
             try {
@@ -70,7 +58,6 @@ const IngredientManagement: React.FC = () => {
         }
     }, [currentPage]);
 
-    // 2. Load the details (linked products + nutritions) once we pick an ingredient
     useEffect(() => {
         if (!currentIngredientId) return;
 
@@ -79,19 +66,15 @@ const IngredientManagement: React.FC = () => {
                 const linkedProducts = await fetchIngredientProducts(currentIngredientId);
                 const linkedNutritions = await fetchIngredientNutritions(currentIngredientId);
 
-                setSelectedProducts(
-                    linkedProducts.map((p) => ({
-                        id: p.product_id,
-                        name: p.english_name,
-                    })) || []
-                );
+                setSelectedProducts(linkedProducts.map((p) => ({
+                    id: p.product_id,
+                    name: p.english_name,
+                })) || []);
 
-                setSelectedNutritions(
-                    linkedNutritions.map((n) => ({
-                        id: n.nutrition_id,
-                        name: n.name,
-                    })) || []
-                );
+                setSelectedNutritions(linkedNutritions.map((n) => ({
+                    id: n.nutrition_id,
+                    name: n.name,
+                })) || []);
             } catch (error) {
                 console.error("Failed to fetch ingredient details:", error);
                 setSelectedProducts([]);
@@ -102,7 +85,6 @@ const IngredientManagement: React.FC = () => {
         loadIngredientDetails();
     }, [currentIngredientId]);
 
-    // 3. Creating a new ingredient
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
@@ -115,7 +97,6 @@ const IngredientManagement: React.FC = () => {
             });
 
             if (newIngredient) {
-                // add to local array
                 setIngredients((prev) => [...prev, newIngredient]);
                 setTotalIngredients((prev) => prev + 1);
                 setIngredient({ name: "", default_unit: "", calories_per_100g: undefined });
@@ -126,7 +107,6 @@ const IngredientManagement: React.FC = () => {
         }
     };
 
-    // 4. When user selects a row in the table, set it as current.
     const handleRowClick = (ing: Ingredient) => {
         setCurrentIngredientId(ing.ingredient_id);
         setIngredient({
@@ -136,22 +116,19 @@ const IngredientManagement: React.FC = () => {
         });
     };
 
-    // 5. Linking a product – or you can do the same logic as with nutritions
+    const clearSelection = () => {
+        setCurrentIngredientId(null);
+        setIngredient({ name: "", default_unit: "", calories_per_100g: undefined });
+        setSelectedProducts([]);
+        setSelectedNutritions([]);
+    };
+
     const onProductAdd = async (retail_id: string) => {
-        // Check if an ingredient is selected
         if (!currentIngredientId) return null;
 
-        
-
-        // Attempt to find the product in `products`
         const matchedProduct = await getProductByRetailId(retail_id);
+        if (!matchedProduct) return null;
 
-        if (!matchedProduct) {
-            console.log(`Product '${retail_id}' does not exist in the DB.`);
-            return null;
-        }
-
-        // Link
         try {
             await linkIngredientToProduct(currentIngredientId, matchedProduct.product_id);
             return { id: matchedProduct.product_id, name: matchedProduct.english_name };
@@ -165,22 +142,12 @@ const IngredientManagement: React.FC = () => {
         if (!currentIngredientId) return null;
 
         try {
-            // Step 1: Look up nutrition in the database
             const matchedNutrition = await getNutritionByName(nutritionName);
+            if (!matchedNutrition) return null;
 
-            if (!matchedNutrition) {
-                console.log(`Nutrition '${nutritionName}' does not exist in the database.`);
-                return null; // Prevent adding non-existent nutrition
-            }
-
-            // Step 2: Link nutrition to the ingredient
             const success = await linkIngredientToNutrition(currentIngredientId, matchedNutrition.name);
-            if (!success) {
-                console.log("Failed to link nutrition.");
-                return null;
-            }
+            if (!success) return null;
 
-            // Step 3: Return entity object for display
             return { id: matchedNutrition.nutrition_id, name: matchedNutrition.name };
         } catch (error) {
             console.error("Error linking nutrition:", error);
@@ -188,28 +155,33 @@ const IngredientManagement: React.FC = () => {
         }
     };
 
-
     const onProductRemove = async (product: { id: string; name: string }) => {
         if (!currentIngredientId) return;
-    
+
         const success = await detachProduct(currentIngredientId, product.id);
         if (success) {
-          setSelectedProducts(selectedProducts.filter((p) => p.id !== product.id));
+            setSelectedProducts(selectedProducts.filter((p) => p.id !== product.id));
         }
-      };
-    
-      const onNutritionRemove = async (nutrition: { id: string; name: string }) => {
+    };
+
+    const onNutritionRemove = async (nutrition: { id: string; name: string }) => {
         if (!currentIngredientId) return;
-    
+
         const success = await detachNutrition(currentIngredientId, nutrition.id);
         if (success) {
-          setSelectedNutritions(selectedNutritions.filter((n) => n.id !== nutrition.id));
+            setSelectedNutritions(selectedNutritions.filter((n) => n.id !== nutrition.id));
         }
-      };
+    };
 
     return (
-        <ManagementContainer title="Manage Ingredients">
-            {/* CREATE/EDIT INGREDIENT FORM */}
+        <ManagementContainer
+            title="Manage Ingredients"
+            actionButton={currentIngredientId && (
+                <a onClick={clearSelection} aria-label="Clear Fields">
+            <Plus size={20} />
+          </a>
+            )}
+        >
             <SimpleForm
                 fields={[
                     { name: "name", type: "text", placeholder: "Ingredient Name", required: true },
@@ -222,10 +194,9 @@ const IngredientManagement: React.FC = () => {
                 submitLabel="Add Ingredient"
             />
 
-            {/* LINK PRODUCTS */}
             <EntityLinkForm
                 title="Link Product to Ingredient"
-                placeholder="Enter Product Name"
+                placeholder="Enter Product Retail ID"
                 selectedEntities={selectedProducts}
                 setSelectedEntities={setSelectedProducts}
                 disabled={!currentIngredientId}
@@ -243,20 +214,18 @@ const IngredientManagement: React.FC = () => {
                 onEntityRemove={onNutritionRemove}
             />
 
-
-            {/* TABLE OF INGREDIENTS */}
             <SimpleTable
                 title="Ingredient List"
                 columns={["Name", "Default Unit", "Calories per 100g"]}
                 data={ingredients.map((ing) => ({
                     ...ing,
-                    id: ing.ingredient_id, // used by SimpleTable for row keys
+                    id: ing.ingredient_id,
                 }))}
                 totalItems={totalIngredients}
                 itemsPerPage={ITEMS_PER_PAGE}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
-                searchableFields={["name"]} // if your table supports searching by name
+                searchableFields={["name"]}
                 onRowClick={handleRowClick}
                 renderRow={(ing) => (
                     <>

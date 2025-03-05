@@ -2,69 +2,25 @@
 import React, { useState } from "react";
 import styles from "./entityLinkForm.module.css";
 
-/**
- * Basic shape for any entity we want to link:
- *   - An ID
- *   - A Name
- */
 interface BaseEntity {
   id: string;
   name: string;
 }
 
-/**
- * If you need an "extra field" (like an amount), you can store it here.
- * This is optional. The code below will handle it if you pass `extraFieldName`.
- */
 interface ExtraFieldEntity extends BaseEntity {
   extraField?: number;
 }
 
 interface EntityLinkFormProps<T extends BaseEntity> {
-  /**
-   * Main title to show above the form (e.g. "Link Nutrition to Ingredient").
-   */
   title: string;
-
-  /**
-   * Placeholder text for the text input (e.g. "Enter Nutrition Name").
-   */
   placeholder: string;
-
-  /**
-   * The current list of linked entities (already selected).
-   */
   selectedEntities: T[];
-
-  /**
-   * A state-setter (or any function) to update the current list of linked entities.
-   */
   setSelectedEntities: (entities: T[]) => void;
-
-  /**
-   * If 'true,' the form will disable the add/remove controls.
-   */
   disabled?: boolean;
-
-  /**
-   * Optional extra-field details (e.g. an "amount" or "percentage" field).
-   */
   extraFieldName?: string;
   extraFieldMin?: number;
   extraFieldStep?: number;
-
-  /**
-   * Called when the user clicks "Add."
-   * - Should look up the entity in the backend by 'name' (no creation).
-   * - If found, link it to the parent record, then return the entity object. 
-   * - If not found or link fails, return null.
-   */
   onEntityAdd: (name: string, extraFieldValue?: number) => Promise<T | null>;
-
-  /**
-   * Called when the user clicks "X" to remove a linked entity.
-   * - Should unlink the entity in the backend if necessary.
-   */
   onEntityRemove?: (entity: T) => Promise<void>;
 }
 
@@ -84,35 +40,18 @@ const EntityLinkForm = <T extends BaseEntity>({
   const [extraFieldValue, setExtraFieldValue] = useState<number>(extraFieldMin);
 
   const addEntity = async () => {
-    if (disabled) {
-      console.log("Add button is disabled, skipping...");
-      return;
-    }
+    if (disabled) return;
 
     const trimmedInput = inputValue.trim();
-    if (!trimmedInput) {
-      console.log("Input is empty or whitespace, skipping...");
-      return;
-    }
+    if (!trimmedInput) return;
 
-    // Defer to the parent to find/link the entity
     const newEntity = await onEntityAdd(
       trimmedInput,
       extraFieldName ? extraFieldValue : undefined
     );
 
-    if (!newEntity) {
-      console.log("Entity not found in DB, or link failed.");
-      return;
-    }
+    if (!newEntity || selectedEntities.some((e) => e.id === newEntity.id)) return;
 
-    // Check if it's already selected
-    if (selectedEntities.some((e) => e.id === newEntity.id)) {
-      console.log("Entity is already selected.");
-      return;
-    }
-
-    // Add to the local list of selected entities
     setSelectedEntities([...selectedEntities, newEntity]);
     setInputValue("");
     setExtraFieldValue(extraFieldMin);
@@ -130,9 +69,10 @@ const EntityLinkForm = <T extends BaseEntity>({
       return;
     }
 
-    // Remove from local state
     setSelectedEntities(selectedEntities.filter((e) => e.id !== id));
   };
+
+  if (disabled) return null;
 
   return (
     <div className={styles.container}>
@@ -145,7 +85,6 @@ const EntityLinkForm = <T extends BaseEntity>({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           className={styles.input}
-          disabled={disabled}
         />
 
         {extraFieldName && (
@@ -161,16 +100,10 @@ const EntityLinkForm = <T extends BaseEntity>({
               )
             }
             className={styles.inputSmall}
-            disabled={disabled}
           />
         )}
 
-        <button
-          type="button"
-          onClick={addEntity}
-          className={`${styles.addButton} ${disabled ? styles.disabled : ""}`}
-          disabled={disabled}
-        >
+        <button type="button" onClick={addEntity} className={styles.addButton}>
           Add
         </button>
       </div>
@@ -182,11 +115,7 @@ const EntityLinkForm = <T extends BaseEntity>({
             {extraFieldName && (entity as ExtraFieldEntity).extraField
               ? ` (${(entity as ExtraFieldEntity).extraField} ${extraFieldName})`
               : ""}
-            <button
-              onClick={() => removeEntity(entity.id)}
-              className={styles.removeButton}
-              disabled={disabled}
-            >
+            <button onClick={() => removeEntity(entity.id)} className={styles.removeButton}>
               X
             </button>
           </li>

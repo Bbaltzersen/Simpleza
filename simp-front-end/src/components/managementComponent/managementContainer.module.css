@@ -1,13 +1,31 @@
-/* managementContainer.module.css */
-
 .container {
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-  }
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
 
 .title {
-    text-decoration: underline;
-    text-underline-offset: 0.5rem;
+  text-decoration: underline;
+  text-underline-offset: 0.5rem;
+}
+
+.actionButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #54755e;
+}
+
+.actionButton:hover {
+  color: #304436;
 }
