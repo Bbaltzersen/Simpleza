@@ -14,13 +14,25 @@ interface FormProps<T> {
   fields: FormField<T>[];
   state: Partial<T>;
   setState: (state: Partial<T>) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  submitLabel: string;
+  onAdd: (e: React.FormEvent) => void;
+  onEdit: (e: React.FormEvent) => void;
+  addLabel: string;
+  editLabel: string;
+  isEditMode?: boolean;
 }
 
-const SimpleForm = <T,>({ fields, state, setState, onSubmit, submitLabel }: FormProps<T>) => {
+const SimpleForm = <T,>({
+  fields,
+  state,
+  setState,
+  onAdd,
+  onEdit,
+  addLabel,
+  editLabel,
+  isEditMode = false,
+}: FormProps<T>) => {
   return (
-    <form onSubmit={onSubmit} className={styles.form}>
+    <form onSubmit={isEditMode ? onEdit : onAdd} className={styles.form}>
       {fields.map((field) => (
         <input
           key={field.name as string}
@@ -37,7 +49,11 @@ const SimpleForm = <T,>({ fields, state, setState, onSubmit, submitLabel }: Form
           required={field.required ?? false}
         />
       ))}
-      <input type="submit" value={submitLabel} className={styles.submit} />
+      <input
+        type="submit"
+        value={isEditMode ? editLabel : addLabel}
+        className={isEditMode ? styles.editButton : styles.addButton} // Dynamic class assignment
+      />
     </form>
   );
 };

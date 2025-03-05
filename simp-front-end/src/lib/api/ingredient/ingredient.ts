@@ -32,6 +32,16 @@ export async function createIngredient(ingredient: { name: string; default_unit:
   }
 }
 
+export async function updateIngredient(ingredient_id: string, ingredient: { name: string; default_unit: string; calories_per_100g?: number }): Promise<Ingredient | null> {
+  try {
+    const response = await apiClient.put(`/${ingredient_id}`, ingredient);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating ingredient:", error);
+    return null;
+  }
+}
+
 export async function deleteIngredient(ingredient_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/${ingredient_id}`);
@@ -60,36 +70,21 @@ export async function fetchIngredientProducts(ingredient_id: string): Promise<Pr
  */
 export async function fetchIngredientNutritions(ingredient_id: string): Promise<Nutrition[]> {
   try {
-      const response = await apiClient.get<Nutrition[]>(`/${ingredient_id}/nutritions`);
-      return response.data;
-  } catch (error: any) {
-      if (error.response) {
-          // Server responded with a status code other than 2xx
-          console.error(`API Error (${error.response.status}) fetching nutrition for ingredient ${ingredient_id}:`, error.response.data);
-      } else if (error.request) {
-          // Request was made but no response received
-          console.error(`Network Error: No response received while fetching nutrition for ingredient ${ingredient_id}.`);
-      } else {
-          // Something else happened
-          console.error(`Unexpected Error fetching nutrition for ingredient ${ingredient_id}:`, error.message);
-      }
-      return []; // ✅ Always return an empty array to prevent frontend crashes
+    const response = await apiClient.get<Nutrition[]>(`/${ingredient_id}/nutritions`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ingredient nutritions:", error);
+    return [];
   }
 }
 
-
 /** 
- * Link a single product to an ingredient when "Add" is clicked 
+ * Link a single product to an ingredient 
  */
-export async function linkIngredientToProduct(
-  ingredientId: string,
-  name: string
-): Promise<boolean> {
+export async function linkIngredientToProduct(ingredientId: string, productId: string): Promise<boolean> {
   try {
-    await apiClient.post(
-      `/${ingredientId}/link-product/${name}`
-    );
-    return true
+    await apiClient.post(`/${ingredientId}/link-product/${productId}`);
+    return true;
   } catch (error) {
     console.error("Error linking ingredient to product:", error);
     return false;
@@ -97,26 +92,15 @@ export async function linkIngredientToProduct(
 }
 
 /** 
- * Link a single nutrition to an ingredient when "Add" is clicked 
+ * Link a single nutrition to an ingredient 
  */
 export async function linkIngredientToNutrition(ingredient_id: string, name: string): Promise<boolean> {
   try {
-      await apiClient.post(`/${ingredient_id}/link-nutrition/${name}`); // ✅ Send name
-      return true;
+    await apiClient.post(`/${ingredient_id}/link-nutrition/${name}`);
+    return true;
   } catch (error) {
-      console.error("Error linking ingredient to nutrition:", error);
-      return false;
-  }
-}
-
-
-export async function getNutritionsLinked(ingredient_id: string): Promise<string[]> {
-  try {
-    const response = await apiClient.get<string[]>(`/${ingredient_id}/linked-nutritions`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching linked nutritions:", error);
-    return [];
+    console.error("Error linking ingredient to nutrition:", error);
+    return false;
   }
 }
 

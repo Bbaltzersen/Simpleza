@@ -1,34 +1,47 @@
 .form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 1rem;
-    margin-bottom: 1rem;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
 
-  .input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    width: 100%;
-    font-size: 1rem;
-  }
-  
-  .input:focus {
-    outline: none;
-    border-color: #54755e;
-  }
-  
-  .submit {
-    background-color: #54755e;
-    color: white;
-    padding: 10px;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    width: 100%;
-  }
-  
-  .submit:hover {
-    background-color: #304436;
-  }
-  
+.input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #54755e;
+}
+
+.addButton {
+  background-color: #54755e; /* ✅ Kept Green */
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.addButton:hover {
+  background-color: #304436; /* Darker Green */
+}
+
+.editButton {
+  background-color: #dfbe00; /* 🔹 New Blue */
+  color: white;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.editButton:hover {
+  background-color: #816e00; /* 🔹 Darker Blue */
+}

@@ -11,6 +11,7 @@ import SimpleForm from "@/components/managementComponent/simpleform";
 import {
     fetchIngredients,
     createIngredient,
+    updateIngredient,
     linkIngredientToProduct,
     linkIngredientToNutrition,
     fetchIngredientProducts,
@@ -18,7 +19,7 @@ import {
     detachProduct,
     detachNutrition,
 } from "@/lib/api/ingredient/ingredient";
-import { fetchProducts, getProductByRetailId } from "@/lib/api/ingredient/product";
+import { getProductByRetailId } from "@/lib/api/ingredient/product";
 import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
 import { Plus } from "lucide-react";
 
@@ -26,8 +27,6 @@ const ITEMS_PER_PAGE = 10;
 
 const IngredientManagement: React.FC = () => {
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-    const [products, setProducts] = useState<Product[]>([]);
-    const [nutritions, setNutritions] = useState<Nutrition[]>([]);
     const [selectedProducts, setSelectedProducts] = useState<{ id: string; name: string }[]>([]);
     const [selectedNutritions, setSelectedNutritions] = useState<{ id: string; name: string }[]>([]);
     const [totalIngredients, setTotalIngredients] = useState(0);
@@ -85,7 +84,7 @@ const IngredientManagement: React.FC = () => {
         loadIngredientDetails();
     }, [currentIngredientId]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
 
@@ -99,11 +98,32 @@ const IngredientManagement: React.FC = () => {
             if (newIngredient) {
                 setIngredients((prev) => [...prev, newIngredient]);
                 setTotalIngredients((prev) => prev + 1);
-                setIngredient({ name: "", default_unit: "", calories_per_100g: undefined });
+                clearSelection(); // Reset form
                 setCurrentIngredientId(newIngredient.ingredient_id);
             }
         } catch (error) {
             console.error("Failed to create ingredient:", error);
+        }
+    };
+
+    const handleEdit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!currentIngredientId || !ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
+
+        try {
+            const updatedIngredient = await updateIngredient(currentIngredientId, {
+                name: ingredient.name.trim(),
+                default_unit: ingredient.default_unit.trim(),
+                calories_per_100g: ingredient.calories_per_100g,
+            });
+
+            if (updatedIngredient) {
+                setIngredients((prev) =>
+                    prev.map((ing) => (ing.ingredient_id === currentIngredientId ? updatedIngredient : ing))
+                );
+            }
+        } catch (error) {
+            console.error("Failed to update ingredient:", error);
         }
     };
 
@@ -155,31 +175,13 @@ const IngredientManagement: React.FC = () => {
         }
     };
 
-    const onProductRemove = async (product: { id: string; name: string }) => {
-        if (!currentIngredientId) return;
-
-        const success = await detachProduct(currentIngredientId, product.id);
-        if (success) {
-            setSelectedProducts(selectedProducts.filter((p) => p.id !== product.id));
-        }
-    };
-
-    const onNutritionRemove = async (nutrition: { id: string; name: string }) => {
-        if (!currentIngredientId) return;
-
-        const success = await detachNutrition(currentIngredientId, nutrition.id);
-        if (success) {
-            setSelectedNutritions(selectedNutritions.filter((n) => n.id !== nutrition.id));
-        }
-    };
-
     return (
         <ManagementContainer
             title="Manage Ingredients"
             actionButton={currentIngredientId && (
                 <a onClick={clearSelection} aria-label="Clear Fields">
-            <Plus size={20} />
-          </a>
+                    <Plus size={20} />
+                </a>
             )}
         >
             <SimpleForm
@@ -190,8 +192,11 @@ const IngredientManagement: React.FC = () => {
                 ]}
                 state={ingredient}
                 setState={setIngredient}
-                onSubmit={handleSubmit}
-                submitLabel="Add Ingredient"
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                addLabel="Add Ingredient"
+                editLabel="Update Ingredient"
+                isEditMode={!!currentIngredientId}
             />
 
             <EntityLinkForm
@@ -201,7 +206,11 @@ const IngredientManagement: React.FC = () => {
                 setSelectedEntities={setSelectedProducts}
                 disabled={!currentIngredientId}
                 onEntityAdd={onProductAdd}
-                onEntityRemove={onProductRemove}
+                onEntityRemove={(product) =>
+                    detachProduct(currentIngredientId!, product.id).then(() =>
+                        setSelectedProducts((prev) => prev.filter((p) => p.id !== product.id))
+                    )
+                }
             />
 
             <EntityLinkForm
@@ -211,7 +220,11 @@ const IngredientManagement: React.FC = () => {
                 setSelectedEntities={setSelectedNutritions}
                 disabled={!currentIngredientId}
                 onEntityAdd={onNutritionAdd}
-                onEntityRemove={onNutritionRemove}
+                onEntityRemove={(nutrition) =>
+                    detachNutrition(currentIngredientId!, nutrition.id).then(() =>
+                        setSelectedNutritions((prev) => prev.filter((n) => n.id !== nutrition.id))
+                    )
+                }
             />
 
             <SimpleTable
