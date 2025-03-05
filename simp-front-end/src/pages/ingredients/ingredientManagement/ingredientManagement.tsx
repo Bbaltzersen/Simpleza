@@ -22,6 +22,8 @@ import {
     linkIngredientToNutrition,
     fetchIngredientProducts,
     fetchIngredientNutritions,
+    detachProduct,
+    detachNutrition,
 } from "@/lib/api/ingredient/ingredient";
 import { fetchProducts, getProductByRetailId } from "@/lib/api/ingredient/product";
 import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
@@ -187,14 +189,23 @@ const IngredientManagement: React.FC = () => {
     };
 
 
-    // 7. Removing a nutrition link
-    const onNutritionRemove = async (nutrition: { id: string; name: string }) => {
+    const onProductRemove = async (product: { id: string; name: string }) => {
         if (!currentIngredientId) return;
-        // ...some API call that unlinks the nutrition from the ingredient...
-        // e.g.:
-        // await unlinkIngredientFromNutrition(currentIngredientId, nutrition.id);
-        console.log(`Unlinking nutrition with ID: ${nutrition.id}`);
-    };
+    
+        const success = await detachProduct(currentIngredientId, product.id);
+        if (success) {
+          setSelectedProducts(selectedProducts.filter((p) => p.id !== product.id));
+        }
+      };
+    
+      const onNutritionRemove = async (nutrition: { id: string; name: string }) => {
+        if (!currentIngredientId) return;
+    
+        const success = await detachNutrition(currentIngredientId, nutrition.id);
+        if (success) {
+          setSelectedNutritions(selectedNutritions.filter((n) => n.id !== nutrition.id));
+        }
+      };
 
     return (
         <ManagementContainer title="Manage Ingredients">
@@ -219,11 +230,7 @@ const IngredientManagement: React.FC = () => {
                 setSelectedEntities={setSelectedProducts}
                 disabled={!currentIngredientId}
                 onEntityAdd={onProductAdd}
-                onEntityRemove={async (product) => {
-                    // Unlink in the backend if you want; here's an example:
-                    // await unlinkIngredientFromProduct(currentIngredientId, product.id);
-                    console.log(`Unlinking product with ID: ${product.id}`);
-                }}
+                onEntityRemove={onProductRemove}
             />
 
             <EntityLinkForm
@@ -233,9 +240,7 @@ const IngredientManagement: React.FC = () => {
                 setSelectedEntities={setSelectedNutritions}
                 disabled={!currentIngredientId}
                 onEntityAdd={onNutritionAdd}
-                onEntityRemove={async (nutrition) => {
-                    console.log(`Unlinking product with ID: ${nutrition.id}`);
-                }}
+                onEntityRemove={onNutritionRemove}
             />
 
 

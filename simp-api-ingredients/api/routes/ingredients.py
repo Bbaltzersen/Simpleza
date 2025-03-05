@@ -165,3 +165,37 @@ def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(ge
 
     # ✅ Convert SQLAlchemy objects to Pydantic models
     return [NutritionOut.from_orm(nutrition) for nutrition in linked_nutritions]
+
+@router.delete("/{ingredient_id}/detach-product/{product_id}")
+def detach_product(ingredient_id: str, product_id: str, db: Session = Depends(get_db)):
+    """
+    Detach a product from an ingredient without deleting either entity.
+    """
+    link = db.query(IngredientProduct).filter(
+        IngredientProduct.ingredient_id == ingredient_id,
+        IngredientProduct.product_id == product_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Link between ingredient and product not found")
+
+    db.delete(link)  # Delete the link, not the product or ingredient
+    db.commit()
+    return {"message": "Product detached from ingredient successfully"}
+
+@router.delete("/{ingredient_id}/detach-nutrition/{nutrition_id}")
+def detach_nutrition(ingredient_id: str, nutrition_id: str, db: Session = Depends(get_db)):
+    """
+    Detach a nutrition from an ingredient without deleting either entity.
+    """
+    link = db.query(IngredientNutrition).filter(
+        IngredientNutrition.ingredient_id == ingredient_id,
+        IngredientNutrition.nutrition_id == nutrition_id
+    ).first()
+
+    if not link:
+        raise HTTPException(status_code=404, detail="Link between ingredient and nutrition not found")
+
+    db.delete(link)  # Delete the link, not the nutrition or ingredient
+    db.commit()
+    return {"message": "Nutrition detached from ingredient successfully"}

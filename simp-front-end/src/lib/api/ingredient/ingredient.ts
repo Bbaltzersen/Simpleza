@@ -119,3 +119,23 @@ export async function getNutritionsLinked(ingredient_id: string): Promise<string
     return [];
   }
 }
+
+export async function detachNutrition(ingredient_id: string, nutrition_id: string): Promise<boolean> {
+  try {
+    await apiClient.delete(`/${ingredient_id}/detach-nutrition/${nutrition_id}`);
+    return true;
+  } catch (error) {
+    console.error("Error detaching nutrition:", error);
+    return false;
+  }
+}
+
+export async function detachProduct(ingredient_id: string, product_id: string): Promise<boolean> {
+  try {
+    await apiClient.delete(`/${ingredient_id}/detach-product/${product_id}`);
+    return true;
+  } catch (error) {
+    console.error("Error detaching product:", error);
+    return false;
+  }
+}
