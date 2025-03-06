@@ -1,6 +1,7 @@
 "use client";
 
 import React, { JSX, useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react"; // ✅ Import Lucide icons
 import styles from "./simpleTable.module.css";
 
 interface TableProps<T extends { id: string | number }> {
@@ -13,7 +14,7 @@ interface TableProps<T extends { id: string | number }> {
   totalItems: number;
   currentPage: number;
   onPageChange: (page: number) => void;
-  onRowClick: (item: T) => void; // Ensure row click is handled
+  onRowClick: (item: T) => void;
 }
 
 const SimpleTable = <T extends { id: string | number }>({
@@ -26,7 +27,7 @@ const SimpleTable = <T extends { id: string | number }>({
   totalItems,
   currentPage,
   onPageChange,
-  onRowClick, // Capture row clicks
+  onRowClick,
 }: TableProps<T>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -81,15 +82,32 @@ const SimpleTable = <T extends { id: string | number }>({
               })
             )}
           </tbody>
-
         </table>
       </div>
 
       {/* Pagination */}
       <div className={styles.pagination}>
-        <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className={styles.paginationButton}>Previous</button>
+        <a
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage > 1) onPageChange(currentPage - 1);
+          }}
+          className={`${styles.paginationButton} ${currentPage === 1 ? styles.disabled : ""}`}
+          href="#"
+        >
+          <ArrowLeft size={18} />
+        </a>
         <span className={styles.pageInfo}>Page {currentPage} of {totalPages}</span>
-        <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage >= totalPages} className={styles.paginationButton}>Next</button>
+        <a
+          onClick={(e) => {
+            e.preventDefault();
+            if (currentPage < totalPages) onPageChange(currentPage + 1);
+          }}
+          className={`${styles.paginationButton} ${currentPage >= totalPages ? styles.disabled : ""}`}
+          href="#"
+        >
+          <ArrowRight size={18} />
+        </a>
       </div>
     </div>
   );
