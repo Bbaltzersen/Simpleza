@@ -78,6 +78,7 @@ const EntityLinkForm = <T extends BaseEntity>({
     <div className={styles.container}>
       <div className={styles.title}>{title}</div>
 
+      {/* Input Fields */}
       <div className={styles.inputContainer}>
         <input
           type="text"
@@ -108,18 +109,25 @@ const EntityLinkForm = <T extends BaseEntity>({
         </button>
       </div>
 
+      {/* Improved Row List */}
       <ul className={styles.list}>
-        {selectedEntities.map((entity) => (
-          <li key={entity.id} className={styles.listItem}>
-            {entity.name}
-            {extraFieldName && (entity as ExtraFieldEntity).extraField
-              ? ` (${(entity as ExtraFieldEntity).extraField} ${extraFieldName})`
-              : ""}
-            <button onClick={() => removeEntity(entity.id)} className={styles.removeButton}>
-              X
-            </button>
-          </li>
-        ))}
+        {selectedEntities.length === 0 ? (
+          <li className={styles.noData}>No entities added.</li>
+        ) : (
+          selectedEntities.map((entity) => (
+            <li key={entity.id} className={styles.listItem}>
+              <span className={styles.entityName}>{entity.name}</span>
+              {extraFieldName && (entity as ExtraFieldEntity).extraField && (
+                <span className={styles.extraField}>
+                  ({(entity as ExtraFieldEntity).extraField} {extraFieldName})
+                </span>
+              )}
+              <button onClick={() => removeEntity(entity.id)} className={styles.removeButton}>
+                ✖
+              </button>
+            </li>
+          ))
+        )}
       </ul>
     </div>
   );
