@@ -23,9 +23,9 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  color: #54755e;
+  color: #ff0000;
 }
 
 .actionButton:hover {
-  color: #304436;
+  color: #700000;
 }

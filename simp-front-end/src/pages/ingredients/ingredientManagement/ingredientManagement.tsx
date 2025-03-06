@@ -81,24 +81,31 @@ const IngredientManagement: React.FC = () => {
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
-
+    
         try {
             const newIngredient = await createIngredient({
                 name: ingredient.name.trim(),
                 default_unit: ingredient.default_unit.trim(),
                 calories_per_100g: ingredient.calories_per_100g,
             });
-
+    
             if (newIngredient) {
                 setIngredients((prev) => [...prev, newIngredient]);
                 setTotalIngredients((prev) => prev + 1);
-                clearSelection();
+    
+                setCurrentIngredientId(newIngredient.ingredient_id);
+                setIngredient({
+                    ingredient_id: newIngredient.ingredient_id, // Ensure ID is stored
+                    name: newIngredient.name,
+                    default_unit: newIngredient.default_unit,
+                    calories_per_100g: newIngredient.calories_per_100g,
+                });
             }
         } catch (error) {
             console.error("Failed to create ingredient:", error);
         }
     };
-
+    
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentIngredientId || !ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
