@@ -10,10 +10,10 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-export async function fetchIngredients(page: number = 1, limit: number = 10): Promise<{ ingredients: Ingredient[], total: number }> {
+export async function fetchIngredients(skip: number = 0, limit: number = 10): Promise<{ ingredients: Ingredient[], total: number }> {
   try {
     const response = await apiClient.get<{ ingredients: Ingredient[], total: number }>(
-      `/?skip=${(page - 1) * limit}&limit=${limit}`
+      `/?skip=${skip}&limit=${limit}`
     );
     return response.data;
   } catch (error) {
@@ -21,6 +21,7 @@ export async function fetchIngredients(page: number = 1, limit: number = 10): Pr
     return { ingredients: [], total: 0 };
   }
 }
+
 
 export async function createIngredient(ingredient: { name: string; default_unit: string; calories_per_100g?: number }): Promise<Ingredient | null> {
   try {

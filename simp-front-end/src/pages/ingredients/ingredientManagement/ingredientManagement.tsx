@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Ingredient } from "@/lib/types/ingredient";
-import { Product } from "@/lib/types/product";
-import { Nutrition } from "@/lib/types/nutrition";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import EntityLinkForm from "@/components/managementComponent/entityLinkForm";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
@@ -12,10 +10,10 @@ import {
     fetchIngredients,
     createIngredient,
     updateIngredient,
-    linkIngredientToProduct,
-    linkIngredientToNutrition,
     fetchIngredientProducts,
     fetchIngredientNutritions,
+    linkIngredientToProduct,
+    linkIngredientToNutrition,
     detachProduct,
     detachNutrition,
 } from "@/lib/api/ingredient/ingredient";
@@ -38,12 +36,11 @@ const IngredientManagement: React.FC = () => {
         calories_per_100g: undefined,
     });
 
-    const fetchedOnce = useRef(false);
-
+    // ✅ Fetch ingredients with correct pagination
     useEffect(() => {
         const loadIngredients = async () => {
             try {
-                const { ingredients, total } = await fetchIngredients(currentPage, ITEMS_PER_PAGE);
+                const { ingredients, total } = await fetchIngredients((currentPage - 1) * ITEMS_PER_PAGE, ITEMS_PER_PAGE);
                 setIngredients(ingredients);
                 setTotalIngredients(total);
             } catch (error) {
@@ -51,10 +48,7 @@ const IngredientManagement: React.FC = () => {
             }
         };
 
-        if (!fetchedOnce.current) {
-            loadIngredients();
-            fetchedOnce.current = true;
-        }
+        loadIngredients();
     }, [currentPage]);
 
     useEffect(() => {
@@ -98,8 +92,7 @@ const IngredientManagement: React.FC = () => {
             if (newIngredient) {
                 setIngredients((prev) => [...prev, newIngredient]);
                 setTotalIngredients((prev) => prev + 1);
-                clearSelection(); // Reset form
-                setCurrentIngredientId(newIngredient.ingredient_id);
+                clearSelection();
             }
         } catch (error) {
             console.error("Failed to create ingredient:", error);
@@ -231,15 +224,22 @@ const IngredientManagement: React.FC = () => {
                 title="Ingredient List"
                 columns={["Name", "Default Unit", "Calories per 100g"]}
                 data={ingredients.map((ing) => ({
-                    ...ing,
-                    id: ing.ingredient_id,
+                    id: ing.ingredient_id, 
+                    name: ing.name,
+                    default_unit: ing.default_unit,
+                    calories_per_100g: ing.calories_per_100g,
                 }))}
                 totalItems={totalIngredients}
                 itemsPerPage={ITEMS_PER_PAGE}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
+                onRowClick={(item) => {
+                    const selectedIngredient = ingredients.find((ing) => ing.ingredient_id === item.id);
+                    if (selectedIngredient) {
+                        handleRowClick(selectedIngredient); 
+                    }
+                }}
                 searchableFields={["name"]}
-                onRowClick={handleRowClick}
                 renderRow={(ing) => (
                     <>
                         <td>{ing.name}</td>
@@ -248,6 +248,8 @@ const IngredientManagement: React.FC = () => {
                     </>
                 )}
             />
+
+
         </ManagementContainer>
     );
 };
