@@ -1,20 +1,25 @@
-/* simpleTable.module.css */
-
+/* Container */
 .container {
   margin-top: 4rem;
 }
 
+/* Table Title */
 .title {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  font-weight: bold;
   margin-bottom: 12px;
+  text-align: center;
 }
 
+/* Search Input */
 .searchInput {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #ccc;
   margin-top: 8px;
   margin-bottom: 12px;
+  font-size: 1rem;
+  border-radius: 4px;
 }
 
 .searchInput:focus {
@@ -22,43 +27,75 @@
   border-color: #54755e;
 }
 
+/* Table Wrapper */
 .tableWrapper {
   overflow-x: auto;
 }
 
+/* Table */
 .table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid #ccc;
 }
 
+/* Table Headers */
 .th {
-  background-color: #f2f2f2;
-  padding: 8px;
+  background-color: #f4f4f4;
+  padding: 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+  font-weight: bold;
+}
+
+/* Table Data Cells */
+.td {
+  padding: 16px 20px; /* ✅ More padding for better readability */
   border: 1px solid #ccc;
   text-align: left;
 }
 
-.td {
-  padding: 8px;
-  border: 1px solid #ccc;
+/* Alternating Row Colors */
+.evenRow {
+  background-color: #fafafa;
 }
 
+.oddRow {
+  background-color: #ffffff;
+}
+
+/* ✅ Highlight selected row in yellow */
+.selectedRow {
+  background-color: #ffeb3b !important; /* ✅ Bright Yellow */
+  color: black !important; /* ✅ Ensure text is readable */
+  font-weight: bold;
+  border-left: 4px solid #d4af37; /* ✅ Optional: Adds a golden highlight */
+}
+
+/* Hover Effect */
+.clickableRow:hover {
+  cursor: pointer;
+  background-color: #f0f0f0;
+}
+
+/* No Data Message */
 .noData {
   text-align: center;
-  padding: 16px;
+  padding: 20px;
+  font-style: italic;
+  color: #888;
 }
 
 /* Pagination */
 .pagination {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-evenly;
   align-items: center;
   gap: 1rem;
   margin-top: 12px;
 }
 
-/* Pagination links */
+/* Pagination Buttons */
 .paginationButton {
   display: flex;
   align-items: center;
@@ -67,7 +104,6 @@
   background-color: transparent;
   color: var(--foreground);
   text-decoration: none;
-  border-radius: 4px;
   cursor: pointer;
   transition: color 0.3s ease, text-decoration 0.3s ease;
   border: 1px solid var(--foreground);
@@ -75,13 +111,12 @@
   height: 36px;
 }
 
-
 .paginationButton:hover {
   text-decoration: underline;
   text-underline-offset: 0.125rem;
 }
 
-/* Disabled state */
+/* Disabled State */
 .paginationButton.disabled {
   color: #ccc;
   cursor: not-allowed;

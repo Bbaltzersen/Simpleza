@@ -29,6 +29,7 @@ const IngredientManagement: React.FC = () => {
     const [selectedNutritions, setSelectedNutritions] = useState<{ id: string; name: string }[]>([]);
     const [totalIngredients, setTotalIngredients] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
     const [currentIngredientId, setCurrentIngredientId] = useState<string | null>(null);
     const [ingredient, setIngredient] = useState<Partial<Ingredient>>({
         name: "",
@@ -36,7 +37,6 @@ const IngredientManagement: React.FC = () => {
         calories_per_100g: undefined,
     });
 
-    // ✅ Fetch ingredients with correct pagination
     useEffect(() => {
         const loadIngredients = async () => {
             try {
@@ -81,21 +81,24 @@ const IngredientManagement: React.FC = () => {
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
-    
+
         try {
             const newIngredient = await createIngredient({
                 name: ingredient.name.trim(),
                 default_unit: ingredient.default_unit.trim(),
                 calories_per_100g: ingredient.calories_per_100g,
             });
-    
+
             if (newIngredient) {
                 setIngredients((prev) => [...prev, newIngredient]);
                 setTotalIngredients((prev) => prev + 1);
-    
+
+                // ✅ Set new ingredient as the selected row
+                setSelectedRowId(newIngredient.ingredient_id);
                 setCurrentIngredientId(newIngredient.ingredient_id);
+
                 setIngredient({
-                    ingredient_id: newIngredient.ingredient_id, // Ensure ID is stored
+                    ingredient_id: newIngredient.ingredient_id,
                     name: newIngredient.name,
                     default_unit: newIngredient.default_unit,
                     calories_per_100g: newIngredient.calories_per_100g,
@@ -105,7 +108,7 @@ const IngredientManagement: React.FC = () => {
             console.error("Failed to create ingredient:", error);
         }
     };
-    
+
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentIngredientId || !ingredient.name?.trim() || !ingredient.default_unit?.trim()) return;
@@ -128,6 +131,7 @@ const IngredientManagement: React.FC = () => {
     };
 
     const handleRowClick = (ing: Ingredient) => {
+        setSelectedRowId(ing.ingredient_id);
         setCurrentIngredientId(ing.ingredient_id);
         setIngredient({
             name: ing.name,
@@ -137,42 +141,11 @@ const IngredientManagement: React.FC = () => {
     };
 
     const clearSelection = () => {
+        setSelectedRowId(null);
         setCurrentIngredientId(null);
         setIngredient({ name: "", default_unit: "", calories_per_100g: undefined });
         setSelectedProducts([]);
         setSelectedNutritions([]);
-    };
-
-    const onProductAdd = async (retail_id: string) => {
-        if (!currentIngredientId) return null;
-
-        const matchedProduct = await getProductByRetailId(retail_id);
-        if (!matchedProduct) return null;
-
-        try {
-            await linkIngredientToProduct(currentIngredientId, matchedProduct.product_id);
-            return { id: matchedProduct.product_id, name: matchedProduct.english_name };
-        } catch (error) {
-            console.error("Failed to link product:", error);
-            return null;
-        }
-    };
-
-    const onNutritionAdd = async (nutritionName: string) => {
-        if (!currentIngredientId) return null;
-
-        try {
-            const matchedNutrition = await getNutritionByName(nutritionName);
-            if (!matchedNutrition) return null;
-
-            const success = await linkIngredientToNutrition(currentIngredientId, matchedNutrition.name);
-            if (!success) return null;
-
-            return { id: matchedNutrition.nutrition_id, name: matchedNutrition.name };
-        } catch (error) {
-            console.error("Error linking nutrition:", error);
-            return null;
-        }
     };
 
     return (
@@ -205,7 +178,11 @@ const IngredientManagement: React.FC = () => {
                 selectedEntities={selectedProducts}
                 setSelectedEntities={setSelectedProducts}
                 disabled={!currentIngredientId}
-                onEntityAdd={onProductAdd}
+                onEntityAdd={(retail_id) => getProductByRetailId(retail_id)
+                    .then(matchedProduct => matchedProduct
+                        ? linkIngredientToProduct(currentIngredientId!, matchedProduct.product_id)
+                            .then(() => ({ id: matchedProduct.product_id, name: matchedProduct.english_name }))
+                        : null)}
                 onEntityRemove={(product) =>
                     detachProduct(currentIngredientId!, product.id).then(() =>
                         setSelectedProducts((prev) => prev.filter((p) => p.id !== product.id))
@@ -219,7 +196,11 @@ const IngredientManagement: React.FC = () => {
                 selectedEntities={selectedNutritions}
                 setSelectedEntities={setSelectedNutritions}
                 disabled={!currentIngredientId}
-                onEntityAdd={onNutritionAdd}
+                onEntityAdd={(nutritionName) => getNutritionByName(nutritionName)
+                    .then(matchedNutrition => matchedNutrition
+                        ? linkIngredientToNutrition(currentIngredientId!, matchedNutrition.name)
+                            .then(() => ({ id: matchedNutrition.nutrition_id, name: matchedNutrition.name }))
+                        : null)}
                 onEntityRemove={(nutrition) =>
                     detachNutrition(currentIngredientId!, nutrition.id).then(() =>
                         setSelectedNutritions((prev) => prev.filter((n) => n.id !== nutrition.id))
@@ -231,31 +212,22 @@ const IngredientManagement: React.FC = () => {
                 title="Ingredient List"
                 columns={["Name", "Default Unit", "Calories per 100g"]}
                 data={ingredients.map((ing) => ({
-                    id: ing.ingredient_id, 
-                    name: ing.name,
-                    default_unit: ing.default_unit,
-                    calories_per_100g: ing.calories_per_100g,
+                    id: ing.ingredient_id,
+                    values: [ing.name, ing.default_unit, ing.calories_per_100g],
                 }))}
                 totalItems={totalIngredients}
                 itemsPerPage={ITEMS_PER_PAGE}
                 currentPage={currentPage}
                 onPageChange={setCurrentPage}
+                selectedRowId={selectedRowId} // ✅ Pass selected row
                 onRowClick={(item) => {
+                    setSelectedRowId(item.id); // ✅ Update selected row state
                     const selectedIngredient = ingredients.find((ing) => ing.ingredient_id === item.id);
                     if (selectedIngredient) {
-                        handleRowClick(selectedIngredient); 
+                        handleRowClick(selectedIngredient);
                     }
                 }}
-                searchableFields={["name"]}
-                renderRow={(ing) => (
-                    <>
-                        <td>{ing.name}</td>
-                        <td>{ing.default_unit}</td>
-                        <td>{ing.calories_per_100g}</td>
-                    </>
-                )}
             />
-
 
         </ManagementContainer>
     );

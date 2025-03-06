@@ -1,39 +1,38 @@
 "use client";
 
-import React, { JSX, useState } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react"; // ✅ Import Lucide icons
+import React, { useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import styles from "./simpleTable.module.css";
 
-interface TableProps<T extends { id: string | number }> {
+interface TableProps<T extends { id: string | number; values: any[] }> {
   title: string;
   columns: string[];
   data: T[];
-  renderRow: (item: T, onClick: () => void) => JSX.Element;
-  searchableFields: (keyof T)[];
   itemsPerPage?: number;
   totalItems: number;
   currentPage: number;
   onPageChange: (page: number) => void;
   onRowClick: (item: T) => void;
+  selectedRowId?: string | number | null; // ✅ Use selectedRowId for highlighting
 }
 
-const SimpleTable = <T extends { id: string | number }>({
+const SimpleTable = <T extends { id: string | number; values: any[] }>({
   title,
   columns,
   data,
-  renderRow,
-  searchableFields,
   itemsPerPage = 10,
   totalItems,
   currentPage,
   onPageChange,
   onRowClick,
+  selectedRowId, // ✅ Use selectedRowId for highlighting
 }: TableProps<T>) => {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  // Filter data based on search query
   const filteredData = data.filter((item) =>
-    searchableFields.some((field) =>
-      String(item[field]).toLowerCase().includes(searchQuery.toLowerCase())
+    item.values.some((value) =>
+      String(value).toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
 
@@ -41,7 +40,7 @@ const SimpleTable = <T extends { id: string | number }>({
 
   return (
     <div className={styles.container}>
-      <h3>{title}</h3>
+      <h2>{title}</h2>
 
       {/* Search Bar */}
       <input
@@ -68,18 +67,20 @@ const SimpleTable = <T extends { id: string | number }>({
                 <td colSpan={columns.length} className={styles.noData}>No data found.</td>
               </tr>
             ) : (
-              filteredData.map((item) => {
-                const rowContent = renderRow(item, () => onRowClick(item));
-                return (
-                  <tr
-                    key={String(item.id)}
-                    onClick={() => onRowClick(item)}
-                    className={styles.clickableRow}
-                  >
-                    {React.Children.toArray(rowContent)}
-                  </tr>
-                );
-              })
+              filteredData.map((item, index) => (
+                <tr
+                  key={String(item.id)}
+                  onClick={() => onRowClick(item)}
+                  className={`${styles.clickableRow} 
+                  ${item.id === selectedRowId ? styles.selectedRow : ""}
+                  ${item.id !== selectedRowId ? (index % 2 === 0 ? styles.evenRow : styles.oddRow) : ""}
+                  `}
+                >
+                  {item.values.map((value, idx) => (
+                    <td key={idx} className={styles.td}>{value}</td>
+                  ))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
