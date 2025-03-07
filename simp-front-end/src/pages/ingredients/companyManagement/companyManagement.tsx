@@ -5,29 +5,26 @@ import { Company } from "@/lib/types/company";
 import SimpleTable from "@/components/managementComponent/simpleTable";
 import SimpleForm from "@/components/managementComponent/simpleform";
 import ManagementContainer from "@/components/managementComponent/managementContainer";
-import { fetchCompanies, createCompany, deleteCompany } from "@/lib/api/ingredient/company";
-
-interface FormField {
-  name: keyof Company;
-  type: "text";
-  placeholder: string;
-  required?: boolean;
-}
+import { fetchCompanies, createCompany, updateCompany, deleteCompany } from "@/lib/api/ingredient/company";
+import { Plus } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
 const CompanyManagement: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [company, setCompany] = useState<Partial<Company>>({ name: "" });
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [currentCompanyId, setCurrentCompanyId] = useState<string | null>(null);
+
+  const [company, setCompany] = useState<Partial<Company>>({ name: "" });
 
   // Fetch companies when the page changes
   useEffect(() => {
     const loadCompanies = async () => {
       try {
         const { companies, total } = await fetchCompanies(currentPage, ITEMS_PER_PAGE);
-        setCompanies(companies.map(company => ({ ...company, id: company.company_id })));
+        setCompanies(companies);
         setTotalCompanies(total);
       } catch (error) {
         console.error("Failed to fetch companies:", error);
@@ -37,77 +34,116 @@ const CompanyManagement: React.FC = () => {
     loadCompanies();
   }, [currentPage]);
 
-  // Form Fields
-  const companyFields: FormField[] = [{ name: "name", type: "text", placeholder: "Company Name", required: true }];
-
-  // Handle Company Submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Handle Add
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!company.name?.trim()) return;
 
     try {
       const newCompany = await createCompany({ name: company.name.trim() });
-      if (newCompany) {
-        // If the current page is full, move to the next page
-        const isLastPage = companies.length >= ITEMS_PER_PAGE;
-        if (isLastPage) {
-          setCurrentPage((prev) => prev + 1);
-        } else {
-          setCompanies((prev) => [...prev, { ...newCompany, id: newCompany.company_id }]);
-        }
 
-        setCompany({ name: "" }); // Reset input field
+      if (newCompany) {
+        setCompanies((prev) => [...prev, newCompany]);
         setTotalCompanies((prev) => prev + 1);
+        setCurrentCompanyId(newCompany.company_id);
+        setCompany({ name: newCompany.name });
       }
     } catch (error) {
       console.error("Failed to create company:", error);
     }
   };
 
-  // Handle Company Deletion
+  // Handle Edit
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCompanyId || !company.name?.trim()) return;
+
+    try {
+      const updatedCompany = await updateCompany(currentCompanyId, { name: company.name.trim() });
+
+      if (updatedCompany) {
+        setCompanies((prev) =>
+          prev.map((c) => (c.company_id === currentCompanyId ? updatedCompany : c))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to update company:", error);
+    }
+  };
+
+  // Handle Delete
   const handleDelete = async (company_id: string) => {
     try {
       const success = await deleteCompany(company_id);
       if (success) {
         setCompanies((prev) => prev.filter((c) => c.company_id !== company_id));
         setTotalCompanies((prev) => prev - 1);
+        if (currentCompanyId === company_id) {
+          setCurrentCompanyId(null);
+        }
       }
     } catch (error) {
       console.error("Failed to delete company:", error);
     }
   };
 
+  // Handle Row Click
+  const handleRowClick = (company: Company) => {
+    setSelectedRowId(company.company_id);
+    setCurrentCompanyId(company.company_id);
+    setCompany({ name: company.name });
+  };
+
+  const clearSelection = () => {
+    setSelectedRowId(null);
+    setCurrentCompanyId(null);
+    setCompany({ name: "" });
+};
+
   return (
-    <ManagementContainer title="Manage Companies">
-      {/* Use Reusable Form */}
+    <ManagementContainer
+            title="Manage Companies"
+            actionButton={currentCompanyId && (
+                <a onClick={clearSelection} aria-label="Clear Fields">
+                    <Plus size={20} />
+                </a>
+            )}
+        >
+      {/* Company Form */}
       <SimpleForm
-        fields={companyFields}
+        fields={[
+          { name: "name", type: "text", placeholder: "Company Name", required: true },
+        ]}
         state={company}
         setState={setCompany}
-        onSubmit={handleSubmit}
-        submitLabel="Add Company"
+        onAdd={handleAdd}
+        addLabel="Add Company"
+        isEditMode={!!currentCompanyId}
+        onEdit={handleEdit}
+        editLabel="Update Company"
       />
 
       {/* Company Table with Pagination */}
       <SimpleTable
         title="Company List"
-        columns={["Company Name", "Actions"]}
-        data={companies.map(company => ({ ...company, id: company.company_id }))}
+        columns={["Company Name"]}
+        data={companies.map((company) => ({
+          id: company.company_id,
+          values: [company.name],
+        }))}
         totalItems={totalCompanies}
         itemsPerPage={ITEMS_PER_PAGE}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        searchableFields={["name"]}
-        renderRow={(company) => (
-          <tr key={company.company_id}>
-            <td>{company.name}</td>
-            <td>
-              <button onClick={() => handleDelete(company.company_id)} className="text-red-600">Delete</button>
-            </td>
-          </tr>
-        )} onRowClick={function (item: { id: string; company_id: string; name: string; price: number; }): void {
-          throw new Error("Function not implemented.");
-        } }      />
+        selectedRowId={selectedRowId}
+        onRowClick={(item) => {
+          setSelectedRowId(item.id);
+          const selectedCompany = companies.find((c) => c.company_id === item.id);
+          if (selectedCompany) {
+            handleRowClick(selectedCompany);
+          }
+        }}
+      />
     </ManagementContainer>
   );
 };
