@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import styles from "./ingredientContent.module.css"; // Import CSS module
+import styles from "./managementContent.module.css"; // Import CSS module
 
 import IngredientManagement from "./ingredientManagement/ingredientManagement";
 import NutritionManagement from "./nutritionManagement/nutritionManagement";
