@@ -30,6 +30,19 @@ export async function createNutrition(nutrition: { name: string; measurement: st
   }
 }
 
+export async function updateNutrition(
+  nutrition_id: string,
+  nutrition: { name: string; measurement: string; recommended?: number }
+): Promise<Nutrition | null> {
+  try {
+    const response = await apiClient.put<Nutrition>(`/${nutrition_id}`, nutrition);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating nutrition (${nutrition_id}):`, error);
+    return null;
+  }
+}
+
 export async function deleteNutrition(nutrition_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/${nutrition_id}`);
