@@ -18,24 +18,51 @@ export type ProductCompanyDetail = {
 /**
  * Fetch all products with pagination
  */
-export const fetchProducts = async (page: number = 1, limit: number = 10): Promise<{ products: Product[]; total: number }> => {
-    try {
-      const response = await apiClient.get(`?skip=${(page - 1) * limit}&limit=${limit}`);
-      
-      if (!response.data || !Array.isArray(response.data.products)) {
-        console.error("Unexpected response structure:", response.data);
-        return { products: [], total: 0 };
-      }
-  
-      return {
-        products: response.data.products || [],
-        total: response.data.total || 0,
-      };
-    } catch (error) {
-      console.error("Error fetching products:", error);
+export const fetchProducts = async (
+  page: number = 1, 
+  limit: number = 10
+): Promise<{ products: Product[]; total: number }> => {
+  try {
+    const safePage = Math.max(1, page); // ✅ Ensure `page` is at least 1
+    const skip = (safePage - 1) * limit; // ✅ Correct pagination calculation
+
+    const response = await apiClient.get(`/?skip=${skip}&limit=${limit}`);
+
+    if (!response.data || typeof response.data !== "object") {
+      console.error("Unexpected response structure:", response);
       return { products: [], total: 0 };
     }
-  };  
+
+    const productsArray = Array.isArray(response.data.products)
+      ? response.data.products.map((product: any) => ({
+          product_id: product.product_id,
+          retail_id: product.retail_id ?? null,
+          src_product_id: product.src_product_id ?? null,
+          english_name: product.english_name,
+          spanish_name: product.spanish_name,
+          amount: product.amount ?? 1,
+          weight: product.weight ?? 0,
+          measurement: product.measurement || "",
+          companies: Array.isArray(product.companies)
+            ? product.companies.map((company: any) => ({
+                company_id: company.company_id,
+                company_name: company.company_name,
+                price: company.price ?? 0,
+              }))
+            : [],
+        }))
+      : [];
+
+    return {
+      products: productsArray,
+      total: typeof response.data.total === "number" ? response.data.total : 0,
+    };
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return { products: [], total: 0 };
+  }
+};
+
 
 /**
  * Fetch a single product by ID
@@ -91,15 +118,15 @@ export const createProduct = async (product: ProductCreate): Promise<Product | n
 /**
  * Update an existing product
  */
-export const updateProduct = async (productId: string, product: ProductCreate): Promise<Product | null> => {
+export async function updateProduct(productId: string, productData: Partial<Product>): Promise<Product | null> {
   try {
-    const response = await apiClient.put<Product>(`/${productId}`, product);
+    const response = await apiClient.put(`/${productId}`, productData);
     return response.data;
   } catch (error) {
     console.error(`Error updating product ${productId}:`, error);
     return null;
   }
-};
+}
 
 /**
  * Delete a product by ID
@@ -145,3 +172,4 @@ export async function getProductByRetailId(retailId: string): Promise<Product | 
     return null;
   }
 }
+

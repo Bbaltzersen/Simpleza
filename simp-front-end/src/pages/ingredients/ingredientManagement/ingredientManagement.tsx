@@ -181,7 +181,7 @@ const IngredientManagement: React.FC = () => {
                 onEntityAdd={(retail_id) => getProductByRetailId(retail_id)
                     .then(matchedProduct => matchedProduct
                         ? linkIngredientToProduct(currentIngredientId!, matchedProduct.product_id)
-                            .then(() => ({ id: matchedProduct.product_id, name: matchedProduct.english_name }))
+                        .then(() => ({ id: matchedProduct.product_id, name: matchedProduct.english_name }))
                         : null)}
                 onEntityRemove={(product) =>
                     detachProduct(currentIngredientId!, product.id).then(() =>
@@ -199,7 +199,7 @@ const IngredientManagement: React.FC = () => {
                 onEntityAdd={(nutritionName) => getNutritionByName(nutritionName)
                     .then(matchedNutrition => matchedNutrition
                         ? linkIngredientToNutrition(currentIngredientId!, matchedNutrition.name)
-                            .then(() => ({ id: matchedNutrition.nutrition_id, name: matchedNutrition.name }))
+                        .then(() => ({ id: matchedNutrition.nutrition_id, name: matchedNutrition.name }))
                         : null)}
                 onEntityRemove={(nutrition) =>
                     detachNutrition(currentIngredientId!, nutrition.id).then(() =>
@@ -209,25 +209,25 @@ const IngredientManagement: React.FC = () => {
             />
 
             <SimpleTable
-                title="Ingredient List"
-                columns={["Name", "Default Unit", "Calories per 100g"]}
-                data={ingredients.map((ing) => ({
-                    id: ing.ingredient_id,
-                    values: [ing.name, ing.default_unit, ing.calories_per_100g],
-                }))}
-                totalItems={totalIngredients}
-                itemsPerPage={ITEMS_PER_PAGE}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-                selectedRowId={selectedRowId} // ✅ Pass selected row
-                onRowClick={(item) => {
-                    setSelectedRowId(item.id); // ✅ Update selected row state
-                    const selectedIngredient = ingredients.find((ing) => ing.ingredient_id === item.id);
-                    if (selectedIngredient) {
-                        handleRowClick(selectedIngredient);
-                    }
-                }}
-            />
+    title="Ingredient List"
+    columns={["Name", "Default Unit", "Calories per 100g"]}
+    data={ingredients.map((ing) => ({
+        id: ing.ingredient_id,
+        values: [ing.name, ing.default_unit, ing.calories_per_100g],
+    }))}
+    totalItems={totalIngredients}
+    itemsPerPage={ITEMS_PER_PAGE}
+    currentPage={currentPage}
+    onPageChange={setCurrentPage}
+    selectedRowId={selectedRowId} // ✅ Pass selected row
+    onRowClick={(item) => {
+        setSelectedRowId(item.id); // ✅ Update selected row state
+        const selectedIngredient = ingredients.find((ing) => ing.ingredient_id === item.id);
+        if (selectedIngredient) {
+            handleRowClick(selectedIngredient);
+        }
+    }}
+/>
 
         </ManagementContainer>
     );
