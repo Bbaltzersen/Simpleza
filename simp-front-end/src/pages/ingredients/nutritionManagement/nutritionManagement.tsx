@@ -13,6 +13,7 @@ import {
   updateNutrition,
 } from "@/lib/api/ingredient/nutrition";
 import { fetchIngredients } from "@/lib/api/ingredient/ingredient";
+import { Plus } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -114,8 +115,24 @@ const NutritionManagement: React.FC = () => {
     });
   };
 
+  const clearSelection = () => {
+    setSelectedRowId(null);
+    setCurrentNutritionId(null);
+    setNutrition({
+      name: "",
+      measurement: "",
+      recommended: undefined,
+    });
+};
+
   return (
-    <ManagementContainer title="Manage Nutrition">
+    <ManagementContainer title="Manage Nutritions"
+    actionButton={currentNutritionId && (
+        <a onClick={clearSelection} aria-label="Clear Fields">
+            <Plus size={20} />
+        </a>
+    )}
+>
       <SimpleForm
         fields={[
           { name: "name", type: "text", placeholder: "Nutrition Name", required: true },
