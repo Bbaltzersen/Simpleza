@@ -17,7 +17,7 @@ export default function NavLinks() {
       {user && (
         <>
             {user.role === "admin" && (
-              <a href="/ingredients" className={styles.navLink}>Ingredients</a>
+              <a href="/management" className={styles.navLink}>Management</a>
             )}
             </>
           

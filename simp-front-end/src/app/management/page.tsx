@@ -4,9 +4,9 @@ import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 import AuthWindow from "@/lib/providers/authWindowProvider";
 import AuthModal from "@/components/authWindow/authWindow";
-import IngredientContent from "@/pages/ingredients/ingredientContent";
 import { redirect } from "next/navigation";
 import { initServerSideSession } from "@/lib/api/authentication/serverSession"; // Adjust path as needed
+import ManagementContent from "@/pages/ingredients/managementContent";
 
 export default async function IngredientsPage() {
   // Get the session details on the server.
@@ -23,7 +23,7 @@ export default async function IngredientsPage() {
         <Header />
         <NavMenu />
         <ContentLayout>
-          <IngredientContent />
+          <ManagementContent />
         </ContentLayout>
         <AuthModal />
       </NavMenuProvider>
