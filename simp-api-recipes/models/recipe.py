@@ -11,3 +11,4 @@ class Recipe(Base):
     description = Column(TEXT)
     author_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="SET NULL"))
     created_at = Column(TIMESTAMP, server_default=func.now())
+

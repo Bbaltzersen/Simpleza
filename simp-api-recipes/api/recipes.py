@@ -12,6 +12,7 @@ from models.recipe_ingredient import RecipeIngredient
 from models.recipe_step import RecipeStep
 from models.tag import Tag
 from models.recipe_tag import RecipeTag
+from schemas.recipe import RecipeOut
 
 router = APIRouter(prefix="", tags=["recipes"])
 
@@ -23,3 +24,7 @@ def get_db():
         db.close()
 
 
+@router.get("/", response_model=List[RecipeOut])
+def get_recipes(db: Session = Depends(get_db)):
+    recipes = db.query(Recipe).all()
+    return recipes
