@@ -9,7 +9,13 @@ load_dotenv()
 
 app = FastAPI()
 
-user_dependency = Depends(is_authorized("user"))
+user_dependency = None
+
+if is_authorized("user"):
+    user_dependency = Depends(is_authorized("user"))
+elif is_authorized("admin"):
+    admin_dependency = Depends(is_authorized("admin"))
+
 ALLOWED_ORIGINS = "http://localhost:3000"
 
 app.add_middleware(
