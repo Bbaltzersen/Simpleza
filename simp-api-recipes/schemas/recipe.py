@@ -3,7 +3,7 @@ from typing import List, Optional
 from uuid import UUID
 
 class RecipeOut(BaseModel):
-    recipe_id: uuid.UUID
+    recipe_id: UUID
     title: str
 
     class Config:
@@ -29,7 +29,7 @@ class RecipeCreateSchema(BaseModel):
     ingredients: List[RecipeIngredientSchema]
     steps: List[RecipeStepSchema]
     images: List[RecipeImageSchema]
-    tags: List[UUID]  # Using tag IDs (Alternatively, use List[str] for tag names)
+    tags: List[UUID]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
