@@ -31,7 +31,7 @@ def get_recipes(db: Session = Depends(get_db)):
 def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)):
     # Create a new recipe
     new_recipe = Recipe(
-        recipe_id=uuid.uuid4(),
+        recipe_id=UUID(),
         title=recipe_data.title,
         description=recipe_data.description
     )
@@ -73,7 +73,7 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
         existing_tag = db.query(Tag).filter(Tag.name == tag_name).first()
         if not existing_tag:
             # Create new tag if not found
-            new_tag = Tag(tag_id=uuid.uuid4(), name=tag_name)
+            new_tag = Tag(tag_id=UUID(), name=tag_name)
             db.add(new_tag)
             db.commit()
             db.refresh(new_tag)
@@ -92,20 +92,3 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
 
     return new_recipe
 
-
-@router.post("/tag/{tag_name}")
-def create_tag(tag_name: str, db: Session = Depends(get_db)):
-    new_tag = Tag(
-        tag_id=UUID(),
-        name=tag_name
-    )
-    db.add(new_tag)
-    db.commit()
-    db.refresh(new_tag)
-
-    return new_tag
-
-@router.get("/tags", response_model=List[TagOut])
-def get_tags(db: Session = Depends(get_db)):
-    tags = db.query(Tag).all()
-    return tags

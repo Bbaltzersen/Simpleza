@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from database.auth.authorize import is_authorized
 from api.recipes import router as recipe_router
+from api.tags import router as tag_router
 
 load_dotenv()
 
@@ -33,6 +34,12 @@ app.include_router(
     prefix="/recipes",
     tags=["recipes"],
     dependencies=[admin_dependency],  
+)
+app.include_router(
+    tag_router,
+    prefix="/tags",
+    tags=["tags"],
+    dependencies=[dependency],  
 )
 
 if __name__ == "__main__":
