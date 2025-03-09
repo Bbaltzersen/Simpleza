@@ -10,7 +10,6 @@ load_dotenv()
 
 app = FastAPI()
 
-admin_dependency = Depends(is_authorized("admin"))
 dependency = None
 
 if is_authorized("admin"):
@@ -33,7 +32,7 @@ app.include_router(
     recipe_router,
     prefix="/recipes",
     tags=["recipes"],
-    dependencies=[admin_dependency],  
+    dependencies=[dependency],  
 )
 app.include_router(
     tag_router,

@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+import uuid
 import uuid as UUID
 
 from database.connection import SessionLocal
@@ -22,10 +23,10 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/tag/{tag_name}")
+@router.post("/{tag_name}")
 def create_tag(tag_name: str, db: Session = Depends(get_db)):
     new_tag = Tag(
-        tag_id=UUID(),
+        tag_id=uuid.uuid4(),
         name=tag_name
     )
     db.add(new_tag)
@@ -34,7 +35,7 @@ def create_tag(tag_name: str, db: Session = Depends(get_db)):
 
     return new_tag
 
-@router.get("/tags", response_model=List[TagOut])
+@router.get("/", response_model=List[TagOut])
 def get_tags(db: Session = Depends(get_db)):
     tags = db.query(Tag).all()
     return tags

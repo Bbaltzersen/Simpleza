@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID, TEXT
+from sqlalchemy.orm import relationship
 from .base import Base
 import uuid
 
@@ -12,3 +13,4 @@ class Recipe(Base):
     author_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="SET NULL"))
     created_at = Column(TIMESTAMP, server_default=func.now())
 
+    ingredients = relationship("RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan")

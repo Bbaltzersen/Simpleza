@@ -1,6 +1,8 @@
 from sqlalchemy import Column, ForeignKey, Numeric, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID, TEXT
+from sqlalchemy.orm import relationship
 from .base import Base
+from .ingredient import Ingredient
 
 class RecipeIngredient(Base):
     __tablename__ = "recipe_ingredients"
@@ -9,4 +11,6 @@ class RecipeIngredient(Base):
     ingredient_id = Column(UUID(as_uuid=True), ForeignKey("ingredients.ingredient_id", ondelete="CASCADE"), primary_key=True)
     amount = Column(Numeric(10, 2), nullable=False)
     measurement = Column(TEXT, nullable=False)
-    created_at = Column(TIMESTAMP, server_default=func.now())
+
+    recipe = relationship("Recipe", back_populates="ingredients")
+    ingredient = relationship("Ingredient")

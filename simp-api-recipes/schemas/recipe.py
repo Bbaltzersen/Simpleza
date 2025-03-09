@@ -15,13 +15,23 @@ class RecipeIngredientSchema(BaseModel):
     amount: float
     measurement: str
 
+    class Config:
+        from_attributes = True
+
 class RecipeStepSchema(BaseModel):
     step_number: int
     description: str
     image_url: Optional[str] = None
 
+    class Config:
+        from_attributes = True
+    
+
 class RecipeImageSchema(BaseModel):
     image_url: str
+
+    class Config:
+        from_attributes = True
 
 class RecipeCreateSchema(BaseModel):
     title: str
@@ -29,7 +39,7 @@ class RecipeCreateSchema(BaseModel):
     ingredients: List[RecipeIngredientSchema]
     steps: List[RecipeStepSchema]
     images: List[RecipeImageSchema]
-    tags: List[str]
+    tags: List[UUID]
 
     class Config:
         from_attributes = True

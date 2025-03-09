@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import uuid as UUID
+import uuid 
+from uuid import UUID
 
 from database.connection import SessionLocal
 from models.recipe import Recipe
@@ -31,7 +32,7 @@ def get_recipes(db: Session = Depends(get_db)):
 def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)):
     # Create a new recipe
     new_recipe = Recipe(
-        recipe_id=UUID(),
+        recipe_id=uuid.uuid4(),
         title=recipe_data.title,
         description=recipe_data.description
     )
@@ -41,9 +42,17 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
 
     # Add ingredients
     for ingredient in recipe_data.ingredients:
+        if not isinstance(ingredient.ingredient_id, UUID):
+            try:
+                ingredient_uuid = UUID(ingredient.ingredient_id)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid UUID format: {ingredient.ingredient_id}")
+        else:
+            ingredient_uuid = ingredient.ingredient_id
+
         recipe_ingredient = RecipeIngredient(
             recipe_id=new_recipe.recipe_id,
-            ingredient_id=ingredient.ingredient_id,
+            ingredient_id=ingredient_uuid,
             amount=ingredient.amount,
             measurement=ingredient.measurement
         )
@@ -69,26 +78,24 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
 
     # Add tags
     for tag_name in recipe_data.tags:
-        # Find tag by name
-        existing_tag = db.query(Tag).filter(Tag.name == tag_name).first()
-        if not existing_tag:
-            # Create new tag if not found
-            new_tag = Tag(tag_id=UUID(), name=tag_name)
-            db.add(new_tag)
-            db.commit()
-            db.refresh(new_tag)
-            tag_id = new_tag.tag_id
+        if not isinstance(tag_name, UUID):  # Only convert if it's a string
+            try:
+                tag_uuid = UUID(tag_name)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid UUID format: {tag_name}")
         else:
-            tag_id = existing_tag.tag_id
+            tag_uuid = tag_name
 
-        # Link recipe to tag
+        existing_tag = db.query(Tag).filter(Tag.tag_id == tag_uuid).first()
+        if not existing_tag:
+            raise HTTPException(status_code=400, detail=f"Tag '{tag_name}' does not exist")
+
         recipe_tag = RecipeTag(
             recipe_id=new_recipe.recipe_id,
-            tag_id=tag_id
+            tag_id=tag_uuid
         )
         db.add(recipe_tag)
 
     db.commit()
 
     return new_recipe
-
