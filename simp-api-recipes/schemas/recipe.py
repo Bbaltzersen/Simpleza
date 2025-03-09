@@ -29,7 +29,7 @@ class RecipeCreateSchema(BaseModel):
     ingredients: List[RecipeIngredientSchema]
     steps: List[RecipeStepSchema]
     images: List[RecipeImageSchema]
-    tags: List[UUID]
+    tags: List[str]
 
     class Config:
         from_attributes = True

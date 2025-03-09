@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import uuid
+import uuid as UUID
 
 from database.connection import SessionLocal
 from models.recipe import Recipe
@@ -68,11 +68,20 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
         db.add(recipe_image)
 
     # Add tags
-    for tag_id in recipe_data.tags:
-        tag_exists = db.query(Tag).filter(Tag.tag_id == tag_id).first()
-        if not tag_exists:
-            raise HTTPException(status_code=400, detail=f"Tag {tag_id} does not exist")
+    for tag_name in recipe_data.tags:
+        # Find tag by name
+        existing_tag = db.query(Tag).filter(Tag.name == tag_name).first()
+        if not existing_tag:
+            # Create new tag if not found
+            new_tag = Tag(tag_id=uuid.uuid4(), name=tag_name)
+            db.add(new_tag)
+            db.commit()
+            db.refresh(new_tag)
+            tag_id = new_tag.tag_id
+        else:
+            tag_id = existing_tag.tag_id
 
+        # Link recipe to tag
         recipe_tag = RecipeTag(
             recipe_id=new_recipe.recipe_id,
             tag_id=tag_id
@@ -87,7 +96,7 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
 @router.post("/tag/{tag_name}")
 def create_tag(tag_name: str, db: Session = Depends(get_db)):
     new_tag = Tag(
-        tag_id=uuid.uuid4(),
+        tag_id=UUID(),
         name=tag_name
     )
     db.add(new_tag)
