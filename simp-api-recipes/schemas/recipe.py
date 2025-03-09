@@ -33,3 +33,11 @@ class RecipeCreateSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class TagOut(BaseModel):
+    tag_id: UUID
+    name: str
+
+    class Config:
+        from_attributes = True
