@@ -36,6 +36,7 @@ class RecipeImageSchema(BaseModel):
 class RecipeCreateSchema(BaseModel):
     title: str
     description: Optional[str] = None
+    author_id: Optional[UUID] = None
     ingredients: List[RecipeIngredientSchema]
     steps: List[RecipeStepSchema]
     images: List[RecipeImageSchema]
