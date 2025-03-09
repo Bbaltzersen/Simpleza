@@ -1,18 +1,15 @@
-# Start Redis server in a new PowerShell window
-Write-Host "Starting Redis..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command redis-server"
-Start-Sleep -Seconds 2  # Wait for Redis to start
+Write-Host "Starting services in separate Windows Terminal windows..."
 
-# Define project paths
-$AuthAPIPath = Join-Path $PSScriptRoot "simp-api-auth"
-$IngredientAPIPath = Join-Path $PSScriptRoot "simp-api-ingredients"
+# Start Redis in a new window
+Start-Process wt.exe -ArgumentList "new-tab --title `"Redis Server`" cmd /k echo Starting Redis... ^& redis-server"
 
-Write-Host "Starting FastAPI instances..."
+# Start Auth API in a new window
+Start-Process wt.exe -ArgumentList "new-tab --title `"Auth API`" cmd /k echo Starting Auth API... ^& cd /d `"$PSScriptRoot\simp-api-auth`" ^& venv\Scripts\Activate ^& uvicorn main:app --host 127.0.0.1 --port 8000"
 
-# Start Auth API
-Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$AuthAPIPath'; & venv\Scripts\Activate; uvicorn main:app --log-level error`""
+# Start Ingredient API in a new window
+Start-Process wt.exe -ArgumentList "new-tab --title `"Ingredient API`" cmd /k echo Starting Ingredient API... ^& cd /d `"$PSScriptRoot\simp-api-ingredients`" ^& venv\Scripts\Activate ^& uvicorn main:app --host 127.0.0.1 --port 8010"
 
-# Start Ingredient API
-Start-Process powershell -ArgumentList "-NoExit", "-Command `"cd '$IngredientAPIPath'; & venv\Scripts\Activate; uvicorn main:app --log-level error`""
+# Start Recipes API in a new window
+Start-Process wt.exe -ArgumentList "new-tab --title `"Recipes API`" cmd /k echo Starting Recipes API... ^& cd /d `"$PSScriptRoot\simp-api-recipes`" ^& venv\Scripts\Activate ^& uvicorn main:app --host 127.0.0.1 --port 8020"
 
 Write-Host "All services started successfully."

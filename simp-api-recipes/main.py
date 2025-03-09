@@ -10,13 +10,6 @@ load_dotenv()
 
 app = FastAPI()
 
-dependency = None
-
-if is_authorized("admin"):
-    dependency = Depends(is_authorized("admin"))
-elif is_authorized("user"):
-    dependency = Depends(is_authorized("user"))
-
 ALLOWED_ORIGINS = ["http://localhost:3000"]
 
 app.add_middleware(
@@ -27,19 +20,19 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-CSRF-Token", "Authorization"],
 )
 
-# Apply authorization correctly as a dependency
+# Apply authorization correctly as a dependency per router
 app.include_router(
     recipe_router,
-    prefix="/recipes",
+    prefix="/v1/recipes",
     tags=["recipes"],
-    dependencies=[dependency],  
+    dependencies=[Depends(is_authorized("user"))],  # Adjust role as needed
 )
 app.include_router(
     tag_router,
-    prefix="/tags",
+    prefix="/v1/tags",
     tags=["tags"],
-    dependencies=[dependency],  
+    dependencies=[Depends(is_authorized("admin"))],  # Adjust role as needed
 )
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8020, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8050, reload=True)
