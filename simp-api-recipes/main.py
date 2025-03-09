@@ -10,6 +10,12 @@ load_dotenv()
 app = FastAPI()
 
 admin_dependency = Depends(is_authorized("admin"))
+dependency = None
+
+if is_authorized("admin"):
+    dependency = Depends(is_authorized("admin"))
+elif is_authorized("user"):
+    dependency = Depends(is_authorized("user"))
 
 ALLOWED_ORIGINS = ["http://localhost:3000"]
 
