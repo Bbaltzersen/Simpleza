@@ -23,8 +23,7 @@ export default function Recipes() {
                               className={styles.recipeImage}
                           />
                           <div className={styles.recipeContent}>
-                              <h3>{recipe.title}</h3>
-                              <p>{recipe.description || "No description available."}</p>
+                              <h4>{recipe.title}</h4>
                           </div>
                       </div>
                   ))
