@@ -1,3 +1,59 @@
+/* ✅ Scope all styles under a local class */
 .container {
-    margin-top: 1rem;
+    padding: 20px;
+    max-width: 1000px;
+    margin: auto;
+    text-align: center;
+}
+
+.container h2 {
+    margin-bottom: 20px;
+    font-size: 2rem;
+    color: #333;
+}
+
+/* ✅ Grid Layout */
+.recipeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+/* ✅ Card Design */
+.recipeCard {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.recipeCard:hover {
+    transform: translateY(-5px);
+}
+
+/* ✅ Image */
+.recipeImage {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+/* ✅ Content */
+.recipeContent {
+    padding: 15px;
+    text-align: left;
+}
+
+.recipeContent h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #222;
+}
+
+.recipeContent p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
 }

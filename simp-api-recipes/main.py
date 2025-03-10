@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Depends
-import uvicorn
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from database.auth.authorize import is_authorized
@@ -9,6 +8,9 @@ from api.tags import router as tag_router
 load_dotenv()
 
 app = FastAPI()
+
+# Global dependency: Require admin access for all routes
+admin_dependency = Depends(is_authorized("admin"))
 
 ALLOWED_ORIGINS = ["http://localhost:3000"]
 
@@ -20,19 +22,10 @@ app.add_middleware(
     allow_headers=["Content-Type", "X-CSRF-Token", "Authorization"],
 )
 
-# Apply authorization correctly as a dependency per router
-app.include_router(
-    recipe_router,
-    prefix="/v1/recipes",
-    tags=["recipes"],
-    dependencies=[Depends(is_authorized("user"))],  # Adjust role as needed
-)
-app.include_router(
-    tag_router,
-    prefix="/v1/tags",
-    tags=["tags"],
-    dependencies=[Depends(is_authorized("admin"))],  # Adjust role as needed
-)
+# Include all API routes with admin dependency
+app.include_router(recipe_router, prefix="/v1/recipes", dependencies=[admin_dependency])
+app.include_router(tag_router, prefix="/v1/tags", dependencies=[admin_dependency])
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8050, reload=True)
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=8020, reload=True)

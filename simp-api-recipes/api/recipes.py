@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-import uuid 
+import uuid
 from uuid import UUID
 
 from database.connection import SessionLocal
@@ -37,19 +37,11 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
         description=recipe_data.description
     )
     db.add(new_recipe)
-    db.commit()
-    db.refresh(new_recipe)
+    db.flush()  # Flush to generate recipe_id without committing
 
-    # Add ingredients
+    # Add ingredients (Ensuring ingredient exists)
     for ingredient in recipe_data.ingredients:
-        if not isinstance(ingredient.ingredient_id, UUID):
-            try:
-                ingredient_uuid = UUID(ingredient.ingredient_id)
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid UUID format: {ingredient.ingredient_id}")
-        else:
-            ingredient_uuid = ingredient.ingredient_id
-
+        ingredient_uuid = UUID(ingredient.ingredient_id)
         recipe_ingredient = RecipeIngredient(
             recipe_id=new_recipe.recipe_id,
             ingredient_id=ingredient_uuid,
@@ -59,33 +51,30 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
         db.add(recipe_ingredient)
 
     # Add steps
-    for step in recipe_data.steps:
-        recipe_step = RecipeStep(
+    recipe_steps = [
+        RecipeStep(
             recipe_id=new_recipe.recipe_id,
             step_number=step.step_number,
             description=step.description,
             image_url=step.image_url
         )
-        db.add(recipe_step)
+        for step in recipe_data.steps
+    ]
+    db.add_all(recipe_steps)
 
     # Add images
-    for image in recipe_data.images:
-        recipe_image = RecipeImage(
+    recipe_images = [
+        RecipeImage(
             recipe_id=new_recipe.recipe_id,
             image_url=image.image_url
         )
-        db.add(recipe_image)
+        for image in recipe_data.images
+    ]
+    db.add_all(recipe_images)
 
-    # Add tags
+    # Add tags (Ensuring tags exist)
     for tag_name in recipe_data.tags:
-        if not isinstance(tag_name, UUID):  # Only convert if it's a string
-            try:
-                tag_uuid = UUID(tag_name)
-            except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid UUID format: {tag_name}")
-        else:
-            tag_uuid = tag_name
-
+        tag_uuid = UUID(tag_name)
         existing_tag = db.query(Tag).filter(Tag.tag_id == tag_uuid).first()
         if not existing_tag:
             raise HTTPException(status_code=400, detail=f"Tag '{tag_name}' does not exist")
@@ -97,5 +86,6 @@ def create_recipe(recipe_data: RecipeCreateSchema, db: Session = Depends(get_db)
         db.add(recipe_tag)
 
     db.commit()
+    db.refresh(new_recipe)  # Refresh to get updated relationships
 
     return new_recipe

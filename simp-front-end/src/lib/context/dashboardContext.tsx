@@ -1,23 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import { fetchRecipes, createRecipe } from "@/lib/api/recipe/recipe"; 
+import { Recipe, RecipeCreate, RecipeLoad, Tag } from "@/lib/types/recipe"; // ✅ Import correct types
 
-// Define the shape of the context
-interface Recipe {
-    recipe_id: string;
-    title: string;
-    description?: string;
-    ingredients: { ingredient_id: string; amount: number; measurement: string }[];
-    steps: { step_number: number; description: string; image_url?: string }[];
-    images: { image_url: string }[];
-    tags: string[];
-}
-
+// ✅ Define the context type properly
 interface DashboardContextType {
     recipes: Recipe[];
     fetchRecipes: () => Promise<void>;
-    addRecipe: (recipe: Omit<Recipe, "recipe_id">) => Promise<void>;
+    addRecipe: (recipe: RecipeCreate) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -25,37 +16,48 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-    // Fetch recipes from the API
-    const fetchRecipes = async () => {
-        try {
-            const response = await axios.get("/api/recipes");
-            setRecipes(response.data);
-        } catch (error) {
-            console.error("Failed to fetch recipes", error);
-        }
+    const loadRecipes = async () => {
+        const data = await fetchRecipes();
+    
+        const formattedData: Recipe[] = data.map(recipe => ({
+            ...recipe,
+            description: recipe.description || "", // Ensure missing fields are added
+            ingredients: recipe.ingredients || [],
+            steps: recipe.steps || [],
+            images: recipe.images || [],
+            tags: recipe.tags || [],
+            favorited_by: recipe.favorited_by || [],
+        }));
+    
+        setRecipes(formattedData);
     };
 
-    // Add a new recipe
-    const addRecipe = async (recipe: Omit<Recipe, "recipe_id">) => {
-        try {
-            const response = await axios.post("/api/recipes", recipe);
-            setRecipes((prevRecipes) => [...prevRecipes, response.data]);
-        } catch (error) {
-            console.error("Failed to add recipe", error);
+    const addRecipe = async (recipe: RecipeCreate) => {
+        const newRecipe = await createRecipe(recipe);
+        if (newRecipe) {
+            setRecipes(prev => [
+                ...prev,
+                {
+                    ...newRecipe,
+                    tags: newRecipe.tags.map(tag => ({ tag_id: tag.tag_id, name: tag.name })), // ✅ Ensure tags are stored as `Tag[]`
+                }
+            ]);
         }
     };
+    
 
     useEffect(() => {
-        fetchRecipes();
+        loadRecipes();
     }, []);
 
     return (
-        <DashboardContext.Provider value={{ recipes, fetchRecipes, addRecipe }}>
+        <DashboardContext.Provider value={{ recipes, fetchRecipes: loadRecipes, addRecipe }}>
             {children}
         </DashboardContext.Provider>
     );
 };
 
+// ✅ Export `useDashboard` hook for easy access
 export const useDashboard = () => {
     const context = useContext(DashboardContext);
     if (!context) {
