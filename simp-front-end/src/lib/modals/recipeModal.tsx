@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
+import { Plus, X } from "lucide-react";
 import { Recipe, RecipeCreate, RecipeIngredient, RecipeStep, RecipeImage } from "@/lib/types/recipe";
 
 interface RecipeModalProps {
@@ -44,7 +45,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     }
   }, [recipe, isOpen]);
 
-  // Handle Input Changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -55,13 +55,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       ...formData,
       ingredients: [
         ...formData.ingredients,
-        {
-          ingredient_id: "",
-          recipe_id: "",
-          amount: 0,
-          measurement: "",
-          created_at: new Date().toISOString(),
-        },
+        { ingredient_id: "", recipe_id: "", amount: 0, measurement: "", created_at: new Date().toISOString() },
       ],
     });
   };
@@ -85,13 +79,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       ...formData,
       steps: [
         ...formData.steps,
-        {
-          step_id: "",
-          recipe_id: "",
-          step_number: formData.steps.length + 1,
-          description: "",
-          created_at: new Date().toISOString(),
-        },
+        { step_id: "", recipe_id: "", step_number: formData.steps.length + 1, description: "", created_at: new Date().toISOString() },
       ],
     });
   };
@@ -133,7 +121,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     });
   };
 
-  // Handle Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -155,71 +142,40 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <label>Ingredients</label>
           {formData.ingredients.map((ingredient, index) => (
             <div key={index} className={styles.ingredientRow}>
-              <input
-                type="text"
-                placeholder="Ingredient ID"
-                value={ingredient.ingredient_id}
-                onChange={(e) => handleIngredientChange(index, "ingredient_id", e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder="Amount"
-                value={ingredient.amount}
-                onChange={(e) => handleIngredientChange(index, "amount", Number(e.target.value))}
-              />
-              <input
-                type="text"
-                placeholder="Measurement"
-                value={ingredient.measurement}
-                onChange={(e) => handleIngredientChange(index, "measurement", e.target.value)}
-              />
-              <button type="button" onClick={() => handleRemoveIngredient(index)}>X</button>
+              <input type="text" placeholder="Ingredient ID" value={ingredient.ingredient_id} onChange={(e) => handleIngredientChange(index, "ingredient_id", e.target.value)} />
+              <input type="number" placeholder="Amount" value={ingredient.amount} onChange={(e) => handleIngredientChange(index, "amount", Number(e.target.value))} />
+              <input type="text" placeholder="Measurement" value={ingredient.measurement} onChange={(e) => handleIngredientChange(index, "measurement", e.target.value)} />
+              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)} aria-label="Remove Ingredient"><X size={18} /></a>
             </div>
           ))}
-          <button type="button" onClick={handleAddIngredient}>+ Add Ingredient</button>
+          <a className={styles.addButton} onClick={handleAddIngredient} aria-label="Add Ingredient"><Plus size={20} /></a>
 
           {/* Steps */}
           <label>Steps</label>
           {formData.steps.map((step, index) => (
             <div key={index} className={styles.stepRow}>
-              <textarea
-                placeholder={`Step ${step.step_number}`}
-                value={step.description}
-                onChange={(e) => handleStepChange(index, e.target.value)}
-              />
-              <button type="button" onClick={() => handleRemoveStep(index)}>X</button>
+              <textarea placeholder={`Step ${step.step_number}`} value={step.description} onChange={(e) => handleStepChange(index, e.target.value)} />
+              <a className={styles.iconButton} onClick={() => handleRemoveStep(index)} aria-label="Remove Step"><X size={18} /></a>
             </div>
           ))}
-          <button type="button" onClick={handleAddStep}>+ Add Step</button>
+          <a className={styles.addButton} onClick={handleAddStep} aria-label="Add Step"><Plus size={20} /></a>
 
           {/* Images */}
           <label>Images</label>
           {formData.images.map((image, index) => (
             <div key={index} className={styles.imageRow}>
-              <input
-                type="text"
-                placeholder="Image URL"
-                value={image.image_url}
-                onChange={(e) => handleImageChange(index, e.target.value)}
-              />
-              <button type="button" onClick={() => handleRemoveImage(index)}>X</button>
+              <input type="text" placeholder="Image URL" value={image.image_url} onChange={(e) => handleImageChange(index, e.target.value)} />
+              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)} aria-label="Remove Image"><X size={18} /></a>
             </div>
           ))}
-          <button type="button" onClick={handleAddImage}>+ Add Image</button>
+          <a className={styles.addButton} onClick={handleAddImage} aria-label="Add Image"><Plus size={20} /></a>
 
           {/* Tags */}
           <label>Tags</label>
-          <input
-            type="text"
-            placeholder="Comma-separated tags"
-            value={formData.tags.join(", ")}
-            onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(",").map(tag => tag.trim()) })}
-          />
+          <input type="text" placeholder="Comma-separated tags" value={formData.tags.join(", ")} onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(",").map(tag => tag.trim()) })} />
 
           <div className={styles.modalFooter}>
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
+            <a onClick={onClose} className={styles.cancelButton} aria-label="Cancel">Cancel</a>
             <button type="submit">Save Recipe</button>
           </div>
         </form>
