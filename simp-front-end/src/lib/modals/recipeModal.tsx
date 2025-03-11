@@ -6,6 +6,11 @@ import styles from "./recipeModal.module.css";
 import { Plus, Minus } from "lucide-react";
 import { Recipe, RecipeCreate, RecipeIngredient, RecipeStep, RecipeImage } from "@/lib/types/recipe";
 
+// ✅ Import Drag-and-Drop from `@dnd-kit`
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { SortableItem } from "./sortableItem"; // Component for sortable steps
+
 interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,22 +54,37 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Ingredients Handling
+  // ✅ Drag-and-Drop Sensors
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  // ✅ Handle Drag End
+  const onDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = formData.steps.findIndex(step => step.step_id === active.id);
+    const newIndex = formData.steps.findIndex(step => step.step_id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const updatedSteps = arrayMove(formData.steps, oldIndex, newIndex).map((step, index) => ({
+        ...step,
+        step_number: index + 1, // Keep step numbers ordered
+      }));
+
+      setFormData({ ...formData, steps: updatedSteps });
+    }
+  };
+
+  // ✅ Ingredients Handling
   const handleAddIngredient = () => {
     setFormData({
       ...formData,
-      ingredients: [
-        ...formData.ingredients,
-        { ingredient_id: "", recipe_id: "", amount: 0, measurement: "", created_at: new Date().toISOString() },
-      ],
+      ingredients: [...formData.ingredients, { ingredient_id: "", amount: 0, measurement: "", recipe_id: "", created_at: new Date().toISOString() }],
     });
   };
 
   const handleRemoveIngredient = (index: number) => {
-    setFormData({
-      ...formData,
-      ingredients: formData.ingredients.filter((_, i) => i !== index),
-    });
+    setFormData({ ...formData, ingredients: formData.ingredients.filter((_, i) => i !== index) });
   };
 
   const handleIngredientChange = (index: number, field: keyof RecipeIngredient, value: string | number) => {
@@ -73,38 +93,33 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, ingredients: updatedIngredients });
   };
 
-  // Steps Handling
+  // ✅ Steps Handling
   const handleAddStep = () => {
     setFormData({
       ...formData,
-      steps: [
-        ...formData.steps,
-        { step_id: "", recipe_id: "", step_number: formData.steps.length + 1, description: "", created_at: new Date().toISOString() },
-      ],
+      steps: [...formData.steps, { step_id: `${Date.now()}`, recipe_id: "", step_number: formData.steps.length + 1, description: "", created_at: new Date().toISOString() }],
     });
   };
 
-  const handleRemoveStep = (index: number) => {
+  const handleRemoveStep = (stepId: string) => {
     setFormData({
       ...formData,
-      steps: formData.steps.filter((_, i) => i !== index),
+      steps: formData.steps.filter(step => step.step_id !== stepId),
     });
   };
 
-  const handleStepChange = (index: number, value: string) => {
-    const updatedSteps = [...formData.steps];
-    updatedSteps[index] = { ...updatedSteps[index], description: value };
-    setFormData({ ...formData, steps: updatedSteps });
+  const handleStepChange = (stepId: string, value: string) => {
+    setFormData({
+      ...formData,
+      steps: formData.steps.map(step => (step.step_id === stepId ? { ...step, description: value } : step)),
+    });
   };
 
-  // Image Handling
+  // ✅ Image Handling
   const handleAddImage = () => {
     setFormData({
       ...formData,
-      images: [
-        ...formData.images,
-        { image_id: "", recipe_id: "", image_url: "", created_at: new Date().toISOString() },
-      ],
+      images: [...formData.images, { image_id: "", recipe_id: "", image_url: "", created_at: new Date().toISOString() }],
     });
   };
 
@@ -121,6 +136,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     });
   };
 
+  // ✅ Handle Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -141,47 +157,44 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           {/* Ingredients */}
           <div className={styles.sectionHeader}>
             <label>Ingredients</label>
-            <a className={styles.addButton} onClick={handleAddIngredient} aria-label="Add Ingredient"><Plus size={20} /></a>
+            <a className={styles.addButton} onClick={handleAddIngredient}><Plus size={20} /></a>
           </div>
           {formData.ingredients.map((ingredient, index) => (
             <div key={index} className={styles.ingredientRow}>
               <input type="text" placeholder="Ingredient ID" value={ingredient.ingredient_id} onChange={(e) => handleIngredientChange(index, "ingredient_id", e.target.value)} />
               <input type="number" placeholder="Amount" value={ingredient.amount} onChange={(e) => handleIngredientChange(index, "amount", Number(e.target.value))} />
               <input type="text" placeholder="Measurement" value={ingredient.measurement} onChange={(e) => handleIngredientChange(index, "measurement", e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)} aria-label="Remove Ingredient"><Minus size={18} /></a>
+              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)}><Minus size={18} /></a>
             </div>
           ))}
 
           {/* Steps */}
           <div className={styles.sectionHeader}>
             <label>Steps</label>
-            <a className={styles.addButton} onClick={handleAddStep} aria-label="Add Step"><Plus size={20} /></a>
+            <a className={styles.addButton} onClick={handleAddStep}><Plus size={20} /></a>
           </div>
-          {formData.steps.map((step, index) => (
-            <div key={index} className={styles.stepRow}>
-              <textarea placeholder={`Step ${step.step_number}`} value={step.description} onChange={(e) => handleStepChange(index, e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveStep(index)} aria-label="Remove Step"><Minus size={18} /></a>
-            </div>
-          ))}
+          <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors}>
+            <SortableContext items={formData.steps.map(step => step.step_id)} strategy={verticalListSortingStrategy}>
+              {formData.steps.map(step => (
+                <SortableItem key={step.step_id} step={step} onRemove={handleRemoveStep} onChange={handleStepChange} />
+              ))}
+            </SortableContext>
+          </DndContext>
 
           {/* Images */}
           <div className={styles.sectionHeader}>
             <label>Images</label>
-            <a className={styles.addButton} onClick={handleAddImage} aria-label="Add Image"><Plus size={20} /></a>
+            <a className={styles.addButton} onClick={handleAddImage}><Plus size={20} /></a>
           </div>
           {formData.images.map((image, index) => (
             <div key={index} className={styles.imageRow}>
               <input type="text" placeholder="Image URL" value={image.image_url} onChange={(e) => handleImageChange(index, e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)} aria-label="Remove Image"><Minus size={18} /></a>
+              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)}><Minus size={18} /></a>
             </div>
           ))}
 
-          {/* Tags */}
-          <label>Tags</label>
-          <input type="text" placeholder="Comma-separated tags" value={formData.tags.join(", ")} onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(",").map(tag => tag.trim()) })} />
-
           <div className={styles.modalFooter}>
-            <a onClick={onClose} className={styles.cancelButton} aria-label="Cancel">Cancel</a>
+            <button type="button" onClick={onClose}>Cancel</button>
             <button type="submit">Save Recipe</button>
           </div>
         </form>
