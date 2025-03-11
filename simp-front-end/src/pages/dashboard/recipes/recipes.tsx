@@ -33,7 +33,7 @@ export default function Recipes() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Recipes</h2>
+        <h2>Recipe Library</h2>
       </div>
       <div className={styles.recipeGrid}>
         {/* Add Recipe Button */}
