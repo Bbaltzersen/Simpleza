@@ -1,9 +1,7 @@
 :root {
   --background: #F7F7F7;
   --foreground: #2D2D2D;
-  --font-abril: 'Abril Fatface', serif;
-  --font-merriweather: 'Merriweather', serif;
-  --font-lobster: 'Lobster', serif;
+  --font-primary: 'Arial', sans-serif; 
   --font-size-base: 0.750rem;
   --line-height-base: 1.6;
   --header-font-size: 2rem;
@@ -30,14 +28,14 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-merriweather);
+  font-family: var(--font-primary);
   line-height: var(--line-height-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3 {
-  font-family: var(--font-abril);
+  font-family: var(--font-primary);
   line-height: var(--heading-line-height);
 }
 
