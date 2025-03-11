@@ -10,15 +10,17 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 10px;
 }
 
-/* Modal Window */
+/* Modal Window - Responsive Design */
 .modal {
     background: #fff;
     padding: 20px;
     border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
+    width: clamp(320px, 80vw, 1000px); /* ✅ Adjusts width based on screen size */
+    max-height: 90vh; /* ✅ Prevents overflow */
+    overflow-y: auto; /* ✅ Enables scrolling for long content */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-in-out;
 }
@@ -27,4 +29,12 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
+}
+
+/* Improve Mobile Usability */
+@media (max-width: 480px) {
+    .modal {
+        padding: 15px;
+        width: 95vw; /* ✅ Wider on small screens */
+    }
 }
