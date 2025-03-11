@@ -1,0 +1,61 @@
+/* Modal Content */
+.modalContent {
+    padding: 20px;
+    width: 100%;
+    max-width: 400px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Form Inputs */
+.modalContent label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 1rem;
+}
+
+.modalContent input,
+.modalContent textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    resize: none;
+}
+
+/* Modal Footer */
+.modalFooter {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+/* Buttons */
+.modalFooter button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.modalFooter button:first-child {
+    background: #ccc;
+    color: black;
+}
+
+.modalFooter button:last-child {
+    background: #007fff;
+    color: white;
+}
+
+.modalFooter button:last-child:hover {
+    background: #005fcc;
+}
