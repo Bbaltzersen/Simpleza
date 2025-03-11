@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
-import { Plus, X } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { Recipe, RecipeCreate, RecipeIngredient, RecipeStep, RecipeImage } from "@/lib/types/recipe";
 
 interface RecipeModalProps {
@@ -139,36 +139,42 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <textarea name="description" value={formData.description} onChange={handleChange} />
 
           {/* Ingredients */}
-          <label>Ingredients</label>
+          <div className={styles.sectionHeader}>
+            <label>Ingredients</label>
+            <a className={styles.addButton} onClick={handleAddIngredient} aria-label="Add Ingredient"><Plus size={20} /></a>
+          </div>
           {formData.ingredients.map((ingredient, index) => (
             <div key={index} className={styles.ingredientRow}>
               <input type="text" placeholder="Ingredient ID" value={ingredient.ingredient_id} onChange={(e) => handleIngredientChange(index, "ingredient_id", e.target.value)} />
               <input type="number" placeholder="Amount" value={ingredient.amount} onChange={(e) => handleIngredientChange(index, "amount", Number(e.target.value))} />
               <input type="text" placeholder="Measurement" value={ingredient.measurement} onChange={(e) => handleIngredientChange(index, "measurement", e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)} aria-label="Remove Ingredient"><X size={18} /></a>
+              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)} aria-label="Remove Ingredient"><Minus size={18} /></a>
             </div>
           ))}
-          <a className={styles.addButton} onClick={handleAddIngredient} aria-label="Add Ingredient"><Plus size={20} /></a>
 
           {/* Steps */}
-          <label>Steps</label>
+          <div className={styles.sectionHeader}>
+            <label>Steps</label>
+            <a className={styles.addButton} onClick={handleAddStep} aria-label="Add Step"><Plus size={20} /></a>
+          </div>
           {formData.steps.map((step, index) => (
             <div key={index} className={styles.stepRow}>
               <textarea placeholder={`Step ${step.step_number}`} value={step.description} onChange={(e) => handleStepChange(index, e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveStep(index)} aria-label="Remove Step"><X size={18} /></a>
+              <a className={styles.iconButton} onClick={() => handleRemoveStep(index)} aria-label="Remove Step"><Minus size={18} /></a>
             </div>
           ))}
-          <a className={styles.addButton} onClick={handleAddStep} aria-label="Add Step"><Plus size={20} /></a>
 
           {/* Images */}
-          <label>Images</label>
+          <div className={styles.sectionHeader}>
+            <label>Images</label>
+            <a className={styles.addButton} onClick={handleAddImage} aria-label="Add Image"><Plus size={20} /></a>
+          </div>
           {formData.images.map((image, index) => (
             <div key={index} className={styles.imageRow}>
               <input type="text" placeholder="Image URL" value={image.image_url} onChange={(e) => handleImageChange(index, e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)} aria-label="Remove Image"><X size={18} /></a>
+              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)} aria-label="Remove Image"><Minus size={18} /></a>
             </div>
           ))}
-          <a className={styles.addButton} onClick={handleAddImage} aria-label="Add Image"><Plus size={20} /></a>
 
           {/* Tags */}
           <label>Tags</label>

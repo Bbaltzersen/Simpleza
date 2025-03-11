@@ -11,11 +11,56 @@
 /* Form Inputs */
 .modalContent label {
     font-weight: bold;
-    margin-bottom: 5px;
-    display: block;
     font-size: 1rem;
 }
 
+/* Section Header - Labels with Plus Button */
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.sectionHeader label {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+/* Plus (+) Button */
+.addButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00c73c;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    flex-shrink: 0; /* Ensures button does not shrink */
+}
+
+.addButton:hover {
+    color: #304436;
+}
+
+/* Minus (-) Button */
+.iconButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: red;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0; /* Ensures button does not shrink */
+}
+
+.iconButton:hover {
+    color: darkred;
+}
+
+/* Input Fields */
 .modalContent input,
 .modalContent textarea {
     width: 100%;
@@ -25,6 +70,24 @@
     font-size: 1rem;
     margin-bottom: 10px;
     resize: none;
+}
+
+/* Ingredient, Step, and Image Rows */
+.ingredientRow,
+.stepRow,
+.imageRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Make input fields grow instead of shrinking the button */
+.ingredientRow input,
+.stepRow textarea,
+.imageRow input {
+    flex-grow: 1; /* Allows inputs to take up available space */
+    min-width: 0; /* Prevents layout issues in small containers */
 }
 
 /* Modal Footer */
