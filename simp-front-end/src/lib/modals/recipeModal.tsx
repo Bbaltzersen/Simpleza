@@ -3,13 +3,18 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
-import { Plus, Minus } from "lucide-react";
-import { Recipe, RecipeCreate, RecipeIngredient, RecipeStep, RecipeImage } from "@/lib/types/recipe";
+import { Plus } from "lucide-react";
+import {
+  Recipe,
+  RecipeCreate,
+  RecipeIngredientCreate,
+  RecipeStepCreate,
+  RecipeImageCreate,
+} from "@/lib/types/recipe";
+import { SortableItem } from "./sortableItem";
 
-// ✅ Import Drag-and-Drop from `@dnd-kit`
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { SortableItem } from "./sortableItem"; // Component for sortable steps
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -19,7 +24,14 @@ interface RecipeModalProps {
 }
 
 export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeModalProps) {
-  const [formData, setFormData] = useState<RecipeCreate>({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    ingredients: RecipeIngredientCreate[];
+    steps: RecipeStepCreate[];
+    images: RecipeImageCreate[];
+    tags: string[];
+  }>({
     title: "",
     description: "",
     ingredients: [],
@@ -33,9 +45,21 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       setFormData({
         title: recipe.title,
         description: recipe.description || "",
-        ingredients: recipe.ingredients || [],
-        steps: recipe.steps || [],
-        images: recipe.images || [],
+        ingredients: recipe.ingredients.map(ing => ({
+          id: ing.ingredient_id,
+          ingredient_id: ing.ingredient_id,
+          amount: ing.amount,
+          measurement: ing.measurement,
+        })),
+        steps: recipe.steps.map(step => ({
+          id: step.step_id,
+          step_number: step.step_number,
+          description: step.description,
+        })),
+        images: recipe.images.map(image => ({
+          id: image.image_id,
+          image_url: image.image_url,
+        })),
         tags: recipe.tags.map(tag => tag.tag_id),
       });
     } else {
@@ -54,144 +78,162 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Drag-and-Drop Sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
-  // ✅ Handle Drag End
-  const onDragEnd = (event: any) => {
+  const onDragEnd = (event: any, type: "steps" | "ingredients" | "images") => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = formData.steps.findIndex(step => step.step_id === active.id);
-    const newIndex = formData.steps.findIndex(step => step.step_id === over.id);
+    const updatedItems = arrayMove(
+      [...formData[type]],
+      formData[type].findIndex((item) => item.id === active.id),
+      formData[type].findIndex((item) => item.id === over.id)
+    );
 
-    if (oldIndex !== -1 && newIndex !== -1) {
-      const updatedSteps = arrayMove(formData.steps, oldIndex, newIndex).map((step, index) => ({
-        ...step,
-        step_number: index + 1, // Keep step numbers ordered
-      }));
-
-      setFormData({ ...formData, steps: updatedSteps });
-    }
+    // For steps, you might want to reindex the step_number here if needed.
+    setFormData({ ...formData, [type]: updatedItems });
   };
 
-  // ✅ Ingredients Handling
-  const handleAddIngredient = () => {
-    setFormData({
-      ...formData,
-      ingredients: [...formData.ingredients, { ingredient_id: "", amount: 0, measurement: "", recipe_id: "", created_at: new Date().toISOString() }],
-    });
+  const addItem = (type: "steps" | "ingredients" | "images", newItem: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: [...prev[type], { id: `${Date.now()}`, ...newItem }],
+    }));
   };
 
-  const handleRemoveIngredient = (index: number) => {
-    setFormData({ ...formData, ingredients: formData.ingredients.filter((_, i) => i !== index) });
+  const removeItem = (type: "steps" | "ingredients" | "images", id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: prev[type].filter(item => item.id !== id),
+    }));
   };
 
-  const handleIngredientChange = (index: number, field: keyof RecipeIngredient, value: string | number) => {
-    const updatedIngredients = [...formData.ingredients];
-    updatedIngredients[index] = { ...updatedIngredients[index], [field]: value };
-    setFormData({ ...formData, ingredients: updatedIngredients });
+  const changeItem = (type: "steps" | "ingredients" | "images", id: string, field: string, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [type]: prev[type].map(item => (item.id === id ? { ...item, [field]: value } : item)),
+    }));
   };
 
-  // ✅ Steps Handling
-  const handleAddStep = () => {
-    setFormData({
-      ...formData,
-      steps: [...formData.steps, { step_id: `${Date.now()}`, recipe_id: "", step_number: formData.steps.length + 1, description: "", created_at: new Date().toISOString() }],
-    });
-  };
-
-  const handleRemoveStep = (stepId: string) => {
-    setFormData({
-      ...formData,
-      steps: formData.steps.filter(step => step.step_id !== stepId),
-    });
-  };
-
-  const handleStepChange = (stepId: string, value: string) => {
-    setFormData({
-      ...formData,
-      steps: formData.steps.map(step => (step.step_id === stepId ? { ...step, description: value } : step)),
-    });
-  };
-
-  // ✅ Image Handling
-  const handleAddImage = () => {
-    setFormData({
-      ...formData,
-      images: [...formData.images, { image_id: "", recipe_id: "", image_url: "", created_at: new Date().toISOString() }],
-    });
-  };
-
-  const handleImageChange = (index: number, value: string) => {
-    const updatedImages = [...formData.images];
-    updatedImages[index] = { ...updatedImages[index], image_url: value };
-    setFormData({ ...formData, images: updatedImages });
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData({
-      ...formData,
-      images: formData.images.filter((_, i) => i !== index),
-    });
-  };
-
-  // ✅ Handle Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+
+    // ✅ Ensure all fields contain the necessary properties before submission
+    const cleanedData: RecipeCreate = {
+        ...formData,
+        ingredients: formData.ingredients.map(({ id, ingredient_id, amount, measurement }) => ({
+            id, // ✅ Ensure `id` is included
+            ingredient_id,
+            amount,
+            measurement,
+        })),
+        steps: formData.steps.map(({ id, step_number, description }) => ({
+            id, // ✅ Ensure `id` is included
+            step_number,
+            description,
+        })),
+        images: formData.images.map(({ id, image_url }) => ({
+            id, // ✅ Ensure `id` is included
+            image_url,
+        })),
+    };
+
+    onSave(cleanedData);
     onClose();
-  };
+};
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.modalContent}>
         <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
         <form onSubmit={handleSubmit}>
-          <label>Title</label>
-          <input type="text" name="title" value={formData.title} onChange={handleChange} required />
-
-          <label>Description</label>
-          <textarea name="description" value={formData.description} onChange={handleChange} />
-
-          {/* Ingredients */}
-          <div className={styles.sectionHeader}>
-            <label>Ingredients</label>
-            <a className={styles.addButton} onClick={handleAddIngredient}><Plus size={20} /></a>
+          <div className={styles.titleContainer}>
+            <label className={styles.labelText}>Title</label>
+            <input type="text" name="title" value={formData.title} onChange={handleChange} required />
           </div>
-          {formData.ingredients.map((ingredient, index) => (
-            <div key={index} className={styles.ingredientRow}>
-              <input type="text" placeholder="Ingredient ID" value={ingredient.ingredient_id} onChange={(e) => handleIngredientChange(index, "ingredient_id", e.target.value)} />
-              <input type="number" placeholder="Amount" value={ingredient.amount} onChange={(e) => handleIngredientChange(index, "amount", Number(e.target.value))} />
-              <input type="text" placeholder="Measurement" value={ingredient.measurement} onChange={(e) => handleIngredientChange(index, "measurement", e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveIngredient(index)}><Minus size={18} /></a>
+          <div className={styles.descriptionContainer}>
+            <label className={styles.labelText}>Description</label>
+            <textarea name="description" value={formData.description} onChange={handleChange} />
+          </div>
+
+          {/* Ingredients Section */}
+          <div>
+            <div className={styles.sectionHeader}>
+              <label>Ingredients</label>
+              <a className={styles.addButton} onClick={() => addItem("ingredients", { ingredient_id: "", amount: 0, measurement: "" })}>
+                <Plus size={20} />
+              </a>
             </div>
-          ))}
-
-          {/* Steps */}
-          <div className={styles.sectionHeader}>
-            <label>Steps</label>
-            <a className={styles.addButton} onClick={handleAddStep}><Plus size={20} /></a>
+            <DndContext collisionDetection={closestCenter} onDragEnd={(event) => onDragEnd(event, "ingredients")} sensors={sensors}>
+              <SortableContext items={formData.ingredients.map(ing => ing.id)} strategy={verticalListSortingStrategy}>
+                {formData.ingredients.map(ingredient => (
+                  <SortableItem
+                    key={ingredient.id}
+                    item={ingredient}
+                    onRemove={() => removeItem("ingredients", ingredient.id)}
+                    onChange={(id, field, value) => changeItem("ingredients", id, field, value)}
+                    fields={[
+                      { key: "ingredient_id", type: "text", placeholder: "Ingredient Name" },
+                      { key: "amount", type: "number", placeholder: "Amount" },
+                      { key: "measurement", type: "text", placeholder: "Measurement" },
+                    ]}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
-          <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd} sensors={sensors}>
-            <SortableContext items={formData.steps.map(step => step.step_id)} strategy={verticalListSortingStrategy}>
-              {formData.steps.map(step => (
-                <SortableItem key={step.step_id} step={step} onRemove={handleRemoveStep} onChange={handleStepChange} />
-              ))}
-            </SortableContext>
-          </DndContext>
 
-          {/* Images */}
-          <div className={styles.sectionHeader}>
-            <label>Images</label>
-            <a className={styles.addButton} onClick={handleAddImage}><Plus size={20} /></a>
-          </div>
-          {formData.images.map((image, index) => (
-            <div key={index} className={styles.imageRow}>
-              <input type="text" placeholder="Image URL" value={image.image_url} onChange={(e) => handleImageChange(index, e.target.value)} />
-              <a className={styles.iconButton} onClick={() => handleRemoveImage(index)}><Minus size={18} /></a>
+          {/* Steps Section */}
+          <div>
+            <div className={styles.sectionHeader}>
+              <label>Steps</label>
+              <a className={styles.addButton} onClick={() => addItem("steps", { step_number: formData.steps.length + 1, description: "" })}>
+                <Plus size={20} />
+              </a>
             </div>
-          ))}
+            <DndContext collisionDetection={closestCenter} onDragEnd={(event) => onDragEnd(event, "steps")} sensors={sensors}>
+              <SortableContext items={formData.steps.map(step => step.id)} strategy={verticalListSortingStrategy}>
+                {formData.steps.map(step => (
+                  <SortableItem
+                    key={step.id}
+                    item={step}
+                    onRemove={() => removeItem("steps", step.id)}
+                    onChange={(id, field, value) => changeItem("steps", id, field, value)}
+                    fields={[
+                      { key: "description", type: "text", placeholder: "Step Description" },
+                    ]}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+
+          {/* Images Section */}
+          <div>
+            <div className={styles.sectionHeader}>
+              <label>Images</label>
+              <a className={styles.addButton} onClick={() => addItem("images", { image_url: "" })}>
+                <Plus size={20} />
+              </a>
+            </div>
+            <DndContext collisionDetection={closestCenter} onDragEnd={(event) => onDragEnd(event, "images")} sensors={sensors}>
+              <SortableContext items={formData.images.map(image => image.id)} strategy={verticalListSortingStrategy}>
+                <div className={styles.imageRow}>
+                  {formData.images.map(image => (
+                    <SortableItem
+                      key={image.id}
+                      item={image}
+                      onRemove={() => removeItem("images", image.id)}
+                      onChange={(id, field, value) => changeItem("images", id, field, value)}
+                      fields={[
+                        { key: "image_url", type: "text", placeholder: "Image URL" },
+                      ]}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </div>
 
           <div className={styles.modalFooter}>
             <button type="button" onClick={onClose}>Cancel</button>

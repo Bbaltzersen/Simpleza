@@ -7,23 +7,30 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 500;
     padding: 10px;
 }
 
-/* Modal Window - Responsive Design */
 .modal {
     background: #fff;
+    margin-top: 50px;
     padding: 20px;
     border-radius: 8px;
-    width: clamp(320px, 80vw, 1000px); /* ✅ Adjusts width based on screen size */
-    max-height: 90vh; /* ✅ Prevents overflow */
-    overflow-y: auto; /* ✅ Enables scrolling for long content */
+    width: clamp(320px, 80vw, 1000px); /* ✅ Responsive width */
+    max-height: 90vh; /* ✅ Prevents excessive height */
+    overflow-y: auto; /* ✅ Enables scrolling only if content exceeds 90vh */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.2s ease-in-out;
+    
+    display: flex;
+    flex-direction: column;
+    
+    min-height: min-content; /* ✅ Ensures the height grows with content */
+    height: fit-content; /* ✅ Makes it dynamically adjust based on content */
 }
+
+
 
 /* Fade-in Animation */
 @keyframes fadeIn {

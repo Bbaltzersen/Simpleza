@@ -1,6 +1,5 @@
 /* Modal Content */
 .modalContent {
-    padding: 20px;
     width: 100%;
     background: white;
     display: flex;
@@ -14,18 +13,34 @@
     font-size: 1rem;
 }
 
+.labelText {
+    padding-bottom: 10px;
+}
+
+.titleContainer {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
+}
+
 /* Section Header - Labels with Plus Button */
 .sectionHeader {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
 }
 
 /* Label Styling */
 .sectionHeader label {
     font-size: 1rem;
     font-weight: bold;
+}
+
+
+.descriptionContainer {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 20px;
 }
 
 /* Plus (+) Button */
@@ -64,38 +79,33 @@
 /* Input Fields */
 .modalContent input,
 .modalContent textarea {
-    width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1rem;
-    margin-bottom: 10px;
     resize: none;
 }
 
 /* Ingredient, Step, and Image Rows */
-.ingredientRow,
-.stepRow,
-.imageRow {
+.sortableRow {
+    width: 100%;
+    gap: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
 }
 
 /* Make input fields grow instead of shrinking the button */
-.ingredientRow input,
-.stepRow textarea,
-.imageRow input {
+.sortableRow input {
     flex-grow: 1; /* Allows inputs to take up available space */
     min-width: 0; /* Prevents layout issues in small containers */
+    margin-bottom: 10px;
 }
 
 /* Modal Footer */
 .modalFooter {
     display: flex;
+    margin-top: 20px;
     justify-content: space-between;
-    margin-top: 15px;
 }
 
 /* Buttons */
@@ -120,3 +130,10 @@
 .modalFooter button:last-child:hover {
     background: #005fcc;
 }
+
+/* Add this to your recipeModal.module.css */
+.sortableRow.dragging {
+    position: relative;
+    z-index: 9999;
+  }
+  

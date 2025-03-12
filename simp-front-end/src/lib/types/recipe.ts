@@ -16,11 +16,12 @@ export type RecipeCreate = {
   title: string;
   description?: string;
   author_id?: string;
-  ingredients: RecipeIngredient[];
-  steps: RecipeStep[];
-  images: RecipeImage[];
-  tags: string[]; // ✅ Convert `Tag[]` to `UUID[]` before sending to API
+  ingredients: RecipeIngredientCreate[];
+  steps: RecipeStepCreate[];
+  images: RecipeImageCreate[];
+  tags: string[];
 };
+
 
 export type RecipeLoad = {
   recipe_id: string;
@@ -64,4 +65,23 @@ export type RecipeFavorite = {
   user_id: string;
   recipe_id: string;
   favorited_at: string;
+};
+
+
+export type RecipeIngredientCreate = {
+  id: string; // Temporary ID for frontend sorting
+  ingredient_id: string;
+  amount: number;
+  measurement: string;
+};
+
+export type RecipeStepCreate = {
+  id: string; // Temporary ID for frontend sorting
+  step_number: number;
+  description: string;
+};
+
+export type RecipeImageCreate = {
+  id: string; // Temporary ID for frontend sorting
+  image_url: string;
 };
