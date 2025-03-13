@@ -13,4 +13,9 @@ class Recipe(Base):
     author_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="SET NULL"))
     created_at = Column(TIMESTAMP, server_default=func.now())
 
-    ingredients = relationship("RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan")
+    steps = relationship("RecipeStep", back_populates="recipe", cascade="all, delete-orphan")
+    images = relationship("RecipeImage", back_populates="recipe", cascade="all, delete-orphan")
+
+    ingredients = relationship("RecipeIngredient", back_populates="recipe")
+
+    tags = relationship("RecipeTag", back_populates="recipe")

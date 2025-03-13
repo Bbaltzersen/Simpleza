@@ -8,7 +8,7 @@ class RecipeIngredient(Base):
     __tablename__ = "recipe_ingredients"
 
     recipe_id = Column(UUID(as_uuid=True), ForeignKey("recipes.recipe_id", ondelete="CASCADE"), primary_key=True)
-    ingredient_id = Column(UUID(as_uuid=True), ForeignKey("ingredients.ingredient_id", ondelete="CASCADE"), primary_key=True)
+    ingredient_id = Column(UUID(as_uuid=True), ForeignKey("ingredients.ingredient_id"), primary_key=True)  # ❌ No Cascade Delete
     amount = Column(Numeric(10, 2), nullable=False)
     measurement = Column(TEXT, nullable=False)
 

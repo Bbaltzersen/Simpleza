@@ -1,6 +1,7 @@
 import uuid
 from sqlalchemy import Column, ForeignKey, Integer, Text, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from .base import Base
 
 class RecipeStep(Base):
@@ -12,3 +13,5 @@ class RecipeStep(Base):
     description = Column(Text, nullable=False)
     image_url = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
+
+    recipe = relationship("Recipe", back_populates="steps")

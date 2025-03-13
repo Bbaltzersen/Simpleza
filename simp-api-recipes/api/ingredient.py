@@ -41,7 +41,6 @@ def create_ingredient(ingredient_data: IngredientCreate, db: Session = Depends(g
     new_ingredient = Ingredient(
         ingredient_id=str(uuid.uuid4()),
         name=ingredient_data.name,
-        description=ingredient_data.description or "",
     )
 
     db.add(new_ingredient)

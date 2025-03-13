@@ -45,10 +45,19 @@ class RecipeCreateSchema(BaseModel):
     class Config:
         from_attributes = True
 
-
 class TagOut(BaseModel):
     tag_id: UUID
     name: str
 
     class Config:
         from_attributes = True
+
+class RecipeRetrieveSchema(BaseModel):
+    title: str
+    description: Optional[str] = None
+    author_id: Optional[UUID] = None
+    ingredients: List[RecipeIngredientSchema]
+    steps: List[RecipeStepSchema]
+    images: List[RecipeImageSchema]
+    tags: List[TagOut]
+
