@@ -36,8 +36,7 @@ export default function Recipes() {
       author_id: user.user_id,
       tags: Array.isArray(recipeData.tags) ? recipeData.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Fix `tag_id` issue
       ingredients: recipeData.ingredients.map(ing => ({
-        id: ing.id || `${Date.now()}`,
-        ingredient_id: ing.ingredient_id,
+        ingredient_name: ing.ingredient_name,
         amount: ing.amount,
         measurement: ing.measurement,
       })),

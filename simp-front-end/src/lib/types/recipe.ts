@@ -70,10 +70,11 @@ export type RecipeFavorite = {
 
 export type RecipeIngredientCreate = {
   id: string; // Temporary ID for frontend sorting
-  ingredient_id: string;
+  ingredient_name: string;
   amount: number;
   measurement: string;
 };
+
 
 export type RecipeStepCreate = {
   id: string; // Temporary ID for frontend sorting

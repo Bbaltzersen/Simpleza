@@ -43,12 +43,14 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   useEffect(() => {
     if (recipe) {
+      
+
       setFormData({
         title: recipe.title,
         description: recipe.description || "",
         ingredients: recipe.ingredients.map(ing => ({
           id: ing.ingredient_id,
-          ingredient_id: ing.ingredient_id,
+          ingredient_name: ing.,
           amount: ing.amount,
           measurement: ing.measurement,
         })),
@@ -122,9 +124,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     // ✅ Ensure all fields contain the necessary properties before submission
     const cleanedData: RecipeCreate = {
         ...formData,
-        ingredients: formData.ingredients.map(({ id, ingredient_id, amount, measurement }) => ({
+        ingredients: formData.ingredients.map(({ id, ingredient_name, amount, measurement }) => ({
             id, // ✅ Ensure `id` is included
-            ingredient_id,
+            ingredient_name,
             amount,
             measurement,
         })),
@@ -174,7 +176,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                     onRemove={() => removeItem("ingredients", ingredient.id)}
                     onChange={(id, field, value) => changeItem("ingredients", id, field, value)}
                     fields={[
-                      { key: "ingredient_id", type: "text", placeholder: "Ingredient Name" },
+                      { key: "ingredient_name", type: "text", placeholder: "Ingredient Name" },
                       { key: "amount", type: "number", placeholder: "Amount" },
                       { key: "measurement", type: "text", placeholder: "Measurement" },
                     ]}

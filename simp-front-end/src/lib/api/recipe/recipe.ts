@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Recipe, RecipeCreate } from "@/lib/types/recipe"; // Ensure you have a correct Recipe type
+import { Ingredient } from "@/lib/types/ingredient";
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
@@ -73,13 +74,26 @@ export async function deleteRecipe(recipe_id: string): Promise<boolean> {
   }
 }
 
+/**
+ * Fetch an ingredient by ID
+ */
+export async function fetchIngredientById(ingredient_id: string): Promise<Ingredient | null> {
+  try {
+    const response = await apiClient.get<Ingredient>(`/ingredients/${ingredient_id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ingredient:", error);
+    return null;
+  }
+}
+
 export async function handleSaveRecipe(recipe: RecipeCreate): Promise<Recipe | null> {
   const formattedRecipe: RecipeCreate = {
     ...recipe,
     tags: Array.isArray(recipe.tags) ? recipe.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Explicitly type `tags`
     ingredients: recipe.ingredients.map(ing => ({
       id: ing.id || `${Date.now()}`,
-      ingredient_id: ing.ingredient_id,
+      ingredient_name: ing.ingredient_name,
       amount: ing.amount,
       measurement: ing.measurement,
     })),
