@@ -15,6 +15,7 @@ import { SortableItem } from "./sortableItem";
 
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import TagInput from "./tagSelector";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -233,6 +234,11 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                 </div>
               </SortableContext>
             </DndContext>
+          </div>
+
+          <div>
+            <label className={styles.labelText}>Tags</label>
+            <TagInput selectedTags={formData.tags} onChange={(tags) => setFormData({ ...formData, tags })} />
           </div>
 
           <div className={styles.modalFooter}>

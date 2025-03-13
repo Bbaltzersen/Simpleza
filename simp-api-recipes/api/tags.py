@@ -35,7 +35,7 @@ def create_tag(tag_name: str, db: Session = Depends(get_db)):
 
     return new_tag
 
-@router.get("/", response_model=List[TagOut])
+@router.get("/")
 def get_tags(db: Session = Depends(get_db)):
     tags = db.query(Tag).all()
-    return tags
+    return [{"tag_id": str(tag.tag_id), "name": tag.name} for tag in tags]  # Convert UUID to string
