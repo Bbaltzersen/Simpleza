@@ -4,6 +4,7 @@ import ContentLayout from "@/components/layoutComponent/contentLayout";
 import NavMenu from "@/components/navMenuComponent/navMenu";
 import AuthWindow from "@/lib/providers/authWindowProvider";
 import AuthModal from "@/components/authWindow/authWindow";
+import Footer from "@/components/footerComponent/footer";
 
 export default function Home() {
   const initialUser = null;
@@ -16,6 +17,7 @@ export default function Home() {
         <ContentLayout>
           <h1>Hello, World!</h1>
         </ContentLayout>
+        <Footer />
         <AuthModal />
       </NavMenuProvider>
       </AuthWindow>
