@@ -11,7 +11,7 @@ class RecipeOut(BaseModel):
 
 
 class RecipeIngredientSchema(BaseModel):
-    ingredient_id: UUID
+    ingredient_name: str
     amount: float
     measurement: str
 

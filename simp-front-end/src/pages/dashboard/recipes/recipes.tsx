@@ -6,29 +6,59 @@ import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
 import { Plus } from "lucide-react";
 import { Recipe, RecipeCreate } from "@/lib/types/recipe";
+import { useAuth } from "@/lib/context/authContext";
+import { handleSaveRecipe } from "@/lib/api/recipe/recipe";
 
 export default function Recipes() {
   const { recipes } = useDashboard();
+  const { user } = useAuth(); // ✅ Get authenticated user from context
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
-  // Open modal for adding a recipe
   const handleAddRecipe = () => {
     setSelectedRecipe(null);
     setIsModalOpen(true);
   };
 
-  // Open modal for editing an existing recipe
   const handleEditRecipe = (recipe: Recipe) => {
     setSelectedRecipe(recipe);
     setIsModalOpen(true);
   };
 
-  // Handle saving a new or updated recipe
-  const handleSaveRecipe = (recipeData: RecipeCreate) => {
-    console.log("Saving Recipe:", recipeData);
+  const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
+    if (!user) {
+      console.error("User is not authenticated");
+      return;
+    }
+  
+    const newRecipe: RecipeCreate = {
+      ...recipeData,
+      author_id: user.user_id,
+      tags: Array.isArray(recipeData.tags) ? recipeData.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Fix `tag_id` issue
+      ingredients: recipeData.ingredients.map(ing => ({
+        id: ing.id || `${Date.now()}`,
+        ingredient_id: ing.ingredient_id,
+        amount: ing.amount,
+        measurement: ing.measurement,
+      })),
+      steps: recipeData.steps.map(step => ({
+        id: step.id || `${Date.now()}`,
+        step_number: step.step_number,
+        description: step.description,
+      })),
+      images: recipeData.images.map(img => ({
+        id: img.id || `${Date.now()}`,
+        image_url: img.image_url,
+      })),
+    };
+  
+    console.log("Saving Recipe:", newRecipe);
+    await handleSaveRecipe(newRecipe);
     setIsModalOpen(false);
   };
+  
+  
+  
 
   return (
     <div className={styles.container}>
@@ -36,15 +66,13 @@ export default function Recipes() {
         <h2>Recipe Library</h2>
       </div>
       <div className={styles.recipeGrid}>
-        {/* Add Recipe Button */}
         <div className={styles.addRecipeCard} onClick={handleAddRecipe} aria-label="Add Recipe">
           <Plus size={48} />
         </div>
 
-        {/* Recipe Cards */}
         {recipes.length > 0 ? (
-          [...Array(12)].flatMap(() => recipes).map((recipe, index) => (
-            <div key={`${recipe.recipe_id}-${index}`} className={styles.recipeCard} onClick={() => handleEditRecipe(recipe)}>
+          recipes.map((recipe) => (
+            <div key={recipe.recipe_id} className={styles.recipeCard} onClick={() => handleEditRecipe(recipe)}>
               <div className={styles.imageContainer}>
                 <img
                   src="https://picsum.photos/300/200"
@@ -68,8 +96,12 @@ export default function Recipes() {
         )}
       </div>
 
-      {/* Modal for Adding/Editing Recipes */}
-      <RecipeModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveRecipe} recipe={selectedRecipe} />
+      <RecipeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveRecipeWrapper} // ✅ Use wrapper function
+        recipe={selectedRecipe}
+      />
     </div>
   );
 }

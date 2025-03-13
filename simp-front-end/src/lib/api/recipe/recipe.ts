@@ -72,3 +72,28 @@ export async function deleteRecipe(recipe_id: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function handleSaveRecipe(recipe: RecipeCreate): Promise<Recipe | null> {
+  const formattedRecipe: RecipeCreate = {
+    ...recipe,
+    tags: Array.isArray(recipe.tags) ? recipe.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Explicitly type `tags`
+    ingredients: recipe.ingredients.map(ing => ({
+      id: ing.id || `${Date.now()}`,
+      ingredient_id: ing.ingredient_id,
+      amount: ing.amount,
+      measurement: ing.measurement,
+    })),
+    steps: recipe.steps.map(step => ({
+      id: step.id || `${Date.now()}`,
+      step_number: step.step_number,
+      description: step.description,
+    })),
+    images: recipe.images.map(img => ({
+      id: img.id || `${Date.now()}`,
+      image_url: img.image_url,
+    })),
+  };
+
+  return createRecipe(formattedRecipe);
+}
+
