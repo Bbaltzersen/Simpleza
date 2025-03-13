@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Recipe, RecipeCreate } from "@/lib/types/recipe"; // Ensure you have a correct Recipe type
 import { Ingredient } from "@/lib/types/ingredient";
+import { RecipeRetrieve } from "@/lib/types/recipe"
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
@@ -24,16 +25,6 @@ export async function fetchRecipes(): Promise<Recipe[]> {
 
 /**
  * Fetch a single recipe by ID
- */
-export async function fetchRecipeById(recipe_id: string): Promise<Recipe | null> {
-  try {
-    const response = await apiClient.get(`/${recipe_id}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching recipe:", error);
-    return null;
-  }
-}
 
 /**
  * Create a new recipe
@@ -111,3 +102,12 @@ export async function handleSaveRecipe(recipe: RecipeCreate): Promise<Recipe | n
   return createRecipe(formattedRecipe);
 }
 
+export async function fetchRecipeById(recipeId: string): Promise<RecipeRetrieve | null> {
+  try {
+    const response = await apiClient.get<RecipeRetrieve>(`/${recipeId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching recipe:", error);
+    return null;
+  }
+}

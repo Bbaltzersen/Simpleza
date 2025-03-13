@@ -10,6 +10,7 @@ import {
   RecipeIngredientCreate,
   RecipeStepCreate,
   RecipeImageCreate,
+  RecipeRetrieve,
 } from "@/lib/types/recipe";
 import { SortableItem } from "./sortableItem";
 
@@ -21,7 +22,7 @@ interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (recipe: RecipeCreate) => void;
-  recipe?: Recipe | null;
+  recipe?: RecipeRetrieve | null;
 }
 
 export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeModalProps) {
@@ -50,7 +51,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
         description: recipe.description || "",
         ingredients: recipe.ingredients.map(ing => ({
           id: ing.ingredient_id,
-          ingredient_name: ing.,
+          ingredient_name: ing.ingredient_name,
           amount: ing.amount,
           measurement: ing.measurement,
         })),

@@ -5,23 +5,24 @@ import styles from "./recipes.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
 import { Plus } from "lucide-react";
-import { Recipe, RecipeCreate } from "@/lib/types/recipe";
+import { Recipe, RecipeCreate, RecipeRetrieve } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
-import { handleSaveRecipe } from "@/lib/api/recipe/recipe";
+import { fetchRecipeById, handleSaveRecipe } from "@/lib/api/recipe/recipe";
 
 export default function Recipes() {
   const { recipes } = useDashboard();
   const { user } = useAuth(); // ✅ Get authenticated user from context
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeRetrieve | null>(null);
 
   const handleAddRecipe = () => {
     setSelectedRecipe(null);
     setIsModalOpen(true);
   };
 
-  const handleEditRecipe = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
+  const handleEditRecipe = async (recipe: Recipe) => {
+    let retRecipe = fetchRecipeById(recipe.recipe_id);
+    setSelectedRecipe(await retRecipe);
     setIsModalOpen(true);
   };
 
@@ -36,6 +37,7 @@ export default function Recipes() {
       author_id: user.user_id,
       tags: Array.isArray(recipeData.tags) ? recipeData.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Fix `tag_id` issue
       ingredients: recipeData.ingredients.map(ing => ({
+        id: ing.id || `${Date.now()}`,
         ingredient_name: ing.ingredient_name,
         amount: ing.amount,
         measurement: ing.measurement,

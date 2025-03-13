@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export type Recipe = {
   recipe_id: string;
   title: string;
@@ -34,6 +36,7 @@ export type RecipeUpdate = Partial<RecipeCreate>;
 
 export type RecipeIngredient = {
   ingredient_id: string;
+  ingredient_name: string;
   recipe_id: string;
   amount: number;
   measurement: string;
@@ -70,6 +73,7 @@ export type RecipeFavorite = {
 
 export type RecipeIngredientCreate = {
   id: string; // Temporary ID for frontend sorting
+  
   ingredient_name: string;
   amount: number;
   measurement: string;
@@ -86,3 +90,23 @@ export type RecipeImageCreate = {
   id: string; // Temporary ID for frontend sorting
   image_url: string;
 };
+
+
+
+export type RecipeIngredientModify = {
+  ingredient_id: string;
+  ingredient_name: string;
+  amount: number;
+  measurement: string;
+};
+
+
+export interface RecipeRetrieve {
+  title: string;
+  description?: string;
+  author_id?: string;
+  ingredients: RecipeIngredient[];
+  steps: RecipeStep[];
+  images: RecipeImage[];
+  tags: Tag[];
+}
