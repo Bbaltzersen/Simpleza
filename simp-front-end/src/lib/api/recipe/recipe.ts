@@ -95,7 +95,7 @@ export async function fetchIngredientsByName(query: string): Promise<Ingredient[
   if (query.length < 3) return []; // Avoid unnecessary API calls for short queries
 
   try {
-    const response = await apiClient.get<Ingredient[]>(`/ingredients?search=${encodeURIComponent(query)}`);
+    const response = await apiClient.get<Ingredient[]>(`/ingredients/?search=${encodeURIComponent(query)}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching ingredients:", error);

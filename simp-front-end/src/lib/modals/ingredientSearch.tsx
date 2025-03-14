@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { fetchIngredientsByName } from "@/lib/api/recipe/recipe";
+import { fetchIngredientsByName } from "@/lib/api/user/ingredient";
 import { Ingredient } from "@/lib/types/ingredient";
 import styles from "./ingredientSearch.module.css"; // Create this file for styling
 
@@ -25,7 +25,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
       const results = await fetchIngredientsByName(query);
       setIngredients(results);
       setLoading(false);
-    }, 300); // Debounce input by 300ms
+    }, 500); // Debounce input by 300ms
 
     return () => clearTimeout(delayDebounce);
   }, [query]);
