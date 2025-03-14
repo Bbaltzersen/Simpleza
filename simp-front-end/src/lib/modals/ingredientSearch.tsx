@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchIngredientsByName } from "@/lib/api/user/ingredient";
 import { Ingredient } from "@/lib/types/ingredient";
 import { CheckCircle, XCircle } from "lucide-react";
@@ -21,9 +21,10 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
   const [amount, setAmount] = useState("");
   const [measurement, setMeasurement] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // If an ingredient is selected and query matches it exactly, do not search again.
     if (
       selectedIngredient &&
       query.toLowerCase() === selectedIngredient.name.toLowerCase()
@@ -35,35 +36,32 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
       setIngredients([]);
       setSelectedIngredient(null);
       onSelect(null, amount, measurement);
+      setIsDropdownOpen(false);
       return;
     }
 
-    const delayDebounce = setTimeout(async () => {
+    const fetchData = async () => {
       setLoading(true);
       const results = await fetchIngredientsByName(query);
       setIngredients(results);
       setLoading(false);
+      setIsDropdownOpen(results.length > 0);
+    };
 
-      // Find an exact match (case-insensitive)
-      const match = results.find(
-        (ing) => ing.name.toLowerCase() === query.toLowerCase()
-      );
-      setSelectedIngredient(match || null);
-      onSelect(match || null, amount, measurement);
-    }, 300);
+    const delayDebounce = setTimeout(fetchData, 200);
 
     return () => clearTimeout(delayDebounce);
   }, [query, selectedIngredient]);
 
   useEffect(() => {
-    // Whenever amount, measurement, or the selected ingredient changes, update the parent
     onSelect(selectedIngredient, amount, measurement);
   }, [amount, measurement, selectedIngredient]);
 
   const handleSelectIngredient = (ingredient: Ingredient) => {
     setQuery(ingredient.name);
     setSelectedIngredient(ingredient);
-    setIngredients([]); // Close dropdown after selection
+    setIngredients([]);
+    setIsDropdownOpen(false);
     onSelect(ingredient, amount, measurement);
   };
 
@@ -73,12 +71,13 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
       <div className={styles.field}>
         <div className={styles.inputWrapper}>
           <input
+            ref={inputRef}
             type="text"
             placeholder="Ingredient"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              // Reset selection if the user types something different
+              setIsDropdownOpen(true);
               if (
                 selectedIngredient &&
                 e.target.value.toLowerCase() !== selectedIngredient.name.toLowerCase()
@@ -86,6 +85,8 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
                 setSelectedIngredient(null);
               }
             }}
+            onBlur={() => setIsDropdownOpen(false)} // Close immediately when losing focus
+            onFocus={() => setIsDropdownOpen(ingredients.length > 0)} // Open if there are results
             className={styles.input}
           />
           {selectedIngredient ? (
@@ -93,8 +94,11 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
           ) : query.length > 1 ? (
             <XCircle color="red" size={20} className={styles.icon} />
           ) : null}
-          {ingredients.length > 0 && (
-            <ul className={styles.dropdown}>
+          {isDropdownOpen && ingredients.length > 0 && (
+            <ul
+              className={styles.dropdown}
+              onMouseDown={(e) => e.preventDefault()} // Prevents dropdown from closing before selection
+            >
               {ingredients.map((ingredient) => (
                 <li
                   key={ingredient.ingredient_id}
