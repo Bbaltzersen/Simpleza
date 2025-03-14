@@ -1,10 +1,10 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 import uuid
 from database.connection import SessionLocal
 from models.ingredient import Ingredient
-from schemas.ingredient import IngredientCreate, IngredientOut
+from schemas.ingredient import IngredientCreate, IngredientOut, IngredientSchema
 
 router = APIRouter(tags=["ingredients"])
 
@@ -61,3 +61,9 @@ def delete_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Ingredient deleted successfully"}
+
+@router.get("/", response_model=List[IngredientSchema])
+def search_ingredients(search: str = Query(..., min_length=3), db: Session = Depends(get_db)):
+    search_term = f"%{search}%"
+    ingredients = db.query(Ingredient).filter(Ingredient.name.ilike(search_term)).limit(10).all()
+    return ingredients

@@ -13,7 +13,7 @@ import {
   RecipeRetrieve,
 } from "@/lib/types/recipe";
 import { SortableItem } from "./sortableItem";
-
+import IngredientSearch from "./ingredientSearch"; // ✅ Added Ingredient Search Component
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import TagInput from "./tagSelector";
@@ -44,8 +44,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   useEffect(() => {
     if (recipe) {
-      
-
       setFormData({
         title: recipe.title,
         description: recipe.description || "",
@@ -94,7 +92,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       formData[type].findIndex((item) => item.id === over.id)
     );
 
-    // For steps, you might want to reindex the step_number here if needed.
     setFormData({ ...formData, [type]: updatedItems });
   };
 
@@ -122,29 +119,28 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Ensure all fields contain the necessary properties before submission
     const cleanedData: RecipeCreate = {
-        ...formData,
-        ingredients: formData.ingredients.map(({ id, ingredient_name, amount, measurement }) => ({
-            id, // ✅ Ensure `id` is included
-            ingredient_name,
-            amount,
-            measurement,
-        })),
-        steps: formData.steps.map(({ id, step_number, description }) => ({
-            id, // ✅ Ensure `id` is included
-            step_number,
-            description,
-        })),
-        images: formData.images.map(({ id, image_url }) => ({
-            id, // ✅ Ensure `id` is included
-            image_url,
-        })),
+      ...formData,
+      ingredients: formData.ingredients.map(({ id, ingredient_name, amount, measurement }) => ({
+        id,
+        ingredient_name,
+        amount,
+        measurement,
+      })),
+      steps: formData.steps.map(({ id, step_number, description }) => ({
+        id,
+        step_number,
+        description,
+      })),
+      images: formData.images.map(({ id, image_url }) => ({
+        id,
+        image_url,
+      })),
     };
 
     onSave(cleanedData);
     onClose();
-};
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -160,31 +156,26 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <textarea name="description" value={formData.description} onChange={handleChange} />
           </div>
 
-          {/* Ingredients Section */}
+          {/* ✅ Ingredient Search Integration */}
           <div>
-            <div className={styles.sectionHeader}>
-              <label>Ingredients</label>
-              <a className={styles.addButton} onClick={() => addItem("ingredients", { ingredient_id: "", amount: 0, measurement: "" })}>
-                <Plus size={20} />
-              </a>
-            </div>
-            <DndContext collisionDetection={closestCenter} onDragEnd={(event) => onDragEnd(event, "ingredients")} sensors={sensors}>
-              <SortableContext items={formData.ingredients.map(ing => ing.id)} strategy={verticalListSortingStrategy}>
-                {formData.ingredients.map(ingredient => (
-                  <SortableItem
-                    key={ingredient.id}
-                    item={ingredient}
-                    onRemove={() => removeItem("ingredients", ingredient.id)}
-                    onChange={(id, field, value) => changeItem("ingredients", id, field, value)}
-                    fields={[
-                      { key: "ingredient_name", type: "text", placeholder: "Ingredient Name" },
-                      { key: "amount", type: "number", placeholder: "Amount" },
-                      { key: "measurement", type: "text", placeholder: "Measurement" },
-                    ]}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+            <label className={styles.labelText}>Ingredients</label>
+            <IngredientSearch
+              onSelect={(ingredient) =>
+                addItem("ingredients", {
+                  ingredient_id: ingredient.ingredient_id,
+                  ingredient_name: ingredient.name,
+                  amount: 0,
+                  measurement: ingredient.default_unit,
+                })
+              }
+            />
+            <ul>
+              {formData.ingredients.map(ingredient => (
+                <li key={ingredient.id}>
+                  {ingredient.ingredient_name} ({ingredient.amount} {ingredient.measurement})
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Steps Section */}

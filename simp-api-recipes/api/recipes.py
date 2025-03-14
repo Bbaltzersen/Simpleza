@@ -108,7 +108,7 @@ def get_recipe_with_details(recipe_id: str, db: Session = Depends(get_db)):
             joinedload(Recipe.ingredients).joinedload(RecipeIngredient.ingredient),
             joinedload(Recipe.steps),
             joinedload(Recipe.images),
-            joinedload(Recipe.tags).joinedload(RecipeTag.tag),
+            joinedload(Recipe.tags),
         )
         .first()
     )

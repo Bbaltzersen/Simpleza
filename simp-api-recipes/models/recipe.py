@@ -2,6 +2,7 @@ from sqlalchemy import Column, ForeignKey, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID, TEXT
 from sqlalchemy.orm import relationship
 from .base import Base
+from .recipe_tag import RecipeTag  # ✅ Import the association table
 import uuid
 
 class Recipe(Base):
@@ -15,7 +16,7 @@ class Recipe(Base):
 
     steps = relationship("RecipeStep", back_populates="recipe", cascade="all, delete-orphan")
     images = relationship("RecipeImage", back_populates="recipe", cascade="all, delete-orphan")
-
     ingredients = relationship("RecipeIngredient", back_populates="recipe")
 
-    tags = relationship("RecipeTag", back_populates="recipe")
+    # ✅ Correct many-to-many relationship with Tag
+    tags = relationship("Tag", secondary=RecipeTag, back_populates="recipes")

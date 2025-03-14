@@ -11,3 +11,12 @@ class IngredientOut(BaseModel):
 
     class Config:
         from_attributes = True  # Ensures conversion from SQLAlchemy models
+
+class IngredientSchema(BaseModel):
+    ingredient_id: UUID
+    name: str
+    default_unit: str
+    calories_per_100g: float | None = None  # Optional field
+
+    class Config:
+        from_attributes = True  # ✅ Allows conversion from SQLAlchemy models
