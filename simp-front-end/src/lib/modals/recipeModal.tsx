@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
-import { Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import {
   Recipe,
   RecipeCreate,
@@ -142,6 +142,20 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     onClose();
   };
 
+  const handleIngredientSelect = (index: number, ingredient: any, amount: string, measurement: string) => {
+    setFormData(prev => {
+      const updatedIngredients = [...prev.ingredients];
+      updatedIngredients[index] = {
+        id: ingredient ? ingredient.ingredient_id : `${Date.now()}`,
+        ingredient_name: ingredient ? ingredient.name : "",
+        amount: amount ? parseFloat(amount) : 0, // ✅ Convert to number
+        measurement,
+      };
+      return { ...prev, ingredients: updatedIngredients };
+    });
+  };
+  
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.modalContent}>
@@ -156,23 +170,29 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <textarea name="description" value={formData.description} onChange={handleChange} />
           </div>
 
-          {/* ✅ Ingredient Search Integration */}
-          <div>
-            <label className={styles.labelText}>Ingredients</label>
-            <IngredientSearch
-              onSelect={(ingredient, amount, measurement) => {
-                // Only add if an ingredient is selected; amount and measurement come from the fields.
-                if (ingredient) {
-                  addItem("ingredients", {
-                    ingredient_id: ingredient.ingredient_id || "", // handle null if needed
-                    ingredient_name: ingredient.name,
-                    amount: Number(amount),
-                    measurement: measurement,
-                  });
-                }
-              }}
-            />
-          </div>
+          {/* ✅ Dynamic Ingredient Rows */}
+<div>
+  <div className={styles.sectionHeader}>
+  <label className={styles.labelText}>Ingredients</label>
+  <a className={styles.addButton} onClick={() => addItem("ingredients", { ingredient_name: "", amount: "", measurement: "" })}>
+    <Plus size={20} /> 
+  </a>
+  </div>
+  {formData.ingredients.map((ingredient, index) => (
+    <div key={index} className={styles.ingredientRow}>
+      <IngredientSearch
+        onSelect={(ingredient, amount, measurement) =>
+          handleIngredientSelect(index, ingredient, amount, measurement)
+        }
+      />
+      <a className={styles.iconButton} onClick={() => removeItem("ingredients", formData.ingredients[index].id)}>
+        <Minus size={20} />
+      </a>
+    </div>
+  ))}
+  
+</div>
+
 
           {/* Steps Section */}
           <div>
