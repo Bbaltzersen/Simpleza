@@ -2,6 +2,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding-bottom: 10px;
   }
   
   .addButton, .iconButton {
@@ -12,6 +13,14 @@
     display: flex;
     align-items: center;
   }
+
+  .addButton {
+    color: #00c73c;
+  }
+
+  .addButton:hover {
+    color: #304436;
+  } 
   
   .sectionHeader {
     display: flex;
