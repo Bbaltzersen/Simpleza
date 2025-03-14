@@ -13,7 +13,7 @@ export default function NavLinks() {
           <a href="/dashboard" className={styles.navLink}>Dashboard</a>
         </>
       )}
-      <a href="/findrecipes" className={styles.navLink}>Find Recipes</a>
+      <a href="/catalogue" className={styles.navLink}>Catalogue</a>
       {user && (
         <>
             {user.role === "admin" && (
