@@ -26,9 +26,11 @@
 /* Section Header - Labels with Plus Button */
 .sectionHeader {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-}
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
 
 /* Label Styling */
 .sectionHeader label {
@@ -88,17 +90,17 @@
 
 /* Ingredient, Step, and Image Rows */
 .sortableRow {
-    width: 100%;
-    gap: 10px;
     display: flex;
     align-items: center;
-}
+    gap: 0.5rem;
+    padding-bottom: 10px;
+  }
+  
 
 /* Make input fields grow instead of shrinking the button */
 .sortableRow input {
     flex-grow: 1; /* Allows inputs to take up available space */
     min-width: 0; /* Prevents layout issues in small containers */
-    margin-bottom: 10px;
 }
 
 /* Modal Footer */
