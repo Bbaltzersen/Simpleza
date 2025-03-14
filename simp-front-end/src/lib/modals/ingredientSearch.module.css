@@ -1,40 +1,56 @@
-.container {
-    position: relative;
-  }
-  
-  .input {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .list {
-    position: absolute;
-    width: 100%;
-    background: white;
-    border: 1px solid #ccc;
-    border-top: none;
-    max-height: 200px;
-    overflow-y: auto;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .listItem {
-    padding: 8px;
-    cursor: pointer;
-  }
-  
-  .listItem:hover {
-    background-color: #f0f0f0;
-  }
-  
-  .loading {
-    font-size: 14px;
-    color: gray;
-    margin-top: 4px;
-  }
-  
+.row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.field {
+  flex: 1;
+  position: relative;
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  z-index: 1000;
+}
+
+.dropdownItem {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background-color: #f0f0f0;
+}

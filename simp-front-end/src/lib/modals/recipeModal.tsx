@@ -160,22 +160,18 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <div>
             <label className={styles.labelText}>Ingredients</label>
             <IngredientSearch
-              onSelect={(ingredient) =>
-                addItem("ingredients", {
-                  ingredient_id: ingredient.ingredient_id,
-                  ingredient_name: ingredient.name,
-                  amount: 0,
-                  measurement: ingredient.default_unit,
-                })
-              }
+              onSelect={(ingredient, amount, measurement) => {
+                // Only add if an ingredient is selected; amount and measurement come from the fields.
+                if (ingredient) {
+                  addItem("ingredients", {
+                    ingredient_id: ingredient.ingredient_id || "", // handle null if needed
+                    ingredient_name: ingredient.name,
+                    amount: Number(amount),
+                    measurement: measurement,
+                  });
+                }
+              }}
             />
-            <ul>
-              {formData.ingredients.map(ingredient => (
-                <li key={ingredient.id}>
-                  {ingredient.ingredient_name} ({ingredient.amount} {ingredient.measurement})
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Steps Section */}
