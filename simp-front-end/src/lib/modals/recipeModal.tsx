@@ -52,21 +52,21 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
         title: recipe.title,
         description: recipe.description || "",
         ingredients: recipe.ingredients.map((ing) => ({
-          id: ing.ingredient_id,
+          id: ing.ingredient_id.toString(),
           ingredient_name: ing.ingredient_name,
           amount: ing.amount,
           measurement: ing.measurement,
         })),
         steps: recipe.steps.map((step, index) => ({
-          id: step.step_id,
+          id: step.step_id.toString(),
           step_number: index + 1,
           description: step.description,
         })),
         images: recipe.images.map((image) => ({
-          id: image.image_id,
+          id: image.image_id.toString(),
           image_url: image.image_url,
         })),
-        tags: recipe.tags.map((tag) => tag.tag_id),
+        tags: recipe.tags.map((tag) => tag.tag_id.toString()),
       });
     } else {
       setFormData({
@@ -79,6 +79,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       });
     }
   }, [recipe, isOpen]);
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
