@@ -2,7 +2,7 @@
 
 import React from "react";
 import styles from "./recipeModal.module.css";
-import { Minus } from "lucide-react";
+import { Minus, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -33,10 +33,17 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className={`${styles.sortableRow} ${isDragging ? styles.dragging : ""}`}
     >
-      {/* Display step number as "1.", "2.", etc. if available */}
+      {/* Drag handle: only this element gets the drag listeners */}
+      <div
+        {...listeners}
+        className={styles.dragHandle}
+        style={{ cursor: "grab", paddingRight: "8px" }}
+      >
+        <GripVertical size={20} />
+      </div>
+      {/* Display step number if available */}
       {item.step_number && (
         <span className={styles.stepNumber}>{item.step_number}.</span>
       )}

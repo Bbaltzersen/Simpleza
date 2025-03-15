@@ -11,13 +11,13 @@ import {
   RecipeIngredientCreate,
 } from "@/lib/types/recipe";
 import { Minus, Plus } from "lucide-react";
-import IngredientList from "./ingredientList";
 import TagInput from "./tagSelector";
 
 // dnd-kit imports
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
 import { SortableItem } from "./sortableItem";
+import SortableIngredientRow from "./sortableIngredientRow";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -81,21 +81,22 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // For ingredients and images, index-based removal is still used.
+  // Updated addItem to always use string IDs.
   const addItem = (type: "ingredients" | "steps" | "images", newItem: any) => {
     setFormData((prev) => ({
       ...prev,
       [type]: [
         ...prev[type],
         {
-          id: type === "steps" ? Date.now().toString() : Date.now(),
+          id: Date.now().toString(),
           ...newItem,
         },
       ],
     }));
   };
 
-  const removeItem = (type: "ingredients" | "images", index: number) => {
+  // For images, we keep index-based removal.
+  const removeItem = (type: "images", index: number) => {
     setFormData((prev) => ({
       ...prev,
       [type]: prev[type].filter((_, i) => i !== index),
@@ -110,25 +111,51 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     });
   };
 
+  // Ingredient-specific functions now use id-based updates.
   const handleIngredientSelect = (
-    index: number,
+    id: string,
     ingredient: any,
     amount: string,
     measurement: string
   ) => {
-    setFormData((prev) => {
-      const updatedIngredients = [...prev.ingredients];
-      updatedIngredients[index] = {
-        id: ingredient ? ingredient.ingredient_id : Date.now(),
-        ingredient_name: ingredient ? ingredient.name : "",
-        amount: amount ? parseFloat(amount) : 0,
-        measurement,
-      };
-      return { ...prev, ingredients: updatedIngredients };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      ingredients: prev.ingredients.map((ing) =>
+        ing.id === id
+          ? {
+              ...ing,
+              // If an ingredient is selected, update its data; otherwise keep current.
+              ingredient_name: ingredient ? ingredient.name : "",
+              amount: amount ? parseFloat(amount) : 0,
+              measurement,
+            }
+          : ing
+      ),
+    }));
   };
 
-  // Steps-specific functions with step number updates
+  const removeIngredient = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      ingredients: prev.ingredients.filter((ing) => ing.id !== id),
+    }));
+  };
+
+  const handleIngredientDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setFormData((prev) => {
+        const oldIndex = prev.ingredients.findIndex((ing) => ing.id === active.id);
+        const newIndex = prev.ingredients.findIndex((ing) => ing.id === over.id);
+        return {
+          ...prev,
+          ingredients: arrayMove(prev.ingredients, oldIndex, newIndex),
+        };
+      });
+    }
+  };
+
+  // Steps-specific functions with step number updates.
   const addStep = () => {
     setFormData((prev) => {
       const newStep: RecipeStepCreate = {
@@ -150,7 +177,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const removeStep = (id: string) => {
     setFormData((prev) => {
       const newSteps = prev.steps.filter((step) => step.id !== id);
-      // Reassign step numbers based on new order
+      // Reassign step numbers based on new order.
       return { 
         ...prev, 
         steps: newSteps.map((step, index) => ({ ...step, step_number: index + 1 })) 
@@ -158,7 +185,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     });
   };
 
-  // Drag end handler for steps reordering and step number update
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -194,15 +220,33 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <textarea name="description" value={formData.description} onChange={handleChange} />
           </div>
 
-          {/* Ingredients Section */}
-          <IngredientList
-            ingredients={formData.ingredients}
-            onAdd={() =>
-              addItem("ingredients", { ingredient_name: "", amount: "", measurement: "" })
-            }
-            onRemove={(index) => removeItem("ingredients", index)}
-            onSelect={handleIngredientSelect}
-          />
+          {/* Draggable Ingredients Section */}
+          <div>
+            <div className={styles.sectionHeader}>
+              <label className={styles.labelText}>Ingredients</label>
+              <button
+                type="button"
+                className={styles.addButton}
+                onClick={() =>
+                  addItem("ingredients", { ingredient_name: "", amount: "", measurement: "" })
+                }
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleIngredientDragEnd}>
+              <SortableContext items={formData.ingredients.map((ing) => ing.id)} strategy={verticalListSortingStrategy}>
+                {formData.ingredients.map((ingredient) => (
+                  <SortableIngredientRow
+                    key={ingredient.id}
+                    ingredient={ingredient}
+                    onSelect={handleIngredientSelect}
+                    onRemove={removeIngredient}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
 
           {/* Steps Section with drag-and-drop reordering and step number display */}
           <div>
