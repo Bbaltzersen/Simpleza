@@ -224,7 +224,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <div>
             <div className={styles.sectionHeader}>
               <label className={styles.labelText}>Ingredients</label>
-              <button
+              <a
                 type="button"
                 className={styles.addButton}
                 onClick={() =>
@@ -232,7 +232,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                 }
               >
                 <Plus size={20} />
-              </button>
+              </a>
             </div>
             <DndContext collisionDetection={closestCenter} onDragEnd={handleIngredientDragEnd}>
               <SortableContext items={formData.ingredients.map((ing) => ing.id)} strategy={verticalListSortingStrategy}>
@@ -252,9 +252,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <div>
             <div className={styles.sectionHeader}>
               <label>Steps</label>
-              <button type="button" className={styles.addButton} onClick={addStep}>
+              <a type="button" className={styles.addButton} onClick={addStep}>
                 <Plus size={20} />
-              </button>
+              </a>
             </div>
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={formData.steps.map((step) => step.id)} strategy={verticalListSortingStrategy}>
@@ -275,13 +275,13 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <div>
             <div className={styles.sectionHeader}>
               <label>Images</label>
-              <button
+              <a
                 type="button"
                 className={styles.addButton}
                 onClick={() => addItem("images", { image_url: "" })}
               >
                 <Plus size={20} />
-              </button>
+              </a>
             </div>
             {formData.images.map((image, index) => (
               <div key={image.id} className={styles.sortableRow}>
@@ -292,9 +292,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                   onChange={(e) => changeItem("images", index, "image_url", e.target.value)}
                   className={styles.input}
                 />
-                <button type="button" className={styles.iconButton} onClick={() => removeItem("images", index)}>
+                <a type="button" className={styles.iconButton} onClick={() => removeItem("images", index)}>
                   <Minus size={20} />
-                </button>
+                </a>
               </div>
             ))}
           </div>
