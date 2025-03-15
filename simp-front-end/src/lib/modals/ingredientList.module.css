@@ -21,6 +21,14 @@
   .addButton:hover {
     color: #304436;
   } 
+
+  .iconButton {
+    color: red;
+  }
+
+  .iconButton:hover {
+    color: darkred;
+  } 
   
   .sectionHeader {
     display: flex;
