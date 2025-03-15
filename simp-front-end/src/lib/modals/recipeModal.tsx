@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
 import {
@@ -27,6 +27,9 @@ interface RecipeModalProps {
 }
 
 export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeModalProps) {
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const minHeight = 100; // Predefined starting height in pixels
+
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
@@ -81,6 +84,20 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Auto-grow the textarea starting from minHeight and then expanding as needed.
+  const updateTextAreaHeight = () => {
+    if (descriptionRef.current) {
+      descriptionRef.current.style.height = "auto";
+      const newHeight = Math.max(minHeight, descriptionRef.current.scrollHeight);
+      descriptionRef.current.style.height = newHeight + "px";
+      descriptionRef.current.style.overflowY = "hidden";
+    }
+  };
+
+  useEffect(() => {
+    updateTextAreaHeight();
+  }, [formData.description]);
+
   // Updated addItem to always use string IDs.
   const addItem = (type: "ingredients" | "steps" | "images", newItem: any) => {
     setFormData((prev) => ({
@@ -124,7 +141,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
         ing.id === id
           ? {
               ...ing,
-              // If an ingredient is selected, update its data; otherwise keep current.
               ingredient_name: ingredient ? ingredient.name : "",
               amount: amount ? parseFloat(amount) : 0,
               measurement,
@@ -178,9 +194,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData((prev) => {
       const newSteps = prev.steps.filter((step) => step.id !== id);
       // Reassign step numbers based on new order.
-      return { 
-        ...prev, 
-        steps: newSteps.map((step, index) => ({ ...step, step_number: index + 1 })) 
+      return {
+        ...prev,
+        steps: newSteps.map((step, index) => ({ ...step, step_number: index + 1 })),
       };
     });
   };
@@ -215,9 +231,25 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <label className={styles.labelText}>Title</label>
             <input type="text" name="title" value={formData.title} onChange={handleChange} required />
           </div>
+
           <div className={styles.descriptionContainer}>
             <label className={styles.labelText}>Description</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} />
+            <textarea
+              name="description"
+              ref={descriptionRef}
+              value={formData.description}
+              onChange={(e) => {
+                handleChange(e);
+                updateTextAreaHeight();
+              }}
+              style={{
+                overflowY: "hidden",
+                resize: "none",
+                padding: "8px 8px 8px 8px",
+                boxSizing: "border-box",
+                height: `${minHeight}px`,
+              }}
+            />
           </div>
 
           {/* Draggable Ingredients Section */}

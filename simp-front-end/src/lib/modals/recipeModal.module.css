@@ -45,6 +45,16 @@
     padding-bottom: 20px;
 }
 
+.descriptionContainer textarea {
+    min-height: 100px; /* Predefined starting height */
+    height: auto;
+    overflow-y: hidden; /* Hide scrollbars */
+    padding: 8px;
+    box-sizing: border-box;
+    resize: vertical; /* Allow manual vertical resizing */
+  }
+  
+
 /* Plus (+) Button */
 .addButton {
     display: flex;
