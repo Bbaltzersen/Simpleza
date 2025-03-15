@@ -54,9 +54,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           amount: ing.amount,
           measurement: ing.measurement,
         })),
-        steps: recipe.steps.map((step) => ({
+        steps: recipe.steps.map((step, index) => ({
           id: step.step_id,
-          step_number: step.step_number,
+          step_number: index + 1,
           description: step.description,
         })),
         images: recipe.images.map((image) => ({
@@ -81,14 +81,13 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // For ingredients and images we continue using index-based removal
+  // For ingredients and images, index-based removal is still used.
   const addItem = (type: "ingredients" | "steps" | "images", newItem: any) => {
     setFormData((prev) => ({
       ...prev,
       [type]: [
         ...prev[type],
         {
-          // For steps, use a string ID to match the SortableItem interface
           id: type === "steps" ? Date.now().toString() : Date.now(),
           ...newItem,
         },
@@ -129,17 +128,16 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     });
   };
 
-  // Steps-specific functions using id-based updates/removal
+  // Steps-specific functions with step number updates
   const addStep = () => {
-    const newStep: RecipeStepCreate = {
-      id: Date.now().toString(),
-      step_number: formData.steps.length + 1,
-      description: "",
-    };
-    setFormData((prev) => ({
-      ...prev,
-      steps: [...prev.steps, newStep],
-    }));
+    setFormData((prev) => {
+      const newStep: RecipeStepCreate = {
+        id: Date.now().toString(),
+        step_number: prev.steps.length + 1,
+        description: "",
+      };
+      return { ...prev, steps: [...prev.steps, newStep] };
+    });
   };
 
   const changeStep = (id: string, field: string, value: string | number) => {
@@ -150,22 +148,29 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   };
 
   const removeStep = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      steps: prev.steps.filter((step) => step.id !== id),
-    }));
+    setFormData((prev) => {
+      const newSteps = prev.steps.filter((step) => step.id !== id);
+      // Reassign step numbers based on new order
+      return { 
+        ...prev, 
+        steps: newSteps.map((step, index) => ({ ...step, step_number: index + 1 })) 
+      };
+    });
   };
 
-  // Drag end handler for steps reordering
+  // Drag end handler for steps reordering and step number update
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = formData.steps.findIndex((step) => step.id === active.id);
-      const newIndex = formData.steps.findIndex((step) => step.id === over.id);
-      setFormData((prev) => ({
-        ...prev,
-        steps: arrayMove(prev.steps, oldIndex, newIndex),
-      }));
+      setFormData((prev) => {
+        const oldIndex = prev.steps.findIndex((step) => step.id === active.id);
+        const newIndex = prev.steps.findIndex((step) => step.id === over.id);
+        const movedSteps = arrayMove(prev.steps, oldIndex, newIndex);
+        return {
+          ...prev,
+          steps: movedSteps.map((step, index) => ({ ...step, step_number: index + 1 })),
+        };
+      });
     }
   };
 
@@ -199,7 +204,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             onSelect={handleIngredientSelect}
           />
 
-          {/* Steps Section with drag-and-drop reordering using SortableItem */}
+          {/* Steps Section with drag-and-drop reordering and step number display */}
           <div>
             <div className={styles.sectionHeader}>
               <label>Steps</label>

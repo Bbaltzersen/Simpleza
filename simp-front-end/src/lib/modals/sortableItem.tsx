@@ -36,6 +36,10 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
       {...listeners}
       className={`${styles.sortableRow} ${isDragging ? styles.dragging : ""}`}
     >
+      {/* Display step number as "1.", "2.", etc. if available */}
+      {item.step_number && (
+        <span className={styles.stepNumber}>{item.step_number}.</span>
+      )}
       {fields.map(({ key, type, placeholder }) => (
         <input
           key={key as string}
