@@ -7,11 +7,7 @@ import { CheckCircle, XCircle } from "lucide-react";
 import styles from "./ingredientSearch.module.css";
 
 interface IngredientSearchProps {
-  onSelect: (
-    ingredient: Ingredient | null,
-    amount: string,
-    measurement: string
-  ) => void;
+  onSelect: (ingredient: Ingredient | null, amount: string, measurement: string) => void;
 }
 
 const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
@@ -25,10 +21,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    if (
-      selectedIngredient &&
-      query.toLowerCase() === selectedIngredient.name.toLowerCase()
-    ) {
+    if (selectedIngredient && query.toLowerCase() === selectedIngredient.name.toLowerCase()) {
       return;
     }
 
@@ -67,7 +60,6 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
 
   return (
     <div className={styles.row}>
-      {/* Ingredient Input Field */}
       <div className={styles.field}>
         <div className={styles.inputWrapper}>
           <input
@@ -78,15 +70,12 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
             onChange={(e) => {
               setQuery(e.target.value);
               setIsDropdownOpen(true);
-              if (
-                selectedIngredient &&
-                e.target.value.toLowerCase() !== selectedIngredient.name.toLowerCase()
-              ) {
+              if (selectedIngredient && e.target.value.toLowerCase() !== selectedIngredient.name.toLowerCase()) {
                 setSelectedIngredient(null);
               }
             }}
-            onBlur={() => setIsDropdownOpen(false)} // Close immediately when losing focus
-            onFocus={() => setIsDropdownOpen(ingredients.length > 0)} // Open if there are results
+            onBlur={() => setIsDropdownOpen(false)}
+            onFocus={() => setIsDropdownOpen(ingredients.length > 0)}
             className={styles.input}
           />
           {selectedIngredient ? (
@@ -95,10 +84,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
             <XCircle color="red" size={20} className={styles.icon} />
           ) : null}
           {isDropdownOpen && ingredients.length > 0 && (
-            <ul
-              className={styles.dropdown}
-              onMouseDown={(e) => e.preventDefault()} // Prevents dropdown from closing before selection
-            >
+            <ul className={styles.dropdown} onMouseDown={(e) => e.preventDefault()}>
               {ingredients.map((ingredient) => (
                 <li
                   key={ingredient.ingredient_id}
@@ -113,7 +99,6 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         </div>
       </div>
 
-      {/* Amount Input Field */}
       <div className={styles.field}>
         <input
           type="number"
@@ -124,7 +109,6 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         />
       </div>
 
-      {/* Measurement Input Field */}
       <div className={styles.field}>
         <input
           type="text"

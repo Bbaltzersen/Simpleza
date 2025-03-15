@@ -16,23 +16,20 @@ interface IngredientListProps {
 const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onAdd, onRemove, onSelect }) => {
   return (
     <div>
-      {/* Header with Add Button */}
       <div className={styles.sectionHeader}>
         <label className={styles.labelText}>Ingredients</label>
-        <button className={styles.addButton} onClick={onAdd}>
+        <button type="button" className={styles.addButton} onClick={onAdd}>
           <Plus size={20} />
         </button>
       </div>
-
-      {/* Ingredient Rows */}
-      {ingredients.map((ingredient, index) => (
-        <div key={index} className={styles.ingredientRow}>
+      {ingredients.map((ingredient) => (
+        <div key={ingredient.id} className={styles.ingredientRow}>
           <IngredientSearch
             onSelect={(ingredient, amount, measurement) =>
-              onSelect(index, ingredient, amount, measurement)
+              onSelect(ingredients.findIndex((ing) => ing.id === ingredient?.ingredient_id || ing.id === ingredient?.ingredient_id), ingredient, amount, measurement)
             }
           />
-          <button className={styles.iconButton} onClick={() => onRemove(index)}>
+          <button type="button" className={styles.iconButton} onClick={() => onRemove(ingredients.findIndex((ing) => ing.id === ingredient.id))}>
             <Minus size={20} />
           </button>
         </div>
