@@ -223,7 +223,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           {/* Draggable Ingredients Section */}
           <div>
             <div className={styles.sectionHeader}>
-              <label className={styles.labelText}>Ingredients</label>
+              <label>Ingredients</label>
               <a
                 type="button"
                 className={styles.addButton}

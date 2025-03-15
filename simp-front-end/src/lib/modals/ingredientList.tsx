@@ -17,7 +17,7 @@ const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onAdd, onR
   return (
     <div>
       <div className={styles.sectionHeader}>
-        <label className={styles.labelText}>Ingredients</label>
+        <label className={styles.test}>Ingredients</label>
         <button type="button" className={styles.addButton} onClick={onAdd}>
           <Plus size={20} />
         </button>
