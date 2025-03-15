@@ -60,7 +60,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
 
   return (
     <div className={styles.row}>
-      <div className={styles.field}>
+      <div className={styles.searchField}>
         <div className={styles.inputWrapper}>
           <input
             ref={inputRef}
@@ -99,7 +99,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         </div>
       </div>
 
-      <div className={styles.field}>
+      <div className={styles.valueField}>
         <input
           type="number"
           placeholder="Amount"
@@ -109,7 +109,7 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         />
       </div>
 
-      <div className={styles.field}>
+      <div className={styles.valueField}>
         <input
           type="text"
           placeholder="Measurement"
