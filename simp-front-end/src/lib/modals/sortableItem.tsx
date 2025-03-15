@@ -6,14 +6,14 @@ import { Minus, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-interface SortableItemProps<T extends { id: string; [key: string]: any }> {
+interface SortableItemProps<T extends { id: string;[key: string]: any }> {
   item: T;
-  fields: { key: keyof T; type: "text" | "number"; placeholder: string }[];
+  fields: { key: keyof T; type: "text" | "number" | "textarea"; placeholder: string }[];
   onRemove: (id: string) => void;
   onChange: (id: string, field: keyof T, value: string | number) => void;
 }
 
-export function SortableItem<T extends { id: string; [key: string]: any }>({
+export function SortableItem<T extends { id: string;[key: string]: any }>({
   item,
   fields,
   onRemove,
@@ -30,9 +30,9 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
 
   // Custom change handler that validates numeric fields.
   const handleFieldChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     key: keyof T,
-    fieldType: "text" | "number"
+    fieldType: "text" | "number" | "textarea"
   ) => {
     const value = e.target.value;
     if (fieldType === "number") {
@@ -64,19 +64,36 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
         <span className={styles.stepNumber}>{item.step_number}.</span>
       )}
       {fields.map(({ key, type, placeholder }) => {
-        const inputType = type === "number" ? "text" : type;
-        return (
-          <input
-            key={key as string}
-            type={inputType}
-            inputMode={type === "number" ? "numeric" : undefined}
-            pattern={type === "number" ? "^(0|[1-9]\\d*)$" : undefined}
-            placeholder={placeholder}
-            value={item[key] || ""}
-            onChange={(e) => handleFieldChange(e, key, type)}
-            className={styles.draggableInput}
-          />
-        );
+        if (type === "textarea") {
+          return (
+            <textarea
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${target.scrollHeight}px`;
+              }}
+              className={`${styles.draggableInput} ${styles.autoHeightTextarea}`}
+              placeholder={placeholder}
+              value={item[key] || ""}
+              onChange={(e) => handleFieldChange(e, key, type)}
+            />
+
+          );
+        } else {
+          const inputType = type === "number" ? "text" : type;
+          return (
+            <input
+              key={key as string}
+              type={inputType}
+              inputMode={type === "number" ? "numeric" : undefined}
+              pattern={type === "number" ? "^(0|[1-9]\\d*)$" : undefined}
+              placeholder={placeholder}
+              value={item[key] || ""}
+              onChange={(e) => handleFieldChange(e, key, type)}
+              className={styles.draggableInput}
+            />
+          );
+        }
       })}
       <a
         className={styles.iconButton}

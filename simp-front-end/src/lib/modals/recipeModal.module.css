@@ -29,16 +29,14 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
-  }
-  
+}
 
-/* Label Styling */
 .sectionHeader label {
     font-size: 1rem;
     font-weight: bold;
 }
 
-
+/* Description Container */
 .descriptionContainer {
     display: flex;
     flex-direction: column;
@@ -52,8 +50,7 @@
     padding: 8px;
     box-sizing: border-box;
     resize: vertical; /* Allow manual vertical resizing */
-  }
-  
+}
 
 /* Plus (+) Button */
 .addButton {
@@ -64,7 +61,7 @@
     width: 30px;
     height: 30px;
     cursor: pointer;
-    flex-shrink: 0; /* Ensures button does not shrink */
+    flex-shrink: 0;
 }
 
 .addButton:hover {
@@ -81,7 +78,7 @@
     height: 30px;
     border-radius: 50%;
     cursor: pointer;
-    flex-shrink: 0; /* Ensures button does not shrink */
+    flex-shrink: 0;
 }
 
 .iconButton:hover {
@@ -104,13 +101,17 @@
     align-items: center;
     gap: 0.5rem;
     padding-bottom: 10px;
-  }
-  
+}
+
+.sortableRow.dragging {
+    position: relative;
+    z-index: 9999;
+}
 
 /* Make input fields grow instead of shrinking the button */
 .sortableRow input {
-    flex-grow: 1; /* Allows inputs to take up available space */
-    min-width: 0; /* Prevents layout issues in small containers */
+    flex-grow: 1;
+    min-width: 0;
 }
 
 /* Modal Footer */
@@ -120,7 +121,7 @@
     justify-content: space-between;
 }
 
-/* Buttons */
+/* Footer Buttons */
 .modalFooter button {
     padding: 10px 15px;
     border: none;
@@ -143,14 +144,40 @@
     background: #005fcc;
 }
 
-/* Add this to your recipeModal.module.css */
-.sortableRow.dragging {
-    position: relative;
-    z-index: 9999;
-  }
-  
+/* Drag Handle */
 .dragHandle {
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
+/* Auto-growing Textarea Styles for Draggable Items */
+.autoHeightTextarea {
+    min-height: 50px; /* Starts at 50px */
+    height: auto;     /* Will be set dynamically via JS */
+    overflow-y: hidden;
+    box-sizing: border-box;
+    resize: none;     /* Prevent manual resizing if desired */
+}
+
+/* Style when dragging */
+.draggingTextarea {
+    background-color: #f0f0f0;
+    border: 1px dashed #aaa;
+}
+
+/* Optional: Step number styling */
+.stepNumber {
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.sortableRow textarea {
+    flex-grow: 1;
+    min-width: 0;
+    height: auto;
+    overflow-y: hidden; /* Hide scrollbars */
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  

@@ -294,7 +294,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                   <SortableItem
                     key={step.id}
                     item={step}
-                    fields={[{ key: "description", type: "text", placeholder: "Step Description" }]}
+                    fields={[{ key: "description", type: "textarea", placeholder: "Step Description" }]}
                     onChange={(id, field, value) => changeStep(id, field, value)}
                     onRemove={(id) => removeStep(id)}
                   />
