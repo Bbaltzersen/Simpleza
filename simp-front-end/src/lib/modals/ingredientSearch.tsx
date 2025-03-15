@@ -7,7 +7,11 @@ import { CheckCircle, XCircle } from "lucide-react";
 import styles from "./ingredientSearch.module.css";
 
 interface IngredientSearchProps {
-  onSelect: (ingredient: Ingredient | null, amount: string, measurement: string) => void;
+  onSelect: (
+    ingredient: Ingredient | null,
+    amount: string,
+    measurement: string
+  ) => void;
 }
 
 const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
@@ -99,12 +103,21 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         </div>
       </div>
 
+      {/* Updated Amount Input Field */}
       <div className={styles.valueField}>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
+          pattern="^(0|[1-9]\\d*)$"
           placeholder="Amount"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            // Allow empty string (to clear) or a sequence of digits only.
+            if (val === "" || /^[0-9]+$/.test(val)) {
+              setAmount(val);
+            }
+          }}
           className={styles.input}
         />
       </div>

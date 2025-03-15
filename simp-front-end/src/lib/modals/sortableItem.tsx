@@ -28,6 +28,23 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
     transition,
   };
 
+  // Custom change handler that validates numeric fields.
+  const handleFieldChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    key: keyof T,
+    fieldType: "text" | "number"
+  ) => {
+    const value = e.target.value;
+    if (fieldType === "number") {
+      // Allow empty string or only digits
+      if (value === "" || /^[0-9]+$/.test(value)) {
+        onChange(item.id, key, value === "" ? "" : Number(value));
+      }
+    } else {
+      onChange(item.id, key, value);
+    }
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -43,26 +60,24 @@ export function SortableItem<T extends { id: string; [key: string]: any }>({
       >
         <GripVertical size={20} />
       </div>
-      {/* Display step number if available */}
       {item.step_number && (
         <span className={styles.stepNumber}>{item.step_number}.</span>
       )}
-      {fields.map(({ key, type, placeholder }) => (
-        <input
-          key={key as string}
-          type={type}
-          placeholder={placeholder}
-          value={item[key] || ""}
-          onChange={(e) =>
-            onChange(
-              item.id,
-              key,
-              type === "number" ? Number(e.target.value) : e.target.value
-            )
-          }
-          className={styles.draggableInput}
-        />
-      ))}
+      {fields.map(({ key, type, placeholder }) => {
+        const inputType = type === "number" ? "text" : type;
+        return (
+          <input
+            key={key as string}
+            type={inputType}
+            inputMode={type === "number" ? "numeric" : undefined}
+            pattern={type === "number" ? "^(0|[1-9]\\d*)$" : undefined}
+            placeholder={placeholder}
+            value={item[key] || ""}
+            onChange={(e) => handleFieldChange(e, key, type)}
+            className={styles.draggableInput}
+          />
+        );
+      })}
       <a
         className={styles.iconButton}
         onPointerDown={(e) => e.stopPropagation()}
