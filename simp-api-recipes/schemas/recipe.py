@@ -5,6 +5,7 @@ from uuid import UUID
 class RecipeOut(BaseModel):
     recipe_id: UUID
     title: str
+    front_image: str
 
     class Config:
         from_attributes = True
