@@ -122,6 +122,7 @@ def get_recipe_with_details(recipe_id: str, db: Session = Depends(get_db)):
         author_id=recipe.author_id,
         ingredients=[
             RecipeIngredientSchema(
+                ingredient_id=ing.ingredient_id,
                 ingredient_name=ing.ingredient.name,  # Get ingredient name
                 amount=ing.amount,
                 measurement=ing.measurement

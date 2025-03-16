@@ -22,14 +22,18 @@ const IngredientList: React.FC<IngredientListProps> = ({ ingredients, onAdd, onR
           <Plus size={20} />
         </button>
       </div>
-      {ingredients.map((ingredient) => (
+      {ingredients.map((ingredient, index) => (
         <div key={ingredient.id} className={styles.ingredientRow}>
           <IngredientSearch
-            onSelect={(ingredient, amount, measurement) =>
-              onSelect(ingredients.findIndex((ing) => ing.id === ingredient?.ingredient_id || ing.id === ingredient?.ingredient_id), ingredient, amount, measurement)
+            onChange={(selectedIngredient, amount, measurement) =>
+              onSelect(index, selectedIngredient, amount, measurement)
             }
           />
-          <button type="button" className={styles.iconButton} onClick={() => onRemove(ingredients.findIndex((ing) => ing.id === ingredient.id))}>
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={() => onRemove(index)}
+          >
             <Minus size={20} />
           </button>
         </div>

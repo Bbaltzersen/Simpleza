@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Ingredient } from "@/lib/types/ingredient";
+import { RecipeIngredient } from "@/lib/types/recipe";
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
@@ -30,6 +31,18 @@ export async function fetchIngredientsByName(query: string): Promise<Ingredient[
 
   try {
     const response = await apiClient.get<Ingredient[]>(`/?search=${encodeURIComponent(query)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching ingredients:", error);
+    return [];
+  }
+}
+
+export async function fetchRecipeIngredientByName(query: string): Promise<RecipeIngredient[]> {
+  if (query.length < 3) return []; // Avoid unnecessary API calls for short queries
+
+  try {
+    const response = await apiClient.get<RecipeIngredient[]>(`/?search=${encodeURIComponent(query)}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching ingredients:", error);

@@ -10,13 +10,13 @@ import { RecipeIngredientCreate } from "@/lib/types/recipe";
 
 interface SortableIngredientRowProps {
   ingredient: RecipeIngredientCreate;
-  onSelect: (id: string, ingredient: any, amount: string, measurement: string) => void;
+  onChange: (id: string, ingredient_name: string, amount: string, measurement: string) => void;
   onRemove: (id: string) => void;
 }
 
 const SortableIngredientRow: React.FC<SortableIngredientRowProps> = ({
   ingredient,
-  onSelect,
+  onChange,
   onRemove,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -34,15 +34,23 @@ const SortableIngredientRow: React.FC<SortableIngredientRowProps> = ({
       {...attributes}
       className={`${styles.sortableRow} ${isDragging ? styles.dragging : ""}`}
     >
-      {/* Drag handle: Only this element has the drag listeners */}
+      {/* Drag handle */}
       <div {...listeners} className={styles.dragHandle} style={{ cursor: "grab", paddingRight: "8px" }}>
         <GripVertical size={20} />
       </div>
-      {/* IngredientSearch remains fully clickable */}
+      {/* Pass current values from the ingredient to IngredientSearch */}
       <div style={{ flexGrow: 1 }}>
         <IngredientSearch
-          onSelect={(selectedIngredient, amount, measurement) =>
-            onSelect(ingredient.id, selectedIngredient, amount, measurement)
+          initialQuery={ingredient.ingredient_name}
+          initialAmount={ingredient.amount ? ingredient.amount.toString() : ""}
+          initialMeasurement={ingredient.measurement}
+          onChange={(selectedIngredient, amount, measurement) =>
+            onChange(
+              ingredient.id,
+              selectedIngredient ? selectedIngredient.name : "",
+              amount,
+              measurement
+            )
           }
         />
       </div>

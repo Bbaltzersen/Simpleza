@@ -3,27 +3,47 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchIngredientsByName } from "@/lib/api/user/ingredient";
 import { Ingredient } from "@/lib/types/ingredient";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, Handshake, XCircle } from "lucide-react";
 import styles from "./ingredientSearch.module.css";
 
 interface IngredientSearchProps {
-  onSelect: (
+  onChange: (
     ingredient: Ingredient | null,
     amount: string,
     measurement: string
   ) => void;
+  initialQuery?: string;
+  initialAmount?: string;
+  initialMeasurement?: string;
 }
 
-const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
-  const [query, setQuery] = useState("");
+const IngredientSearch: React.FC<IngredientSearchProps> = ({
+  onChange,
+  initialQuery = "",
+  initialAmount = "",
+  initialMeasurement = ""
+}) => {
+  const [query, setQuery] = useState(initialQuery);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [selectedIngredient, setSelectedIngredient] = useState<Ingredient | null>(null);
-  const [amount, setAmount] = useState("");
-  const [measurement, setMeasurement] = useState("");
+  const [amount, setAmount] = useState(initialAmount);
+  const [measurement, setMeasurement] = useState(initialMeasurement);
   const [loading, setLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // Use a ref to hold onChange so it doesn't trigger effect re-runs.
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Update local query state when the initial query changes.
+  useEffect(() => {
+    setQuery(initialQuery);
+  }, [initialQuery]);
+
+  // Fetch ingredients when query or selectedIngredient changes.
   useEffect(() => {
     if (selectedIngredient && query.toLowerCase() === selectedIngredient.name.toLowerCase()) {
       return;
@@ -32,10 +52,10 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
     if (query.length < 2) {
       setIngredients([]);
       setSelectedIngredient(null);
-      onSelect(null, amount, measurement);
+      onChangeRef.current(null, amount, measurement);
       setIsDropdownOpen(false);
       return;
-    }
+    } 
 
     const fetchData = async () => {
       setLoading(true);
@@ -46,20 +66,20 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
     };
 
     const delayDebounce = setTimeout(fetchData, 200);
-
     return () => clearTimeout(delayDebounce);
-  }, [query, selectedIngredient]);
+  }, [query, selectedIngredient, amount, measurement]);
 
+  // Notify parent when selected ingredient, amount, or measurement changes.
   useEffect(() => {
-    onSelect(selectedIngredient, amount, measurement);
-  }, [amount, measurement, selectedIngredient]);
+    onChangeRef.current(selectedIngredient, amount, measurement);
+  }, [selectedIngredient, amount, measurement]);
 
   const handleSelectIngredient = (ingredient: Ingredient) => {
     setQuery(ingredient.name);
     setSelectedIngredient(ingredient);
     setIngredients([]);
     setIsDropdownOpen(false);
-    onSelect(ingredient, amount, measurement);
+    onChangeRef.current(ingredient, amount, measurement);
   };
 
   return (
@@ -103,25 +123,22 @@ const IngredientSearch: React.FC<IngredientSearchProps> = ({ onSelect }) => {
         </div>
       </div>
 
-      {/* Updated Amount Input Field */}
+      {/* Amount Input Field */}
       <div className={styles.valueField}>
         <input
           type="text"
           inputMode="numeric"
-          pattern="^(0|[1-9]\\d*)$"
           placeholder="Amount"
           value={amount}
           onChange={(e) => {
             const val = e.target.value;
-            // Allow empty string (to clear) or a sequence of digits only.
-            if (val === "" || /^[0-9]+$/.test(val)) {
-              setAmount(val);
-            }
+            setAmount(val)
           }}
           className={styles.input}
         />
       </div>
 
+      {/* Measurement Input Field */}
       <div className={styles.valueField}>
         <input
           type="text"

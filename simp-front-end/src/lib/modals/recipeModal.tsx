@@ -9,6 +9,7 @@ import {
   RecipeImageCreate,
   RecipeRetrieve,
   RecipeIngredientCreate,
+  RecipeIngredient,
 } from "@/lib/types/recipe";
 import { Minus, Plus } from "lucide-react";
 import TagInput from "./tagSelector";
@@ -48,26 +49,29 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   useEffect(() => {
     if (recipe) {
+      console.log("Loaded recipe:", recipe); // Debug: check the structure in the console.
       setFormData({
-        title: recipe.title,
+        title: recipe.title || "",
         description: recipe.description || "",
-        ingredients: recipe.ingredients.map((ing) => ({
-          id: ing.ingredient_id.toString(),
+        ingredients: (recipe.ingredients || []).map((ing: RecipeIngredient) => ({
+          id: ing.ingredient_id,
           ingredient_name: ing.ingredient_name,
-          amount: ing.amount,
-          measurement: ing.measurement,
+          amount: ing.amount ?? 0,
+          measurement: ing.measurement || "",
         })),
-        steps: recipe.steps.map((step, index) => ({
-          id: step.step_id.toString(),
+        
+        steps: (recipe.steps || []).map((step: any, index: number) => ({
+          id: (step.step_id ?? step.id)?.toString() || Date.now().toString(),
           step_number: index + 1,
-          description: step.description,
+          description: step.description || "",
         })),
-        images: recipe.images.map((image) => ({
-          id: image.image_id.toString(),
-          image_url: image.image_url,
+        images: (recipe.images || []).map((image: any) => ({
+          id: (image.image_id ?? image.id)?.toString() || Date.now().toString(),
+          image_url: image.image_url || "",
         })),
-        tags: recipe.tags.map((tag) => tag.tag_id.toString()),
+        tags: (recipe.tags || []).map((tag: any) => (tag.tag_id ?? tag.id)?.toString() || ""),
       });
+      console.log("After code run", formData)
     } else {
       setFormData({
         title: "",
@@ -78,8 +82,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
         tags: [],
       });
     }
-  }, [recipe, isOpen]);
-  
+    
+    console.log(formData)
+  }, [recipe,isOpen]); // removed isOpen from dependency array
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -141,11 +146,11 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
       ingredients: prev.ingredients.map((ing) =>
         ing.id === id
           ? {
-              ...ing,
-              ingredient_name: ingredient ? ingredient.name : "",
-              amount: amount ? parseFloat(amount) : 0,
-              measurement,
-            }
+            ...ing,
+            ingredient_name: ingredient ? ingredient.name : "",
+            amount: amount ? parseFloat(amount) : 0,
+            measurement,
+          }
           : ing
       ),
     }));
@@ -246,7 +251,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
               style={{
                 overflowY: "hidden",
                 resize: "none",
-                padding: "8px 8px 8px 8px",
+                padding: "8px",
                 boxSizing: "border-box",
                 height: `${minHeight}px`,
               }}
@@ -273,7 +278,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                   <SortableIngredientRow
                     key={ingredient.id}
                     ingredient={ingredient}
-                    onSelect={handleIngredientSelect}
+                    onChange={handleIngredientSelect}
                     onRemove={removeIngredient}
                   />
                 ))}
