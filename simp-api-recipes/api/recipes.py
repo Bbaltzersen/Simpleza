@@ -27,13 +27,13 @@ def get_db():
 
 
 
-@router.get("/get-all/", response_model=List[RecipeOut])
-def get_recipes(db: Session = Depends(get_db)):
-    return db.query(Recipe).all()
+# @router.get("/get-all/", response_model=List[RecipeOut])
+# def get_recipes(db: Session = Depends(get_db)):
+#     return db.query(Recipe).all()
 
-@router.get("/pagination/", response_model=List[RecipeOut])
-def get_pagination(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=20), db: Session = Depends(get_db)):
-    return db.query(Recipe).offset(skip).limit(limit).all()
+# @router.get("/pagination/", response_model=List[RecipeOut])
+# def get_pagination(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=20), db: Session = Depends(get_db)):
+#     return db.query(Recipe).offset(skip).limit(limit).all()
 
 # @router.get("/", response_model=Dict[str, List[IngredientOut] | int])
 # def read_ingredients(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
