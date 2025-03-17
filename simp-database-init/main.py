@@ -5,6 +5,7 @@ from alembic import command
 from alembic.config import Config
 from database.session import engine
 from models.base import Base
+from triggers.tsvectors import initialize_vectors
 
 # Alembic Config Path
 ALEMBIC_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "alembic.ini")
@@ -24,6 +25,7 @@ def create_database():
     try:
         logging.info("Creating database tables...")
         Base.metadata.create_all(bind=engine)
+        initialize_vectors()
         logging.info("Database created successfully!")
     except Exception as e:
         logging.error(f"Error creating database: {e}")

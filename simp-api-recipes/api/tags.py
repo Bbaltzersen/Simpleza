@@ -26,18 +26,31 @@ def get_db():
 
 @router.get("/", response_model=List[RetrieveTag])
 def search_tag(
-    search: str = Query(..., min_length=3),
+    search: str = Query(..., min_length=1),
     db: Session = Depends(get_db)
 ):
-    # Use similarity() to filter ingredients that are at least 40% similar
-    tags = (
-        db.query(Tag)
-          .filter(func.similarity(Tag.name, search) >= 0.8)
-          .order_by(func.similarity(Tag.name, search).desc())
-          .limit(10)
-          .all()
-    )
-    return tags
+    """Search tags with full-text search, similarity, and ILIKE fallback."""
+
+    if not search:
+        raise HTTPException(status_code=400, detail="Search query cannot be empty.")
+
+    query_tsquery = func.plainto_tsquery("english", search)
+
+    query = db.query(Tag)
+
+    if len(search) > 2:
+        query = query.filter(
+            Tag.name_tsv.op("@@")(query_tsquery) |
+            (func.similarity(Tag.name, search) >= 0.8)
+        ).order_by(
+            func.ts_rank_cd(Tag.name_tsv, query_tsquery).desc(),
+            func.similarity(Tag.name, search).desc()
+        )
+    else:
+        query = query.filter(Tag.name.ilike(f"%{search}%"))  # ✅ Fallback for short words
+
+    return query.limit(10).all()
+
 
 # @router.post("/{tag_name}")
 # def create_tag(tag_name: str, db: Session = Depends(get_db)):
