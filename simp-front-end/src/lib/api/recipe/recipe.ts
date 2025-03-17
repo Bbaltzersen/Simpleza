@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ListRecipe, Recipe, RecipeCreate } from "@/lib/types/recipe";
+import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { RecipeRetrieve } from "@/lib/types/recipe";
 
@@ -41,7 +41,7 @@ export async function fetchRecipeById(recipeId: string): Promise<RecipeRetrieve 
 /**
  * Create a new recipe
  */
-export async function createRecipe(recipe: RecipeCreate): Promise<Recipe | null> {
+export async function createRecipe(recipe: RecipeCreate): Promise<RecipeCreate | null> {
   try {
     const response = await apiClient.post("/", recipe);
     return response.data;
@@ -54,15 +54,15 @@ export async function createRecipe(recipe: RecipeCreate): Promise<Recipe | null>
 /**
  * Update an existing recipe
  */
-export async function updateRecipe(recipe_id: string, recipeUpdate: Partial<Recipe>): Promise<Recipe | null> {
-  try {
-    const response = await apiClient.put(`/${recipe_id}`, recipeUpdate);
-    return response.data;
-  } catch (error) {
-    console.error("Error updating recipe:", error);
-    return null;
-  }
-}
+// export async function updateRecipe(recipe_id: string, recipeUpdate: Partial<Recipe>): Promise<Recipe | null> {
+//   try {
+//     const response = await apiClient.put(`/${recipe_id}`, recipeUpdate);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error updating recipe:", error);
+//     return null;
+//   }
+// }
 
 /**
  * Delete a recipe
@@ -105,29 +105,43 @@ export async function fetchIngredientsByName(query: string): Promise<Ingredient[
   }
 }
 
+
+export async function fetchTagsByName(query: string): Promise<TagRetrieval[]> {
+  
+  if (query.length < 3) return []; // Avoid unnecessary API calls for short queries
+
+  try {
+    const response = await apiClient.get<TagRetrieval[]>(`/tags/?search=${encodeURIComponent(query)}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    return [];
+  }
+}
+
 /**
  * Handle saving a recipe (ensures proper formatting)
  */
-export async function handleSaveRecipe(recipe: RecipeCreate): Promise<Recipe | null> {
-  const formattedRecipe: RecipeCreate = {
-    ...recipe,
-    tags: Array.isArray(recipe.tags) ? recipe.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Explicitly type `tags`
-    ingredients: recipe.ingredients.map(ing => ({
-      id: ing.id || `${Date.now()}`,
-      ingredient_name: ing.ingredient_name,
-      amount: ing.amount,
-      measurement: ing.measurement,
-    })),
-    steps: recipe.steps.map(step => ({
-      id: step.id || `${Date.now()}`,
-      step_number: step.step_number,
-      description: step.description,
-    })),
-    images: recipe.images.map(img => ({
-      id: img.id || `${Date.now()}`,
-      image_url: img.image_url,
-    })),
-  };
+// export async function handleSaveRecipe(recipe: RecipeCreate): Promise<Recipe | null> {
+//   const formattedRecipe: RecipeCreate = {
+//     ...recipe,
+//     tags: Array.isArray(recipe.tags) ? recipe.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [], // ✅ Explicitly type `tags`
+//     ingredients: recipe.ingredients.map(ing => ({
+//       id: ing.id || `${Date.now()}`,
+//       ingredient_name: ing.ingredient_name,
+//       amount: ing.amount,
+//       measurement: ing.measurement,
+//     })),
+//     steps: recipe.steps.map(step => ({
+//       id: step.id || `${Date.now()}`,
+//       step_number: step.step_number,
+//       description: step.description,
+//     })),
+//     images: recipe.images.map(img => ({
+//       id: img.id || `${Date.now()}`,
+//       image_url: img.image_url,
+//     })),
+//   };
 
-  return createRecipe(formattedRecipe);
-}
+//   return createRecipe(formattedRecipe);
+// }

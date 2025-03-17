@@ -123,6 +123,11 @@ export type ListRecipe = {
   front_image: string;
 }
 
+export type TagRetrieval = {
+  tag_id: string;
+  name: string;
+}
+
 // Create Recipes
 
 export type RecipeCreate = {
@@ -158,3 +163,5 @@ export type RecipeTagCreate = {
   tag_id?: string;
   name: string;
 }
+
+// 
