@@ -49,7 +49,7 @@ def read_ingredients(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le
     ingredients = db.query(Ingredient).offset(skip).limit(limit).all()
 
     return {
-        "ingredients": [ingredient.model_dump() for ingredient in ingredients],  
+        "ingredients": [IngredientOut.model_validate(ingredient) for ingredient in ingredients],  # ✅ Convert to Pydantic model
         "total": total_ingredients
     }
 
@@ -74,7 +74,7 @@ def update_ingredient(ingredient_id: uuid.UUID, ingredient_update: IngredientCre
 
     db.commit()
     db.refresh(ingredient)
-    return ingredient.model_dump()
+    return IngredientOut.model_validate(ingredient)  # ✅ Convert to Pydantic model
 
 @router.delete("/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
