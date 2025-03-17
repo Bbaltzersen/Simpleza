@@ -51,6 +51,12 @@ class CreateRecipe(BaseModel):
     class Config:
         from_attributes = True
 
+class RetrieveTag(BaseModel):
+    tag_id: UUID
+    name: str
+
+    class Config: 
+        from_attributes = True
 
 
 # class RecipeIngredientSchema(BaseModel):

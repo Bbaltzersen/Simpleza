@@ -1,5 +1,6 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 import uuid as UUID
@@ -11,7 +12,7 @@ from models.recipe_ingredient import RecipeIngredient
 from models.recipe_step import RecipeStep
 from models.tag import Tag
 from models.recipe_tag import RecipeTag
-from schemas.recipe import RecipeOut
+from schemas.recipe import RecipeOut, RetrieveTag
 
 router = APIRouter(tags=["tags"])
 
@@ -22,6 +23,21 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@router.get("/", response_model=List[RetrieveTag])
+def search_tag(
+    search: str = Query(..., min_length=3),
+    db: Session = Depends(get_db)
+):
+    # Use similarity() to filter ingredients that are at least 40% similar
+    tags = (
+        db.query(Tag)
+          .filter(func.similarity(Tag.name, search) >= 0.8)
+          .order_by(func.similarity(Tag.name, search).desc())
+          .limit(10)
+          .all()
+    )
+    return tags
 
 # @router.post("/{tag_name}")
 # def create_tag(tag_name: str, db: Session = Depends(get_db)):
