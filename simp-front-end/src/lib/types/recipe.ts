@@ -101,15 +101,15 @@ export type RecipeIngredientModify = {
 };
 
 
-export interface RecipeRetrieve {
-  title: string;
-  description?: string;
-  author_id?: string;
-  ingredients: RecipeIngredient[];
-  steps: RecipeStep[];
-  images: RecipeImage[];
-  tags: Tag[];
-}
+// export interface RecipeRetrieve {
+//   title: string;
+//   description?: string;
+//   author_id?: string;
+//   ingredients: RecipeIngredient[];
+//   steps: RecipeStep[];
+//   images: RecipeImage[];
+//   tags: Tag[];
+// }
 
 
 // -------------------------------- New types.

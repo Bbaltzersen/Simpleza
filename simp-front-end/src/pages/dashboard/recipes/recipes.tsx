@@ -5,15 +5,14 @@ import styles from "./recipes.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
 import { Plus } from "lucide-react";
-import { ListRecipe, RecipeCreate, RecipeRetrieve } from "@/lib/types/recipe";
+import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
-import { fetchRecipeById } from "@/lib/api/recipe/recipe";
 
 export default function Recipes() {
   const { recipes, fetchMoreRecipes, addRecipe, hasMore } = useDashboard(); // ✅ Use context functions
   const { user } = useAuth(); // ✅ Get authenticated user from context
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeRetrieve | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastRecipeRef = useCallback(
@@ -38,8 +37,7 @@ export default function Recipes() {
   };
 
   const handleEditRecipe = async (recipe: ListRecipe) => {
-    const retRecipe = await fetchRecipeById(recipe.recipe_id);
-    setSelectedRecipe(retRecipe);
+    setSelectedRecipe(recipe);
     setIsModalOpen(true);
   };
 
