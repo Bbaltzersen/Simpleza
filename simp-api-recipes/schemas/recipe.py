@@ -21,6 +21,11 @@ class CreateRecipeIngredient(BaseModel):
     class Config:
         from_attributes = True
 
+class CreateRecipeStep(BaseModel):
+    step_number: int
+    description: str
+    image_url: str = None
+
 class CreateRecipeImage(BaseModel):
     image_url: str
 

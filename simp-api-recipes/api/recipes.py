@@ -6,14 +6,9 @@ from uuid import UUID
 from fuzzywuzzy import process  
 from database.connection import SessionLocal
 from models.recipe import Recipe
-from models.recipe_image import RecipeImage
-from models.recipe_ingredient import RecipeIngredient
-from models.recipe_step import RecipeStep
-from models.tag import Tag
 from models.recipe_tag import RecipeTag
-from models.ingredient import Ingredient  
-from schemas.ingredient import IngredientOut
-from schemas.recipe import  RecipeOut
+from models.tag import Tag
+from schemas.recipe import  RecipeOut, CreateRecipe, CreateRecipeIngredient, CreateRecipeImage, CreateRecipeTag
 
 router = APIRouter(tags=["recipes"])
 
@@ -26,6 +21,80 @@ def get_db():
         db.close()
 
 
+@router.get("/", response_model=Dict[str, List[RecipeOut] | int])
+def read_recipes(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
+    total_recipes = db.query(Recipe).count()
+    recipes = db.query(Recipe).offset(skip).limit(limit).all()
+
+    return {
+        "recipes": [
+            RecipeOut(
+                recipe_id=str(recipe.recipe_id),
+                title=recipe.title,
+                front_image=recipe.front_image,
+                tags=[tag.name for tag in recipe.tags]
+            )
+            for recipe in recipes
+        ],
+        "total": total_recipes  
+    }
+
+# # API Call to get recipes made by a user.
+@router.get("/{author_id}/", response_model=Dict[str, List[RecipeOut] | int])
+def read_user_recipes(author_id: uuid.UUID, skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=20), db: Session = Depends(get_db)):
+    total_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).count()
+    user_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).offset(skip).limit(limit).all()
+    
+    return {
+        "total": total_recipes,
+        "recipes": user_recipes 
+    }
+
+
+@router.post("/", response_model=RecipeOut) 
+def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
+    try:
+        new_recipe = Recipe(
+            recipe_id=uuid.uuid4(),
+            title=recipe.title,
+            description=recipe.description,
+            front_image=recipe.front_image,
+            author_id=recipe.author_id,
+            validated=False,
+        )
+        db.add(new_recipe)
+        db.flush()  
+
+        for tag in recipe.tags:
+            if tag.tag_id:
+                existing_tag = db.query(Tag).filter(Tag.tag_id == tag.tag_id).first()
+                if not existing_tag:
+                    raise HTTPException(status_code=400, detail=f"Tag {tag.tag_id} not found.")
+            else:
+                existing_tag = Tag(tag_id=uuid.uuid4(), name=tag.name)
+                db.add(existing_tag)
+                db.flush()
+
+            recipe_tag = RecipeTag.insert().values(
+                recipe_id=new_recipe.recipe_id,
+                tag_id=existing_tag.tag_id
+            )
+            db.execute(recipe_tag)
+
+        db.commit() 
+
+        created_recipe = db.query(Recipe).filter(Recipe.recipe_id == new_recipe.recipe_id).first()
+
+        return RecipeOut(
+            recipe_id=str(created_recipe.recipe_id),
+            title=created_recipe.title,
+            front_image=created_recipe.front_image,
+            tags=[tag.name for tag in created_recipe.tags]  # Convert tags to list of strings
+        )
+
+    except Exception as e:
+        db.rollback()  # ❌ Rollback changes if something fails
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 # @router.get("/get-all/", response_model=List[RecipeOut])
 # def get_recipes(db: Session = Depends(get_db)):
@@ -44,29 +113,6 @@ def get_db():
 #         "ingredients": ingredients,
 #         "total": total_ingredients
 #     }
-
-@router.get("/", response_model=Dict[str, List[RecipeOut] | int])
-def read_recipes(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
-    total_recipes = db.query(Recipe).count()
-    user_recipes = db.query(Recipe).offset(skip).limit(limit).all()
-    
-    return {
-        "recipes": user_recipes,
-        "total": total_recipes
-    }
-
-# # API Call to get recipes made by a user.
-@router.get("/{author_id}/", response_model=Dict[str, List[RecipeOut] | int])
-def read_user_recipes(author_id: uuid.UUID, skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=20), db: Session = Depends(get_db)):
-    total_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).count()
-    user_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).offset(skip).limit(limit).all()
-    
-    return {
-        "total": total_recipes,
-        "recipes": user_recipes 
-    }
-
-
 
 
 # @router.post("/", response_model=RecipeOut)
