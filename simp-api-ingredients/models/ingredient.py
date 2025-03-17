@@ -11,7 +11,7 @@ class Ingredient(Base):
     name = Column(TEXT, unique=True, nullable=False, index=True)
     name_tsv = Column(TSVECTOR)  # ✅ Full-text search column
     default_unit = Column(TEXT, nullable=False, default="g")
-    calories_per_100g = Column(Numeric(10, 2), nullable=True)
+    calories_per_100g = Column(Numeric(10, 2), nullable=True)  # ✅ Stores up to 2 decimal places
     validated = Column(Boolean, nullable=False, default=False)  # ✅ Default to False
 
     # ✅ Diet Classification (1 = Vegan, 2 = Vegetarian, 3 = Pescatarian, 4 = Omnivore)

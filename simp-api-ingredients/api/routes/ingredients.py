@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict
 import uuid
+from decimal import Decimal
 
 from database.connection import SessionLocal
 from models.ingredient import Ingredient
@@ -13,7 +14,7 @@ from schemas.ingredient import IngredientCreate, IngredientOut, NutritionLink
 from schemas.product import ProductOut
 from schemas.nutrition import NutritionOut
 
-router = APIRouter(prefix="", tags=["Ingredients"])
+router = APIRouter(prefix="/v1/ingredients", tags=["Ingredients"])
 
 def get_db():
     db = SessionLocal()
@@ -31,8 +32,9 @@ def create_ingredient(ingredient: IngredientCreate, db: Session = Depends(get_db
     new_ingredient = Ingredient(
         name=ingredient.name,
         default_unit=ingredient.default_unit,
-        calories_per_100g=ingredient.calories_per_100g,
-        validated=ingredient.validated
+        calories_per_100g=Decimal(ingredient.calories_per_100g) if ingredient.calories_per_100g is not None else None,
+        validated=ingredient.validated,
+        diet_level=ingredient.diet_level
     )
 
     db.add(new_ingredient)
@@ -47,7 +49,7 @@ def read_ingredients(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le
     ingredients = db.query(Ingredient).offset(skip).limit(limit).all()
 
     return {
-        "ingredients": ingredients,
+        "ingredients": [ingredient.model_dump() for ingredient in ingredients],  
         "total": total_ingredients
     }
 
@@ -56,7 +58,7 @@ def read_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
     ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
     if not ingredient:
         raise HTTPException(status_code=404, detail="Ingredient not found")
-    return ingredient
+    return ingredient.model_dump()
 
 @router.put("/{ingredient_id}", response_model=IngredientOut)
 def update_ingredient(ingredient_id: uuid.UUID, ingredient_update: IngredientCreate, db: Session = Depends(get_db)):
@@ -66,12 +68,13 @@ def update_ingredient(ingredient_id: uuid.UUID, ingredient_update: IngredientCre
 
     ingredient.name = ingredient_update.name
     ingredient.default_unit = ingredient_update.default_unit
-    ingredient.calories_per_100g = ingredient_update.calories_per_100g
+    ingredient.calories_per_100g = Decimal(ingredient_update.calories_per_100g) if ingredient_update.calories_per_100g is not None else None
     ingredient.validated = ingredient_update.validated
+    ingredient.diet_level = ingredient_update.diet_level
 
     db.commit()
     db.refresh(ingredient)
-    return ingredient
+    return ingredient.model_dump()
 
 @router.delete("/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_ingredient(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
@@ -104,32 +107,8 @@ def link_ingredient_to_product(ingredient_id: uuid.UUID, product_id: uuid.UUID, 
     db.commit()
     return {"message": "Product linked successfully"}
 
-@router.post("/{ingredient_id}/link-nutrition/{nutrition_name}")
-def link_ingredient_to_nutrition(ingredient_id: uuid.UUID, nutrition_name: str, db: Session = Depends(get_db)):
-    ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
-    nutrition = db.query(Nutrition).filter(Nutrition.name.ilike(nutrition_name)).first()  
-
-    if not ingredient:
-        raise HTTPException(status_code=404, detail="Ingredient not found")
-    if not nutrition:
-        raise HTTPException(status_code=404, detail="Nutrition not found")
-
-    existing_link = db.query(IngredientNutrition).filter(
-        IngredientNutrition.ingredient_id == ingredient_id,
-        IngredientNutrition.nutrition_id == nutrition.nutrition_id
-    ).first()
-
-    if existing_link:
-        raise HTTPException(status_code=400, detail="Link already exists")
-
-    new_link = IngredientNutrition(ingredient_id=ingredient_id, nutrition_id=nutrition.nutrition_id)
-    db.add(new_link)
-    db.commit()
-    return {"message": "Nutrition linked successfully"}
-
 @router.get("/{ingredient_id}/products", response_model=List[ProductOut])
 def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
-    """Retrieve all products linked to an ingredient."""
     linked_products = (
         db.query(Product)
         .join(IngredientProduct, Product.product_id == IngredientProduct.product_id)
@@ -137,8 +116,7 @@ def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_
         .all()
     )
 
-    return [ProductOut.from_orm(product) for product in linked_products] if linked_products else []
-
+    return [product.model_dump() for product in linked_products] if linked_products else []
 
 @router.post("/link-nutrition")
 def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends(get_db)):
@@ -153,7 +131,6 @@ def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends
 
 @router.get("/{ingredient_id}/nutritions", response_model=List[NutritionOut])
 def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
-    """Retrieve all nutritions linked to an ingredient."""
     linked_nutritions = (
         db.query(Nutrition)
         .join(IngredientNutrition, Nutrition.nutrition_id == IngredientNutrition.nutrition_id)
@@ -161,18 +138,10 @@ def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(ge
         .all()
     )
 
-    # ✅ Return an empty list instead of raising 404
-    if not linked_nutritions:
-        return []
-
-    # ✅ Convert SQLAlchemy objects to Pydantic models
-    return [NutritionOut.from_orm(nutrition) for nutrition in linked_nutritions]
+    return [nutrition.model_dump() for nutrition in linked_nutritions] if linked_nutritions else []
 
 @router.delete("/{ingredient_id}/detach-product/{product_id}")
-def detach_product(ingredient_id: str, product_id: str, db: Session = Depends(get_db)):
-    """
-    Detach a product from an ingredient without deleting either entity.
-    """
+def detach_product(ingredient_id: uuid.UUID, product_id: uuid.UUID, db: Session = Depends(get_db)):
     link = db.query(IngredientProduct).filter(
         IngredientProduct.ingredient_id == ingredient_id,
         IngredientProduct.product_id == product_id
@@ -181,15 +150,12 @@ def detach_product(ingredient_id: str, product_id: str, db: Session = Depends(ge
     if not link:
         raise HTTPException(status_code=404, detail="Link between ingredient and product not found")
 
-    db.delete(link)  # Delete the link, not the product or ingredient
+    db.delete(link)
     db.commit()
     return {"message": "Product detached from ingredient successfully"}
 
 @router.delete("/{ingredient_id}/detach-nutrition/{nutrition_id}")
-def detach_nutrition(ingredient_id: str, nutrition_id: str, db: Session = Depends(get_db)):
-    """
-    Detach a nutrition from an ingredient without deleting either entity.
-    """
+def detach_nutrition(ingredient_id: uuid.UUID, nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
     link = db.query(IngredientNutrition).filter(
         IngredientNutrition.ingredient_id == ingredient_id,
         IngredientNutrition.nutrition_id == nutrition_id
@@ -198,6 +164,6 @@ def detach_nutrition(ingredient_id: str, nutrition_id: str, db: Session = Depend
     if not link:
         raise HTTPException(status_code=404, detail="Link between ingredient and nutrition not found")
 
-    db.delete(link)  # Delete the link, not the nutrition or ingredient
+    db.delete(link)
     db.commit()
     return {"message": "Nutrition detached from ingredient successfully"}
