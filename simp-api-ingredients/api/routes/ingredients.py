@@ -14,7 +14,7 @@ from schemas.ingredient import IngredientCreate, IngredientOut, NutritionLink
 from schemas.product import ProductOut
 from schemas.nutrition import NutritionOut
 
-router = APIRouter(prefix="/v1/ingredients", tags=["Ingredients"])
+router = APIRouter(prefix="", tags=["Ingredients"])
 
 def get_db():
     db = SessionLocal()

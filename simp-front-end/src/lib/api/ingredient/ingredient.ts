@@ -10,6 +10,9 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+/** 
+ * Fetch ingredients with pagination 
+ */
 export async function fetchIngredients(skip: number = 0, limit: number = 10): Promise<{ ingredients: Ingredient[], total: number }> {
   try {
     const response = await apiClient.get<{ ingredients: Ingredient[], total: number }>(
@@ -22,17 +25,21 @@ export async function fetchIngredients(skip: number = 0, limit: number = 10): Pr
   }
 }
 
-
+/** 
+ * Create a new ingredient 
+ */
 export async function createIngredient({
   name,
-  default_unit,
+  default_unit = "g",
   calories_per_100g,
   validated = false, 
+  diet_level = 4, // ✅ Ensure default value
 }: {
   name: string;
-  default_unit: string;
+  default_unit?: string;
   calories_per_100g?: number;
   validated?: boolean;
+  diet_level?: number;
 }): Promise<Ingredient | null> {
   try {
     const response = await apiClient.post("/", {
@@ -40,6 +47,7 @@ export async function createIngredient({
       default_unit,
       calories_per_100g,
       validated,
+      diet_level,
     });
     return response.data;
   } catch (error) {
@@ -48,7 +56,10 @@ export async function createIngredient({
   }
 }
 
-export async function updateIngredient(ingredient_id: string, ingredient: { name: string; default_unit: string; calories_per_100g?: number }): Promise<Ingredient | null> {
+/** 
+ * Update an ingredient (supports partial updates)
+ */
+export async function updateIngredient(ingredient_id: string, ingredient: Partial<Ingredient>): Promise<Ingredient | null> {
   try {
     const response = await apiClient.put(`/${ingredient_id}`, ingredient);
     return response.data;
@@ -58,6 +69,9 @@ export async function updateIngredient(ingredient_id: string, ingredient: { name
   }
 }
 
+/** 
+ * Delete an ingredient by ID
+ */
 export async function deleteIngredient(ingredient_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/${ingredient_id}`);
@@ -110,9 +124,9 @@ export async function linkIngredientToProduct(ingredientId: string, productId: s
 /** 
  * Link a single nutrition to an ingredient 
  */
-export async function linkIngredientToNutrition(ingredient_id: string, name: string): Promise<boolean> {
+export async function linkIngredientToNutrition(ingredient_id: string, nutrition_id: string): Promise<boolean> {
   try {
-    await apiClient.post(`/${ingredient_id}/link-nutrition/${name}`);
+    await apiClient.post("/link-nutrition", { ingredient_id, nutrition_id });
     return true;
   } catch (error) {
     console.error("Error linking ingredient to nutrition:", error);
@@ -120,6 +134,9 @@ export async function linkIngredientToNutrition(ingredient_id: string, name: str
   }
 }
 
+/** 
+ * Detach a nutrition from an ingredient 
+ */
 export async function detachNutrition(ingredient_id: string, nutrition_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/${ingredient_id}/detach-nutrition/${nutrition_id}`);
@@ -130,6 +147,9 @@ export async function detachNutrition(ingredient_id: string, nutrition_id: strin
   }
 }
 
+/** 
+ * Detach a product from an ingredient 
+ */
 export async function detachProduct(ingredient_id: string, product_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/${ingredient_id}/detach-product/${product_id}`);
