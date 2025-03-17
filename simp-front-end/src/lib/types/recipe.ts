@@ -1,28 +1,29 @@
+import exp from "constants";
 import { UUID } from "crypto";
 
-export type Recipe = {
-  recipe_id: string;
-  title: string;
-  description?: string;
-  author_id?: string;
-  created_at: string;  // ❌ Not needed in `RecipeCreate`
-  ingredients: RecipeIngredient[];
-  steps: RecipeStep[];
-  images: RecipeImage[];
-  tags: Tag[];  // Backend expects UUID[], so we must transform this
-  favorited_by: RecipeFavorite[];  // ❌ Not needed in `RecipeCreate`
-};
+// export type Recipe = {
+//   recipe_id: string;
+//   title: string;
+//   description?: string;
+//   author_id?: string;
+//   created_at: string;  // ❌ Not needed in `RecipeCreate`
+//   ingredients: RecipeIngredient[];
+//   steps: RecipeStep[];
+//   images: RecipeImage[];
+//   tags: Tag[];  // Backend expects UUID[], so we must transform this
+//   favorited_by: RecipeFavorite[];  // ❌ Not needed in `RecipeCreate`
+// };
 
 // ✅ Define `RecipeCreate` correctly to match `RecipeCreateSchema`
-export type RecipeCreate = {
-  title: string;
-  description?: string;
-  author_id?: string;
-  ingredients: RecipeIngredientCreate[];
-  steps: RecipeStepCreate[];
-  images: RecipeImageCreate[];
-  tags: string[];
-};
+// export type RecipeCreate = {
+//   title: string;
+//   description?: string;
+//   author_id?: string;
+//   ingredients: RecipeIngredientCreate[];
+//   steps: RecipeStepCreate[];
+//   images: RecipeImageCreate[];
+//   tags: string[];
+// };
 
 
 export type RecipeLoad = {
@@ -71,25 +72,24 @@ export type RecipeFavorite = {
 };
 
 
-export type RecipeIngredientCreate = {
-  id: string; // Temporary ID for frontend sorting
-  
-  ingredient_name: string;
-  amount: number;
-  measurement: string;
-};
+// export type RecipeIngredientCreate = {
+//   id: string; // Temporary ID for frontend sorting
+//   ingredient_name: string;
+//   amount: number;
+//   measurement: string;
+// };
 
 
-export type RecipeStepCreate = {
-  id: string; // Temporary ID for frontend sorting
-  step_number: number;
-  description: string;
-};
+// export type RecipeStepCreate = {
+//   id: string; // Temporary ID for frontend sorting
+//   step_number: number;
+//   description: string;
+// };
 
-export type RecipeImageCreate = {
-  id: string; // Temporary ID for frontend sorting
-  image_url: string;
-};
+// export type RecipeImageCreate = {
+//   id: string; // Temporary ID for frontend sorting
+//   image_url: string;
+// };
 
 
 
@@ -109,4 +109,52 @@ export interface RecipeRetrieve {
   steps: RecipeStep[];
   images: RecipeImage[];
   tags: Tag[];
+}
+
+
+// -------------------------------- New types.
+
+// Retrieval Recipe
+
+export type ListRecipe = {
+  recipe_id: string;
+  title: string;
+  tags: string[];
+  front_image: string;
+}
+
+// Create Recipes
+
+export type RecipeCreate = {
+  title: string;
+  description: string;
+  front_image: string;
+  author_id: string;
+  ingredients: RecipeIngredientCreate[];
+  steps: RecipeStepCreate[]; 
+  images: RecipeImageCreate[];
+  tags: RecipeTagCreate[];
+}
+
+export type RecipeIngredientCreate = {
+  ingredient_id?: string;
+  ingredient_name: string;
+  amount: number;
+  measurement: string;
+  position: number;
+};
+
+export type RecipeStepCreate = {
+  step_number: number;
+  description: string;
+  image_url?: string;
+};
+
+export type RecipeImageCreate = {
+  image_url: string;
+}
+
+export type RecipeTagCreate = {
+  tag_id?: string;
+  name: string;
 }

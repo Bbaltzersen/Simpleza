@@ -2,56 +2,50 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { fetchRecipes, createRecipe } from "@/lib/api/recipe/recipe"; 
-import { Recipe, RecipeCreate, RecipeLoad, Tag } from "@/lib/types/recipe"; // ✅ Import correct types
+import { ListRecipe, RecipeCreate } from "@/lib/types/recipe"; 
 
-// ✅ Define the context type properly
+// ✅ Define the context type properly with pagination
 interface DashboardContextType {
-    recipes: Recipe[];
-    fetchRecipes: () => Promise<void>;
+    recipes: ListRecipe[];
+    fetchMoreRecipes: () => Promise<void>;
     addRecipe: (recipe: RecipeCreate) => Promise<void>;
+    hasMore: boolean;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [recipes, setRecipes] = useState<Recipe[]>([]);
+    const [recipes, setRecipes] = useState<ListRecipe[]>([]);
+    const [skip, setSkip] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const limit = 10; // Recipes per page
 
-    const loadRecipes = async () => {
-        const data = await fetchRecipes();
-    
-        const formattedData: Recipe[] = data.map(recipe => ({
-            ...recipe,
-            description: recipe.description || "", // Ensure missing fields are added
-            ingredients: recipe.ingredients || [],
-            steps: recipe.steps || [],
-            images: recipe.images || [],
-            tags: recipe.tags || [],
-            favorited_by: recipe.favorited_by || [],
-        }));
-    
-        setRecipes(formattedData);
-    };
+    // ✅ Load more recipes (for infinite scrolling)
+    const fetchMoreRecipes = async () => {
+        if (!hasMore) return;
 
-    const addRecipe = async (recipe: RecipeCreate) => {
-        const newRecipe = await createRecipe(recipe);
-        if (newRecipe) {
-            setRecipes(prev => [
-                ...prev,
-                {
-                    ...newRecipe,
-                    tags: newRecipe.tags.map(tag => ({ tag_id: tag.tag_id, name: tag.name })), // ✅ Ensure tags are stored as `Tag[]`
-                }
-            ]);
+        const { recipes: newRecipes, total } = await fetchRecipes(skip, limit);
+        setRecipes((prev) => [...prev, ...newRecipes]);
+
+        setSkip((prevSkip) => prevSkip + limit);
+        if (recipes.length + newRecipes.length >= total) {
+            setHasMore(false);
         }
     };
-    
 
+    // ✅ Add a new recipe and update the list
+    const addRecipe = async (recipe: RecipeCreate) => {
+        // const newRecipe = await createRecipe(recipe);
+        // setRecipes((prev) => [newRecipe, ...prev]); // Add the new recipe to the top
+    };
+
+    // Load initial recipes on mount
     useEffect(() => {
-        loadRecipes();
+        fetchMoreRecipes();
     }, []);
 
     return (
-        <DashboardContext.Provider value={{ recipes, fetchRecipes: loadRecipes, addRecipe }}>
+        <DashboardContext.Provider value={{ recipes, fetchMoreRecipes, addRecipe, hasMore }}>
             {children}
         </DashboardContext.Provider>
     );

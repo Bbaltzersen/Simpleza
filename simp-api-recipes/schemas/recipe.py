@@ -6,9 +6,46 @@ class RecipeOut(BaseModel):
     recipe_id: UUID
     title: str
     front_image: str
+    tags: List[str]
 
     class Config:
         from_attributes = True
+
+class CreateRecipeIngredient(BaseModel):
+    ingredient_id: UUID = None
+    ingredient_name: str
+    amount: float
+    measurement:str
+    position: int
+    
+    class Config:
+        from_attributes = True
+
+class CreateRecipeImage(BaseModel):
+    image_url: str
+
+    class Config:
+        from_attributes = True
+
+class CreateRecipeTag(BaseModel):
+    tag_id: UUID = None
+    name: str
+
+    class Config:
+        from_attributes = True
+
+class CreateRecipe(BaseModel):
+    title: str
+    description: str
+    front_image: str
+    author_id: UUID
+    ingredients: List[CreateRecipeIngredient]
+    images: List[CreateRecipeImage]
+    tags: List[CreateRecipeTag]
+
+    class Config:
+        from_attributes = True
+
 
 
 # class RecipeIngredientSchema(BaseModel):

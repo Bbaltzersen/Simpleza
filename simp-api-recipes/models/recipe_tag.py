@@ -1,7 +1,6 @@
 from sqlalchemy import Table, Column, ForeignKey, UUID
 from .base import Base
 
-# ✅ Use a simple association table for many-to-many relationships
 RecipeTag = Table(
     "recipe_tags",
     Base.metadata,

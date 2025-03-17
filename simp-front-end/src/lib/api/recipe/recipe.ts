@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Recipe, RecipeCreate } from "@/lib/types/recipe";
+import { ListRecipe, Recipe, RecipeCreate } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { RecipeRetrieve } from "@/lib/types/recipe";
 
@@ -13,13 +13,15 @@ const apiClient = axios.create({
 /**
  * Fetch paginated recipes
  */
-export async function fetchRecipes(): Promise<Recipe[]> {
+export async function fetchRecipes(skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
   try {
-    const response = await apiClient.get<Recipe[]>("/");
+    const response = await apiClient.get<{ recipes: ListRecipe[]; total: number }>(
+      `/?skip=${skip}&limit=${limit}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching recipes:", error);
-    return [];
+    return { recipes: [], total: 0 };
   }
 }
 

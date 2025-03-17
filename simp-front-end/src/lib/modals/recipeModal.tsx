@@ -84,13 +84,12 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     }
     
     console.log(formData)
-  }, [recipe,isOpen]); // removed isOpen from dependency array
+  }, [recipe,isOpen]); 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Auto-grow the textarea starting from minHeight and then expanding as needed.
   const updateTextAreaHeight = () => {
     if (descriptionRef.current) {
       descriptionRef.current.style.height = "auto";
@@ -104,7 +103,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     updateTextAreaHeight();
   }, [formData.description]);
 
-  // Updated addItem to always use string IDs.
   const addItem = (type: "ingredients" | "steps" | "images", newItem: any) => {
     setFormData((prev) => ({
       ...prev,
