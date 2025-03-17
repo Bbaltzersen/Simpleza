@@ -23,9 +23,24 @@ export async function fetchIngredients(skip: number = 0, limit: number = 10): Pr
 }
 
 
-export async function createIngredient(ingredient: { name: string; default_unit: string; calories_per_100g?: number }): Promise<Ingredient | null> {
+export async function createIngredient({
+  name,
+  default_unit,
+  calories_per_100g,
+  validated = false, 
+}: {
+  name: string;
+  default_unit: string;
+  calories_per_100g?: number;
+  validated?: boolean;
+}): Promise<Ingredient | null> {
   try {
-    const response = await apiClient.post("/", ingredient);
+    const response = await apiClient.post("/", {
+      name,
+      default_unit,
+      calories_per_100g,
+      validated,
+    });
     return response.data;
   } catch (error) {
     console.error("Error creating ingredient:", error);

@@ -31,7 +31,8 @@ def create_ingredient(ingredient: IngredientCreate, db: Session = Depends(get_db
     new_ingredient = Ingredient(
         name=ingredient.name,
         default_unit=ingredient.default_unit,
-        calories_per_100g=ingredient.calories_per_100g
+        calories_per_100g=ingredient.calories_per_100g,
+        validated=ingredient.validated
     )
 
     db.add(new_ingredient)
@@ -66,6 +67,7 @@ def update_ingredient(ingredient_id: uuid.UUID, ingredient_update: IngredientCre
     ingredient.name = ingredient_update.name
     ingredient.default_unit = ingredient_update.default_unit
     ingredient.calories_per_100g = ingredient_update.calories_per_100g
+    ingredient.validated = ingredient_update.validated
 
     db.commit()
     db.refresh(ingredient)

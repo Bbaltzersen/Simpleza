@@ -3,6 +3,7 @@ export type Ingredient = {
     name: string;
     default_unit: string; // Default is "g"
     calories_per_100g?: number; // Optional
+    validation: boolean;
   };
 
   export type IngredientNutrition = {
