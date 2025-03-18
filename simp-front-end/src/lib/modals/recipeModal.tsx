@@ -147,7 +147,6 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   );
 }
 
-// ✅ Separate Memoized Ingredient Component to Prevent Re-renders
 const IngredientList = memo(
   ({
     ingredients,
@@ -160,7 +159,7 @@ const IngredientList = memo(
     onAdd: () => void;
     onChange: (index: number, field: keyof RecipeIngredientCreate, value: string | number) => void;
     onRemove: (index: number) => void;
-    lastInputRef: React.MutableRefObject<HTMLInputElement | null>;
+    lastInputRef: React.RefObject<HTMLInputElement | null>;
   }) => {
     return (
       <div className={styles.inputContainer}>
