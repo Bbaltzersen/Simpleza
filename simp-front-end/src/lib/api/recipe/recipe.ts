@@ -5,7 +5,7 @@ import { Ingredient } from "@/lib/types/ingredient";
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/recipes`,
+  baseURL: `${API_BASE_URL}`,
   withCredentials: true, // Ensures cookies (auth_token) and CSRF token are sent
 });
 
@@ -15,7 +15,7 @@ const apiClient = axios.create({
 export async function fetchRecipes(skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
   try {
     const response = await apiClient.get<{ recipes: ListRecipe[]; total: number }>(
-      `/?skip=${skip}&limit=${limit}`
+      `/recipes/?skip=${skip}&limit=${limit}`
     );
     return response.data;
   } catch (error) {
@@ -33,7 +33,7 @@ export async function fetchRecipes(skip: number = 0, limit: number = 10): Promis
  */
 export async function createRecipe(recipe: RecipeCreate): Promise<RecipeCreate | null> {
   try {
-    const response = await apiClient.post("/", recipe);
+    const response = await apiClient.post("/recipes/", recipe);
     return response.data;
   } catch (error) {
     console.error("Error creating recipe:", error);
@@ -59,7 +59,7 @@ export async function createRecipe(recipe: RecipeCreate): Promise<RecipeCreate |
  */
 export async function deleteRecipe(recipe_id: string): Promise<boolean> {
   try {
-    await apiClient.delete(`/${recipe_id}`);
+    await apiClient.delete(`/recipes/${recipe_id}`);
     return true;
   } catch (error) {
     console.error("Error deleting recipe:", error);

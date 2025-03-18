@@ -1,5 +1,6 @@
 "use client";
 
+
 import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
@@ -11,6 +12,8 @@ import {
   ListRecipe,
   RecipeTagCreate,
 } from "@/lib/types/recipe";
+import { useDashboard } from "../context/dashboardContext";
+
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -42,7 +45,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   // ✅ Separate state for ingredients
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
-  
+
   // ✅ Track the last added input
   const lastInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -82,7 +85,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           position: prev.length,
         },
       ];
-      
+
       return newIngredients;
     });
 
@@ -161,20 +164,70 @@ const IngredientList = memo(
     onRemove: (index: number) => void;
     lastInputRef: React.RefObject<HTMLInputElement | null>;
   }) => {
+    const { searchIngredients, ingredients: searchResults } = useDashboard();
+    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Handle ingredient search
+    const handleSearch = (query: string, index: number) => {
+      if (query.length > 2) {
+        searchIngredients(query);
+        setActiveDropdownIndex(index); // Show dropdown for this input
+      } else {
+        setActiveDropdownIndex(null); // Hide dropdown if query is too short
+      }
+    };
+
+    // Handle selecting a suggestion
+    const handleSelect = (index: number, selectedIngredient: string) => {
+      onChange(index, "ingredient_name", selectedIngredient);
+      setActiveDropdownIndex(null); // Hide dropdown after selection
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setActiveDropdownIndex(null);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     return (
       <div className={styles.inputContainer}>
         <label>Ingredients:</label>
         <button type="button" onClick={onAdd}>Add Ingredient</button>
 
         {ingredients.map((ingredient, index) => (
-          <div key={index} className="ingredient-row">
+          <div key={index} className="ingredient-row" style={{ position: "relative" }}>
             <input
               type="text"
               placeholder="Ingredient Name"
               value={ingredient.ingredient_name}
-              onChange={(e) => onChange(index, "ingredient_name", e.target.value)}
-              ref={index === ingredients.length - 1 ? lastInputRef : null} // ✅ Set ref only for last input
+              onChange={(e) => {
+                onChange(index, "ingredient_name", e.target.value);
+                handleSearch(e.target.value, index);
+              }}
+              ref={index === ingredients.length - 1 ? lastInputRef : null}
             />
+
+            {/* ✅ Dropdown menu */}
+            {activeDropdownIndex === index && searchResults.length > 0 && (
+              <div ref={dropdownRef} className={styles.dropdown}>
+                {searchResults.map((result, i) => (
+                  <div
+                    key={i}
+                    className={styles.dropdownItem}
+                    onClick={() => handleSelect(index, result.name)}
+                  >
+                    {result.name}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <input
               type="number"
               placeholder="Amount"
