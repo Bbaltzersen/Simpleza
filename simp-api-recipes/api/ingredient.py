@@ -9,7 +9,6 @@ from schemas.ingredient import IngredientCreate, IngredientOut, IngredientSchema
 
 router = APIRouter(tags=["ingredients"])
 
-# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -17,13 +16,11 @@ def get_db():
     finally:
         db.close()
 
-# ✅ Fetch all ingredients
 @router.get("/", response_model=List[IngredientOut])
 def get_all_ingredients(db: Session = Depends(get_db)):
     ingredients = db.query(Ingredient).all()
     return ingredients
 
-# ✅ Fetch a specific ingredient by ID
 @router.get("/{ingredient_id}", response_model=IngredientOut)
 def get_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
     ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
@@ -31,7 +28,6 @@ def get_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Ingredient not found")
     return ingredient
 
-# ✅ Create a new ingredient (if it doesn’t exist)
 @router.post("/", response_model=IngredientOut)
 def create_ingredient(ingredient_data: IngredientCreate, db: Session = Depends(get_db)):
     existing_ingredient = db.query(Ingredient).filter(Ingredient.name == ingredient_data.name).first()
@@ -50,7 +46,6 @@ def create_ingredient(ingredient_data: IngredientCreate, db: Session = Depends(g
 
     return new_ingredient
 
-# ✅ Delete an ingredient by ID
 @router.delete("/{ingredient_id}")
 def delete_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
     ingredient = db.query(Ingredient).filter(Ingredient.ingredient_id == ingredient_id).first()
@@ -63,17 +58,18 @@ def delete_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
 
     return {"message": "Ingredient deleted successfully"}
 
-@router.get("/", response_model=List[IngredientSchema])
+@router.get("/by-name/", response_model=List[IngredientSchema])
 def search_ingredients(
     search: str = Query(..., min_length=3),
     db: Session = Depends(get_db)
 ):
-    # Use similarity() to filter ingredients that are at least 40% similar
+    # ✅ Use `word_similarity()` for better ranking
     ingredients = (
         db.query(Ingredient)
-          .filter(func.similarity(Ingredient.name, search) >= 0.8)
-          .order_by(func.similarity(Ingredient.name, search).desc())
-          .limit(10)
-          .all()
+        .filter(func.similarity(Ingredient.name, search) >= 0.4)  # ✅ Adjust threshold if needed
+        .order_by(func.word_similarity(Ingredient.name, search).desc())  # ✅ Ensure best match first
+        .limit(10)
+        .all()
     )
-    return ingredients
+
+    return ingredients if ingredients else []
