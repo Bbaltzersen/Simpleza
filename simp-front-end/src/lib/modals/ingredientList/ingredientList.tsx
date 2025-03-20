@@ -1,7 +1,7 @@
 import { useDashboard } from "@/lib/context/dashboardContext";
 import { RecipeIngredientCreate } from "@/lib/types/recipe";
 import { memo, useEffect, useRef, useState } from "react";
-import styles from "./ingredientForm.module.css"
+import styles from "./ingredientList.module.css"
 
 export const IngredientList = memo(
     ({

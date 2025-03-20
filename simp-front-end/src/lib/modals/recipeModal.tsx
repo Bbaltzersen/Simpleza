@@ -8,11 +8,12 @@ import {
   RecipeStepCreate,
   RecipeImageCreate,
   RecipeIngredientCreate,
-  ListRecipe,
   RecipeTagCreate,
+  ListRecipe,
 } from "@/lib/types/recipe";
 import { useDashboard } from "../context/dashboardContext";
-import { IngredientList } from "./ingredientForm/ingredientForm";
+import { IngredientList } from "./ingredientList/ingredientList";
+import { TagList } from "./tagList/tagList";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export default function RecipeModal({
   });
   const { recipe_details, retrieveRecipeDetails } = useDashboard();
 
-  // Create a stable version of retrieveRecipeDetails to ensure a constant dependency array.
+  // Create a stable version of retrieveRecipeDetails.
   const safeRetrieveRecipeDetails = useCallback(
     retrieveRecipeDetails || (() => {}),
     [retrieveRecipeDetails]
@@ -45,21 +46,20 @@ export default function RecipeModal({
   // 2. Ingredients State
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
 
-  // 3. Other Recipe Components States (for future expansion)
+  // 3. Other Recipe Components States
   const [steps, setSteps] = useState<RecipeStepCreate[]>([]);
   const [images, setImages] = useState<RecipeImageCreate[]>([]);
   const [tags, setTags] = useState<RecipeTagCreate[]>([]);
 
-  // Reference for focusing new ingredient rows.
+  // References for focusing new inputs.
   const lastInputRef = useRef<HTMLInputElement | null>(null);
+  const lastTagInputRef = useRef<HTMLInputElement | null>(null);
 
-  // This effect runs every time the modal is opened or the recipe prop changes.
+  // Reset or load recipe details when modal opens or recipe changes.
   useEffect(() => {
     if (recipe) {
-      // Retrieve recipe details when a recipe is provided.
       safeRetrieveRecipeDetails(recipe.recipe_id);
     } else {
-      // Reset state if no recipe is provided.
       setRecipeMetadata({
         title: "",
         description: "",
@@ -71,10 +71,9 @@ export default function RecipeModal({
       setImages([]);
       setTags([]);
     }
-    // Note: The dependency array now always has the same size.
   }, [recipe, isOpen, safeRetrieveRecipeDetails]);
 
-  // Only update the form state from recipe_details if we're in edit mode.
+  // When in edit mode, update state with recipe details.
   useEffect(() => {
     if (recipe && recipe_details) {
       setRecipeMetadata({
@@ -90,7 +89,7 @@ export default function RecipeModal({
     }
   }, [recipe_details, recipe]);
 
-  // Handler for recipe metadata (title, description, etc.)
+  // Handler for metadata changes.
   const handleMetadataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -125,35 +124,30 @@ export default function RecipeModal({
     });
   };
 
-  // Add a new ingredient row.
+  // --- Ingredient handlers ---
   const handleAddRow = useCallback(() => {
-    setIngredients((prev) => {
-      const newIngredients = [
-        ...prev,
-        {
-          ingredient_name: "",
-          amount: 0,
-          measurement: "",
-          position: prev.length,
-          ingredient_error: "",
-        } as RecipeIngredientCreate & { ingredient_error: string },
-      ];
-      return newIngredients;
-    });
+    setIngredients((prev) => [
+      ...prev,
+      {
+        ingredient_name: "",
+        amount: 0,
+        measurement: "",
+        position: prev.length,
+        ingredient_error: "",
+      } as RecipeIngredientCreate & { ingredient_error: string },
+    ]);
 
     setTimeout(() => {
       lastInputRef.current?.focus();
     }, 0);
   }, []);
 
-  // Update an ingredient and recalc errors.
   const handleIngredientChange = useCallback(
     (index: number, field: keyof RecipeIngredientCreate, value: string | number) => {
       setIngredients((prev) => {
         const updated = [...prev];
         updated[index] = { ...updated[index], [field]: value } as
-          | RecipeIngredientCreate
-          & { ingredient_error: string };
+          RecipeIngredientCreate & { ingredient_error: string };
         if (field === "ingredient_name") {
           return recalcErrors(updated);
         }
@@ -163,7 +157,6 @@ export default function RecipeModal({
     []
   );
 
-  // Remove an ingredient and recalc errors.
   const handleRemoveRow = useCallback((index: number) => {
     setIngredients((prev) => {
       const filtered = prev.filter((_, i) => i !== index);
@@ -173,7 +166,33 @@ export default function RecipeModal({
     });
   }, []);
 
-  // Handle form submission by merging the states.
+  // --- Tag handlers ---
+  const handleAddTagRow = useCallback(() => {
+    setTags((prev) => [
+      ...prev,
+      { name: "", tag_error: "" } as RecipeTagCreate & { tag_error?: string },
+    ]);
+    setTimeout(() => {
+      lastTagInputRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const handleTagChange = useCallback(
+    (index: number, field: keyof RecipeTagCreate, value: string | number) => {
+      setTags((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value } as RecipeTagCreate & { tag_error?: string };
+        return updated;
+      });
+    },
+    []
+  );
+
+  const handleRemoveTagRow = useCallback((index: number) => {
+    setTags((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // Handle form submission by merging all state values.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     onSave({
@@ -192,7 +211,7 @@ export default function RecipeModal({
         <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
         <form onSubmit={handleSubmit}>
           <div className={styles.formContainer}>
-            {/* Recipe Metadata Inputs */}
+            {/* Recipe Metadata */}
             <div className={styles.inputContainer}>
               <label htmlFor="title">Title:</label>
               <input
@@ -222,6 +241,15 @@ export default function RecipeModal({
               onChange={handleIngredientChange}
               onRemove={handleRemoveRow}
               lastInputRef={lastInputRef}
+            />
+
+            {/* Tag Section */}
+            <TagList
+              tags={tags}
+              onAdd={handleAddTagRow}
+              onChange={handleTagChange}
+              onRemove={handleRemoveTagRow}
+              lastInputRef={lastTagInputRef}
             />
           </div>
         </form>

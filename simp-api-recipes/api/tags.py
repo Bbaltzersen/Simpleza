@@ -24,32 +24,20 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/", response_model=List[RetrieveTag])
-def search_tag(
-    search: str = Query(..., min_length=1),
+@router.get("/by-name/", response_model=List[RetrieveTag])
+def search_tags(
+    search: str = Query(..., min_length=3),
     db: Session = Depends(get_db)
 ):
-    """Search tags with full-text search, similarity, and ILIKE fallback."""
-
-    if not search:
-        raise HTTPException(status_code=400, detail="Search query cannot be empty.")
-
-    query_tsquery = func.plainto_tsquery("english", search)
-
-    query = db.query(Tag)
-
-    if len(search) > 2:
-        query = query.filter(
-            Tag.name_tsv.op("@@")(query_tsquery) |
-            (func.similarity(Tag.name, search) >= 0.8)
-        ).order_by(
-            func.ts_rank_cd(Tag.name_tsv, query_tsquery).desc(),
-            func.similarity(Tag.name, search).desc()
-        )
-    else:
-        query = query.filter(Tag.name.ilike(f"%{search}%"))  # ✅ Fallback for short words
-
-    return query.limit(10).all()
+    # Use similarity and word_similarity for ranking
+    tags = (
+        db.query(Tag)
+        .filter(func.similarity(Tag.name, search) >= 0.4)  # Adjust threshold if needed
+        .order_by(func.word_similarity(Tag.name, search).desc())
+        .limit(10)
+        .all()
+    )
+    return tags if tags else []
 
 
 # @router.post("/{tag_name}")
