@@ -3,3 +3,13 @@
     width: 100%;
     flex-direction: column;
 }
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #ccc;
+    z-index: 10;
+  }
