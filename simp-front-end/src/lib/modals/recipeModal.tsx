@@ -12,6 +12,7 @@ import {
   RecipeTagCreate,
 } from "@/lib/types/recipe";
 import { useDashboard } from "../context/dashboardContext";
+import { IngredientList } from "./ingredientForm/ingredientForm";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -20,74 +21,104 @@ interface RecipeModalProps {
   recipe?: ListRecipe | null;
 }
 
-export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeModalProps) {
-  const [RecipeData, setRecipeData] = useState<{
-    title: string;
-    description: string;
-    front_image: string;
-    author_id: string;
-    ingredients: RecipeIngredientCreate[];
-    steps: RecipeStepCreate[];
-    images: RecipeImageCreate[];
-    tags: RecipeTagCreate[];
-  }>({
+export default function RecipeModal({
+  isOpen,
+  onClose,
+  onSave,
+  recipe,
+}: RecipeModalProps) {
+  // 1. Recipe Metadata State
+  const [recipeMetadata, setRecipeMetadata] = useState({
     title: "",
     description: "",
     front_image: "",
     author_id: "",
-    ingredients: [],
-    steps: [],
-    images: [],
-    tags: [],
   });
+  const { recipe_details, retrieveRecipeDetails } = useDashboard();
 
-  // Ingredients state will hold your original RecipeIngredientCreate objects,
-  // with an extra property "ingredient_error" attached when needed.
+
+  // 2. Ingredients State
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
 
-  // Reference for focusing new rows.
+  // 3. Other Recipe Components States (for future expansion)
+  const [steps, setSteps] = useState<RecipeStepCreate[]>([]);
+  const [images, setImages] = useState<RecipeImageCreate[]>([]);
+  const [tags, setTags] = useState<RecipeTagCreate[]>([]);
+
+  // Reference for focusing new ingredient rows.
   const lastInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (recipe) {
-      // TODO: Load existing recipe data here
+      // Retrieve recipe details when a recipe is provided.
+      retrieveRecipeDetails(recipe.recipe_id);
     } else {
-      setRecipeData({
+      // Reset state if no recipe is provided.
+      setRecipeMetadata({
         title: "",
         description: "",
         front_image: "",
         author_id: "",
-        ingredients: [],
-        steps: [],
-        images: [],
-        tags: [],
       });
+      setIngredients([]);
+      setSteps([]);
+      setImages([]);
+      setTags([]);
     }
-  }, [recipe, isOpen]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setRecipeData((prevData) => ({
-      ...prevData,
+  }, [recipe, isOpen, retrieveRecipeDetails]);
+  
+  useEffect(() => {
+    if (recipe_details) {
+      // Update form state when recipe_details change.
+      setRecipeMetadata({
+        title: recipe_details.title || "",
+        description: recipe_details.description || "",
+        front_image: recipe_details.front_image || "",
+        author_id: recipe_details.author_id || "",
+      });
+      setIngredients(recipe_details.ingredients || []);
+      setSteps(recipe_details.steps || []);
+      setImages(recipe_details.images || []);
+      setTags(recipe_details.tags || []);
+    }
+  }, [recipe_details]);
+  
+  // Handler for recipe metadata (title, description, etc.)
+  const handleMetadataChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setRecipeMetadata((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
     }));
   };
 
-  // Helper to recalc duplicate errors. We attach an extra property "ingredient_error"
-  // to each ingredient if its (trimmed, lowercased) name appears more than once.
-  const recalcErrors = (updatedIngredients: RecipeIngredientCreate[]): RecipeIngredientCreate[] => {
-    const names = updatedIngredients.map((ing) => ing.ingredient_name.trim().toLowerCase());
+  // Helper to recalc duplicate errors on ingredients.
+  const recalcErrors = (
+    updatedIngredients: RecipeIngredientCreate[]
+  ): RecipeIngredientCreate[] => {
+    const names = updatedIngredients.map((ing) =>
+      ing.ingredient_name.trim().toLowerCase()
+    );
     return updatedIngredients.map((ing) => {
       if (
         ing.ingredient_name &&
-        names.filter((name) => name === ing.ingredient_name.trim().toLowerCase()).length > 1
+        names.filter(
+          (name) => name === ing.ingredient_name.trim().toLowerCase()
+        ).length > 1
       ) {
-        return { ...ing, ingredient_error: "Duplicate ingredient not allowed." } as any;
+        return {
+          ...ing,
+          ingredient_error: "Duplicate ingredient not allowed.",
+        } as RecipeIngredientCreate & { ingredient_error: string };
       }
-      return { ...ing, ingredient_error: "" } as any;
+      return { ...ing, ingredient_error: "" } as RecipeIngredientCreate & {
+        ingredient_error: string;
+      };
     });
   };
 
-  // Add a new ingredient row with an empty error.
+  // Add a new ingredient row.
   const handleAddRow = useCallback(() => {
     setIngredients((prev) => {
       const newIngredients = [
@@ -98,7 +129,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           measurement: "",
           position: prev.length,
           ingredient_error: "",
-        } as any,
+        } as RecipeIngredientCreate & { ingredient_error: string },
       ];
       return newIngredients;
     });
@@ -108,12 +139,14 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     }, 0);
   }, []);
 
-  // Update an ingredient and recalc errors when the name is changed.
+  // Update an ingredient and recalc errors.
   const handleIngredientChange = useCallback(
     (index: number, field: keyof RecipeIngredientCreate, value: string | number) => {
       setIngredients((prev) => {
         const updated = [...prev];
-        updated[index] = { ...updated[index], [field]: value } as any;
+        updated[index] = { ...updated[index], [field]: value } as
+          | RecipeIngredientCreate
+          & { ingredient_error: string };
         if (field === "ingredient_name") {
           return recalcErrors(updated);
         }
@@ -127,40 +160,50 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const handleRemoveRow = useCallback((index: number) => {
     setIngredients((prev) => {
       const filtered = prev.filter((_, i) => i !== index);
-      return recalcErrors(filtered.map((ing, newIndex) => ({ ...ing, position: newIndex })));
+      return recalcErrors(
+        filtered.map((ing, newIndex) => ({ ...ing, position: newIndex }))
+      );
     });
   }, []);
+
+  // Handle form submission by merging the states.
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    onSave({
+      ...recipeMetadata,
+      ingredients,
+      steps,
+      images,
+      tags,
+    });
+    onClose();
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.recipeModalContainer}>
         <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            // The ingredients (with potential errors attached) are passed up here.
-            onSave({ ...RecipeData, ingredients });
-            onClose();
-          }}
-        >
+        <form onSubmit={handleSubmit}>
           <div className={styles.formContainer}>
+            {/* Recipe Metadata Inputs */}
             <div className={styles.inputContainer}>
-              <label>Title:</label>
+              <label htmlFor="title">Title:</label>
               <input
+                id="title"
                 type="text"
                 name="title"
-                value={RecipeData.title}
-                onChange={handleChange}
+                value={recipeMetadata.title}
+                onChange={handleMetadataChange}
                 required
               />
             </div>
             <div className={styles.inputContainer}>
-              <label>Description:</label>
-              <input
-                type="textarea"
+              <label htmlFor="description">Description:</label>
+              <textarea
+                id="description"
                 name="description"
-                value={RecipeData.description}
-                onChange={handleChange}
+                value={recipeMetadata.description}
+                onChange={handleMetadataChange}
                 required
               />
             </div>
@@ -180,148 +223,4 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   );
 }
 
-const IngredientList = memo(
-  ({
-    ingredients,
-    onAdd,
-    onChange,
-    onRemove,
-    lastInputRef,
-  }: {
-    ingredients: RecipeIngredientCreate[];
-    onAdd: () => void;
-    onChange: (index: number, field: keyof RecipeIngredientCreate, value: string | number) => void;
-    onRemove: (index: number) => void;
-    lastInputRef: React.RefObject<HTMLInputElement | null>;
-  }) => {
-    const { searchIngredients, ingredients: searchResults } = useDashboard();
-    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
-
-    // Track which rows had a suggestion selected.
-    const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-
-    // Refs for dropdown elements.
-    const dropdownRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-    // Close dropdown when clicking outside.
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (!dropdownRefs.current.some((ref) => ref && ref.contains(event.target as Node))) {
-          setActiveDropdownIndex(null);
-        }
-      };
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleSearch = (query: string, index: number) => {
-      if (query.length > 2) {
-        searchIngredients(query);
-        setActiveDropdownIndex(index);
-      } else {
-        setActiveDropdownIndex(null);
-      }
-    };
-
-    const handleSelect = (index: number, selectedIngredient: string) => {
-      onChange(index, "ingredient_name", selectedIngredient);
-      setActiveDropdownIndex(null);
-      setSelectedIndices((prev) => new Set(prev).add(index));
-    };
-
-    // Filter search results to exclude ingredients already in the list (case-insensitive).
-    const filteredResults = searchResults.filter((result) =>
-      !ingredients.some(
-        (ing) =>
-          ing.ingredient_name.trim().toLowerCase() === result.name.trim().toLowerCase()
-      )
-    );
-
-    return (
-      <div className={styles.inputContainer}>
-        <label>Ingredients:</label>
-        <button type="button" onClick={onAdd}>
-          Add Ingredient
-        </button>
-
-        {ingredients.map((ingredient, index) => (
-          <div key={index} className="ingredient-row" style={{ position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Ingredient Name"
-              value={ingredient.ingredient_name}
-              onChange={(e) => {
-                onChange(index, "ingredient_name", e.target.value);
-                if (selectedIndices.has(index)) {
-                  setSelectedIndices((prev) => {
-                    const newSet = new Set(prev);
-                    newSet.delete(index);
-                    return newSet;
-                  });
-                }
-                handleSearch(e.target.value, index);
-              }}
-              onFocus={() => {
-                if (!selectedIndices.has(index) && ingredient.ingredient_name.length > 2) {
-                  handleSearch(ingredient.ingredient_name, index);
-                }
-              }}
-              onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
-              ref={lastInputRef}
-              style={
-                (ingredient as any).ingredient_error
-                  ? { backgroundColor: "#ffe6e6" }
-                  : {}
-              }
-            />
-
-            {activeDropdownIndex === index &&
-              ingredient.ingredient_name.length > 2 &&
-              filteredResults.length > 0 && (
-                <div
-                ref={(el) => {
-                  dropdownRefs.current[index] = el;
-                }}
-                  className={styles.dropdown}
-                >
-                  {filteredResults.map((result, i) => (
-                    <div
-                      key={i}
-                      className={styles.dropdownItem}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handleSelect(index, result.name)}
-                    >
-                      {result.name}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-            <input
-              type="number"
-              placeholder="Amount"
-              value={ingredient.amount}
-              onChange={(e) =>
-                onChange(index, "amount", Number(e.target.value))
-              }
-            />
-            <input
-              type="text"
-              placeholder="Measurement"
-              value={ingredient.measurement}
-              onChange={(e) =>
-                onChange(index, "measurement", e.target.value)
-              }
-            />
-            <span>Position: {ingredient.position}</span>
-            <button type="button" onClick={() => onRemove(index)}>
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  }
-);
-
-export { RecipeModal, IngredientList };
+export { RecipeModal };

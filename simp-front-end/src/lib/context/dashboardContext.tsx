@@ -9,8 +9,10 @@ import { Ingredient } from "@/lib/types/ingredient";
 // ✅ Define the context type with recipes & ingredients
 interface DashboardContextType {
     recipes: ListRecipe[];
+    recipe_details?: RecipeCreate; // Add the recipe property
     fetchMoreRecipes: () => Promise<void>;
     addRecipe: (recipe: RecipeCreate) => Promise<void>;
+    retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
     hasMore: boolean;
     ingredients: Ingredient[];
     searchIngredients: (query: string) => Promise<void>;
@@ -20,14 +22,13 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [recipes, setRecipes] = useState<ListRecipe[]>([]);
+    const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
     const [skip, setSkip] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const limit = 10; 
 
-    // ✅ Ingredient Search State
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
 
-    // ✅ Fetch more recipes (for infinite scrolling)
     const fetchMoreRecipes = useCallback(async () => {
         if (!hasMore) return;
 
@@ -44,17 +45,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
     }, [hasMore, skip, recipes.length]);
 
-    // ✅ Add a new recipe and update the list
     const addRecipe = async (recipe: RecipeCreate) => {
-        // try {
-        //     const newRecipe = await createRecipe(recipe);
-        //     setRecipes((prev) => [newRecipe, ...prev]); // Add new recipe to top
-        // } catch (error) {
-        //     console.error("Error adding recipe:", error);
-        // }
     };
 
-    // ✅ Search for ingredients with API debounce (prevents excessive calls)
+    const retrieveRecipeDetails = async(recipe_id: string) => {
+        setRecipeDetails(dummyRecipe);
+    }
+
     const searchIngredients = useCallback(async (query: string) => {
         if (query.length < 3) {
             setIngredients([]); // Clear results if query is too short
@@ -70,7 +67,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
     }, []);
 
-    // ✅ Load initial recipes on mount
+
+
     useEffect(() => {
         fetchMoreRecipes();
     }, [fetchMoreRecipes]);
@@ -79,6 +77,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         <DashboardContext.Provider
             value={{
                 recipes,
+                recipe_details,
+                retrieveRecipeDetails,
                 fetchMoreRecipes,
                 addRecipe,
                 hasMore,
@@ -99,3 +99,46 @@ export const useDashboard = () => {
     }
     return context;
 };
+
+
+export const dummyRecipe: RecipeCreate = {
+    title: "Dummy Recipe",
+    description: "A simple dummy recipe for testing purposes.",
+    front_image: "http://example.com/dummy.jpg",
+    author_id: "dummy_author",
+    ingredients: [
+      {
+        ingredient_name: "Flour",
+        amount: 200,
+        measurement: "grams",
+        position: 0,
+      },
+      {
+        ingredient_name: "Sugar",
+        amount: 100,
+        measurement: "grams",
+        position: 1,
+      },
+      {
+        ingredient_name: "Eggs",
+        amount: 2,
+        measurement: "pcs",
+        position: 2,
+      },
+    ],
+    steps: [
+      {
+        step_number: 1,
+        description: "Mix all the ingredients together until smooth.",
+      },
+      {
+        step_number: 2,
+        description: "Bake in a preheated oven for 25 minutes.",
+      },
+    ],
+    images: [{ image_url: "http://example.com/dummy-step1.jpg" }],
+    tags: [
+      { name: "Easy" },
+      { name: "Quick" },
+    ],
+  };

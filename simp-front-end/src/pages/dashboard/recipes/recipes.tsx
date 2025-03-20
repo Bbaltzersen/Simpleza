@@ -50,7 +50,11 @@ export default function Recipes() {
     // const newRecipe: RecipeCreate = {
     //   ...recipeData,
     //   author_id: user.user_id,
-    //   tags: Array.isArray(recipeData.tags) ? recipeData.tags.map(tag => (typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id)) : [],
+    //   tags: Array.isArray(recipeData.tags)
+    //     ? recipeData.tags.map(tag =>
+    //         typeof tag === "string" ? tag : (tag as { tag_id: string }).tag_id
+    //       )
+    //     : [],
     //   ingredients: recipeData.ingredients.map(ing => ({
     //     id: ing.id || `${Date.now()}`,
     //     ingredient_name: ing.ingredient_name,
@@ -72,22 +76,37 @@ export default function Recipes() {
     setIsModalOpen(false);
   };
 
+  // Create a dummy ListRecipe from the dummyRecipe object.
+  // Here, we assume ListRecipe requires a unique recipe_id and tags as an array of strings.
+  const dummyListRecipe: ListRecipe = {
+    ...dummyRecipe,
+    recipe_id: "dummy_recipe",
+    tags: dummyRecipe.tags.map((tag) => tag.name),
+  };
+
+  // Combine dummy recipe with recipes from context.
+  const allRecipes: ListRecipe[] = [dummyListRecipe, ...recipes];
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2>Recipe Library</h2>
       </div>
       <div className={styles.recipeGrid}>
-        <div className={styles.addRecipeCard} onClick={handleAddRecipe} aria-label="Add Recipe">
+        <div
+          className={styles.addRecipeCard}
+          onClick={handleAddRecipe}
+          aria-label="Add Recipe"
+        >
           <Plus size={48} />
         </div>
 
-        {recipes.length > 0 ? (
-          recipes.map((recipe, index) => (
+        {allRecipes.length > 0 ? (
+          allRecipes.map((recipe, index) => (
             <div
               key={recipe.recipe_id}
               className={styles.recipeCard}
-              ref={index === recipes.length - 1 ? lastRecipeRef : null} // Attach observer to last recipe
+              ref={index === allRecipes.length - 1 ? lastRecipeRef : null} // Attach observer to last recipe
               onClick={() => handleEditRecipe(recipe)}
             >
               <div className={styles.imageContainer}>
@@ -123,3 +142,45 @@ export default function Recipes() {
     </div>
   );
 }
+
+export const dummyRecipe: RecipeCreate = {
+  title: "Dummy Recipe",
+  description: "A simple dummy recipe for testing purposes.",
+  front_image: "http://example.com/dummy.jpg",
+  author_id: "dummy_author",
+  ingredients: [
+    {
+      ingredient_name: "Flour",
+      amount: 200,
+      measurement: "grams",
+      position: 0,
+    },
+    {
+      ingredient_name: "Sugar",
+      amount: 100,
+      measurement: "grams",
+      position: 1,
+    },
+    {
+      ingredient_name: "Eggs",
+      amount: 2,
+      measurement: "pcs",
+      position: 2,
+    },
+  ],
+  steps: [
+    {
+      step_number: 1,
+      description: "Mix all the ingredients together until smooth.",
+    },
+    {
+      step_number: 2,
+      description: "Bake in a preheated oven for 25 minutes.",
+    },
+  ],
+  images: [{ image_url: "http://example.com/dummy-step1.jpg" }],
+  tags: [
+    { name: "Easy" },
+    { name: "Quick" },
+  ],
+};
