@@ -9,10 +9,13 @@ import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
 
 export default function Recipes() {
-  const { recipes, fetchMoreRecipes, addRecipe, hasMore } = useDashboard(); // ✅ Use context functions
-  const { user } = useAuth(); // ✅ Get authenticated user from context
+  const { recipes, fetchMoreRecipes, addRecipe, hasMore } = useDashboard(); // Use context functions
+  const { user } = useAuth(); // Get authenticated user from context
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
+
+  // New state to control the unique key for the modal.
+  const [modalKey, setModalKey] = useState<string>("new");
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastRecipeRef = useCallback(
@@ -31,22 +34,26 @@ export default function Recipes() {
     [hasMore, fetchMoreRecipes]
   );
 
+  // When adding a new recipe, update the modal key to force a remount.
   const handleAddRecipe = () => {
     setSelectedRecipe(null);
+    setModalKey(`new-${Date.now()}`);
     setIsModalOpen(true);
   };
 
   const handleEditRecipe = async (recipe: ListRecipe) => {
     setSelectedRecipe(recipe);
+    setModalKey(recipe.recipe_id); // Use the recipe ID as the key when editing.
     setIsModalOpen(true);
   };
 
   const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
+    // Uncomment and update the following code as needed when integrating with your API:
     // if (!user) {
     //   console.error("User is not authenticated");
     //   return;
     // }
-
+    //
     // const newRecipe: RecipeCreate = {
     //   ...recipeData,
     //   author_id: user.user_id,
@@ -71,7 +78,7 @@ export default function Recipes() {
     //     image_url: img.image_url,
     //   })),
     // };
-
+    //
     // await addRecipe(newRecipe);
     setIsModalOpen(false);
   };
@@ -133,7 +140,9 @@ export default function Recipes() {
 
       {hasMore && <p>Loading more recipes...</p>}
 
+      {/* Using a dynamic key forces the RecipeModal to remount when switching modes */}
       <RecipeModal
+        key={modalKey}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveRecipeWrapper}

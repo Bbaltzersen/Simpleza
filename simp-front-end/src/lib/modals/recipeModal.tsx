@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, memo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Modal from "@/components/ui/modal";
 import styles from "./recipeModal.module.css";
 import {
@@ -36,6 +36,11 @@ export default function RecipeModal({
   });
   const { recipe_details, retrieveRecipeDetails } = useDashboard();
 
+  // Create a stable version of retrieveRecipeDetails to ensure a constant dependency array.
+  const safeRetrieveRecipeDetails = useCallback(
+    retrieveRecipeDetails || (() => {}),
+    [retrieveRecipeDetails]
+  );
 
   // 2. Ingredients State
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
@@ -48,10 +53,11 @@ export default function RecipeModal({
   // Reference for focusing new ingredient rows.
   const lastInputRef = useRef<HTMLInputElement | null>(null);
 
+  // This effect runs every time the modal is opened or the recipe prop changes.
   useEffect(() => {
     if (recipe) {
       // Retrieve recipe details when a recipe is provided.
-      retrieveRecipeDetails(recipe.recipe_id);
+      safeRetrieveRecipeDetails(recipe.recipe_id);
     } else {
       // Reset state if no recipe is provided.
       setRecipeMetadata({
@@ -65,11 +71,12 @@ export default function RecipeModal({
       setImages([]);
       setTags([]);
     }
-  }, [recipe, isOpen, retrieveRecipeDetails]);
-  
+    // Note: The dependency array now always has the same size.
+  }, [recipe, isOpen, safeRetrieveRecipeDetails]);
+
+  // Only update the form state from recipe_details if we're in edit mode.
   useEffect(() => {
-    if (recipe_details) {
-      // Update form state when recipe_details change.
+    if (recipe && recipe_details) {
       setRecipeMetadata({
         title: recipe_details.title || "",
         description: recipe_details.description || "",
@@ -81,8 +88,8 @@ export default function RecipeModal({
       setImages(recipe_details.images || []);
       setTags(recipe_details.tags || []);
     }
-  }, [recipe_details]);
-  
+  }, [recipe_details, recipe]);
+
   // Handler for recipe metadata (title, description, etc.)
   const handleMetadataChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
