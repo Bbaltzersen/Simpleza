@@ -14,6 +14,7 @@ import {
 import { useDashboard } from "../context/dashboardContext";
 import { IngredientList } from "./ingredientList/ingredientList";
 import { TagList } from "./tagList/tagList";
+import { ImageList } from "./imageList/imageList";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -54,6 +55,7 @@ export default function RecipeModal({
   // References for focusing new inputs.
   const lastInputRef = useRef<HTMLInputElement | null>(null);
   const lastTagInputRef = useRef<HTMLInputElement | null>(null);
+  const lastImageInputRef = useRef<HTMLInputElement | null>(null);
 
   // Reset or load recipe details when modal opens or recipe changes.
   useEffect(() => {
@@ -192,6 +194,32 @@ export default function RecipeModal({
     setTags((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // --- Image handlers ---
+  const handleAddImageRow = useCallback(() => {
+    setImages((prev) => [
+      ...prev,
+      { image_url: "" } as RecipeImageCreate,
+    ]);
+    setTimeout(() => {
+      lastImageInputRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const handleImageChange = useCallback(
+    (index: number, field: keyof RecipeImageCreate, value: string) => {
+      setImages((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value } as RecipeImageCreate;
+        return updated;
+      });
+    },
+    []
+  );
+
+  const handleRemoveImageRow = useCallback((index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
   // Handle form submission by merging all state values.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -250,6 +278,15 @@ export default function RecipeModal({
               onChange={handleTagChange}
               onRemove={handleRemoveTagRow}
               lastInputRef={lastTagInputRef}
+            />
+
+            {/* Image Section */}
+            <ImageList
+              images={images}
+              onAdd={handleAddImageRow}
+              onChange={handleImageChange}
+              onRemove={handleRemoveImageRow}
+              lastInputRef={lastImageInputRef}
             />
           </div>
         </form>
