@@ -15,6 +15,7 @@ import { useDashboard } from "../context/dashboardContext";
 import { IngredientList } from "./ingredientList/ingredientList";
 import { TagList } from "./tagList/tagList";
 import { ImageList } from "./imageList/imageList";
+import { StepList } from "./stepList/stepList";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -47,8 +48,10 @@ export default function RecipeModal({
   // 2. Ingredients State
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
 
-  // 3. Other Recipe Components States
+  // 3. Steps State
   const [steps, setSteps] = useState<RecipeStepCreate[]>([]);
+
+  // 4. Other Recipe Components States (Images, Tags)
   const [images, setImages] = useState<RecipeImageCreate[]>([]);
   const [tags, setTags] = useState<RecipeTagCreate[]>([]);
 
@@ -56,6 +59,7 @@ export default function RecipeModal({
   const lastInputRef = useRef<HTMLInputElement | null>(null);
   const lastTagInputRef = useRef<HTMLInputElement | null>(null);
   const lastImageInputRef = useRef<HTMLInputElement | null>(null);
+  const lastStepInputRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Reset or load recipe details when modal opens or recipe changes.
   useEffect(() => {
@@ -138,7 +142,6 @@ export default function RecipeModal({
         ingredient_error: "",
       } as RecipeIngredientCreate & { ingredient_error: string },
     ]);
-
     setTimeout(() => {
       lastInputRef.current?.focus();
     }, 0);
@@ -220,6 +223,42 @@ export default function RecipeModal({
     setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
+  // --- Step handlers ---
+  const handleAddStepRow = useCallback(() => {
+    setSteps((prev) => [
+      ...prev,
+      {
+        step_number: prev.length + 1,
+        description: "",
+      } as RecipeStepCreate,
+    ]);
+    setTimeout(() => {
+      lastStepInputRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const handleStepChange = useCallback(
+    (index: number, field: keyof RecipeStepCreate, value: string | number) => {
+      setSteps((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], [field]: value } as RecipeStepCreate;
+        return updated;
+      });
+    },
+    []
+  );
+
+  const handleRemoveStepRow = useCallback((index: number) => {
+    setSteps((prev) => {
+      const filtered = prev.filter((_, i) => i !== index);
+      // Reassign step numbers
+      return filtered.map((step, idx) => ({
+        ...step,
+        step_number: idx + 1,
+      }));
+    });
+  }, []);
+
   // Handle form submission by merging all state values.
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -236,7 +275,13 @@ export default function RecipeModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.recipeModalContainer}>
-        <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
+        {/* Modal Header with Close Button */}
+        <div className={styles.modalHeader}>
+          <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
+          <button type="button" className={styles.closeButton} onClick={onClose}>
+            Close
+          </button>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.formContainer}>
             {/* Recipe Metadata */}
@@ -271,13 +316,13 @@ export default function RecipeModal({
               lastInputRef={lastInputRef}
             />
 
-            {/* Tag Section */}
-            <TagList
-              tags={tags}
-              onAdd={handleAddTagRow}
-              onChange={handleTagChange}
-              onRemove={handleRemoveTagRow}
-              lastInputRef={lastTagInputRef}
+            {/* Step Section */}
+            <StepList
+              steps={steps}
+              onAdd={handleAddStepRow}
+              onChange={handleStepChange}
+              onRemove={handleRemoveStepRow}
+              lastInputRef={lastStepInputRef}
             />
 
             {/* Image Section */}
@@ -288,6 +333,20 @@ export default function RecipeModal({
               onRemove={handleRemoveImageRow}
               lastInputRef={lastImageInputRef}
             />
+
+            {/* Tag Section */}
+            <TagList
+              tags={tags}
+              onAdd={handleAddTagRow}
+              onChange={handleTagChange}
+              onRemove={handleRemoveTagRow}
+              lastInputRef={lastTagInputRef}
+            />
+
+            {/* Submit Button */}
+            <div className={styles.submitContainer}>
+              <button type="submit">Submit Recipe</button>
+            </div>
           </div>
         </form>
       </div>
