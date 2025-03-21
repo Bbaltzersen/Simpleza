@@ -85,14 +85,8 @@ export default function Recipes() {
 
   // Create a dummy ListRecipe from the dummyRecipe object.
   // Here, we assume ListRecipe requires a unique recipe_id and tags as an array of strings.
-  const dummyListRecipe: ListRecipe = {
-    ...dummyRecipe,
-    recipe_id: "dummy_recipe",
-    tags: dummyRecipe.tags.map((tag) => tag.name),
-  };
-
   // Combine dummy recipe with recipes from context.
-  const allRecipes: ListRecipe[] = [dummyListRecipe, ...recipes];
+  const allRecipes: ListRecipe[] = [...recipes];
 
   return (
     <div className={styles.container}>
