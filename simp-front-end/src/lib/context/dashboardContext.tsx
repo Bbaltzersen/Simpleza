@@ -6,7 +6,7 @@ import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { TagRetrieval } from "@/lib/types/recipe"; // Adjust the import path and type name as needed
 
-// ✅ Define the context type with recipes, ingredients, and tags
+// ✅ Define the context type with recipes, ingredient search results, and tags
 interface DashboardContextType {
   recipes: ListRecipe[];
   recipe_details?: RecipeCreate; // For selected recipe details
@@ -14,7 +14,7 @@ interface DashboardContextType {
   addRecipe: (recipe: RecipeCreate) => Promise<void>;
   retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
   hasMore: boolean;
-  ingredients: Ingredient[];
+  ingredientSearchResults: Ingredient[];
   searchIngredients: (query: string) => Promise<void>;
   tags: TagRetrieval[];
   searchTags: (query: string) => Promise<void>;
@@ -27,9 +27,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const limit = 10; 
+  const limit = 10;
 
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  // Rename the state for search results to avoid collision with form ingredients
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
   const fetchMoreRecipes = useCallback(async () => {
@@ -60,7 +61,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error("Error adding recipe:", error.response?.data || error.message);
     }
   };
-  
+
   const retrieveRecipeDetails = async (recipe_id: string) => {
     // Replace this with an actual API call as needed.
     //setRecipeDetails(dummyRecipe);
@@ -68,16 +69,16 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const searchIngredients = useCallback(async (query: string) => {
     if (query.length < 3) {
-      setIngredients([]); // Clear results if query is too short
+      setIngredientSearchResults([]); // Clear results if query is too short
       return;
     }
 
     try {
       const results = await fetchIngredientsByName(query);
-      setIngredients(results);
+      setIngredientSearchResults(results);
     } catch (error) {
       console.error("Ingredient search failed:", error);
-      setIngredients([]);
+      setIngredientSearchResults([]);
     }
   }, []);
 
@@ -109,10 +110,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         fetchMoreRecipes,
         addRecipe,
         hasMore,
-        ingredients,         // Ingredient search results
-        searchIngredients,   // Ingredient search function
-        tags,                // Tag search results
-        searchTags,          // Tag search function
+        ingredientSearchResults, // Search results for ingredients
+        searchIngredients,       // Function to update search results
+        tags,
+        searchTags,
       }}
     >
       {children}
