@@ -1,6 +1,6 @@
-import { useDashboard } from "@/lib/context/dashboardContext";
+import React, { memo, useEffect, useRef, useState, useCallback } from "react";
+import { fetchTagsByName } from "@/lib/api/recipe/recipe";
 import { RecipeTagCreate } from "@/lib/types/recipe";
-import { memo, useEffect, useRef, useState } from "react";
 import styles from "./tagList.module.css";
 
 export const TagList = memo(
@@ -21,10 +21,26 @@ export const TagList = memo(
     onRemove: (index: number) => void;
     lastInputRef: React.RefObject<HTMLInputElement | null>;
   }) => {
-    const { searchTags, tags: searchResults } = useDashboard();
+    // Local state for tag search results.
+    const [searchResults, setSearchResults] = useState<RecipeTagCreate[]>([]);
     const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const dropdownRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    // Fetch tag search results locally.
+    const fetchTagSearchResults = useCallback(async (query: string) => {
+      if (query.length < 3) {
+        setSearchResults([]);
+        return;
+      }
+      try {
+        const results = await fetchTagsByName(query);
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Tag search failed:", error);
+        setSearchResults([]);
+      }
+    }, []);
 
     // Close dropdown when clicking outside.
     useEffect(() => {
@@ -44,7 +60,7 @@ export const TagList = memo(
 
     const handleSearch = (query: string, index: number) => {
       if (query.length > 2) {
-        searchTags(query);
+        fetchTagSearchResults(query);
         setActiveDropdownIndex(index);
       } else {
         setActiveDropdownIndex(null);
@@ -96,9 +112,7 @@ export const TagList = memo(
               }}
               onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
               ref={lastInputRef}
-              style={
-                tag.tag_error ? { backgroundColor: "#ffe6e6" } : {}
-              }
+              style={tag.tag_error ? { backgroundColor: "#ffe6e6" } : {}}
             />
 
             {activeDropdownIndex === index &&
