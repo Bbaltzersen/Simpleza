@@ -12,10 +12,10 @@ class RecipeOut(BaseModel):
         from_attributes = True
 
 class CreateRecipeIngredient(BaseModel):
-    ingredient_id: UUID = None
+    ingredient_id: Optional[UUID] = None
     ingredient_name: str
     amount: float
-    measurement:str
+    measurement: str
     position: int
     
     class Config:
@@ -33,7 +33,7 @@ class CreateRecipeImage(BaseModel):
         from_attributes = True
 
 class CreateRecipeTag(BaseModel):
-    tag_id: UUID = None
+    tag_id: Optional[UUID] = None
     name: str
 
     class Config:

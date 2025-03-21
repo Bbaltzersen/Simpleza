@@ -51,7 +51,7 @@ def read_user_recipes(author_id: uuid.UUID, skip: int = Query(0, ge=0), limit: i
     }
 
 
-@router.post("/", response_model=RecipeOut) 
+@router.post("/", response_model=RecipeOut)
 def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
     try:
         new_recipe = Recipe(
@@ -63,38 +63,36 @@ def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
             validated=False,
         )
         db.add(new_recipe)
-        db.flush()  
-
-        for tag in recipe.tags:
-            if tag.tag_id:
-                existing_tag = db.query(Tag).filter(Tag.tag_id == tag.tag_id).first()
-                if not existing_tag:
-                    raise HTTPException(status_code=400, detail=f"Tag {tag.tag_id} not found.")
+        
+        # Process each tag from the request
+        for tag_input in recipe.tags:
+            if tag_input.tag_id:
+                tag_obj = db.query(Tag).filter(Tag.tag_id == tag_input.tag_id).first()
+                if not tag_obj:
+                    raise HTTPException(status_code=400, detail=f"Tag {tag_input.tag_id} not found.")
             else:
-                existing_tag = Tag(tag_id=uuid.uuid4(), name=tag.name)
-                db.add(existing_tag)
-                db.flush()
-
-            recipe_tag = RecipeTag.insert().values(
-                recipe_id=new_recipe.recipe_id,
-                tag_id=existing_tag.tag_id
-            )
-            db.execute(recipe_tag)
-
-        db.commit() 
-
-        created_recipe = db.query(Recipe).filter(Recipe.recipe_id == new_recipe.recipe_id).first()
+                # Check if a tag with the same name already exists
+                tag_obj = db.query(Tag).filter(Tag.name == tag_input.name).first()
+                if not tag_obj:
+                    tag_obj = Tag(name=tag_input.name)
+                    db.add(tag_obj)
+            # Use the ORM relationship to associate the tag with the recipe
+            new_recipe.tags.append(tag_obj)
+        
+        db.commit()
+        db.refresh(new_recipe)  # Refresh the object with the latest DB state
 
         return RecipeOut(
-            recipe_id=str(created_recipe.recipe_id),
-            title=created_recipe.title,
-            front_image=created_recipe.front_image,
-            tags=[tag.name for tag in created_recipe.tags]  # Convert tags to list of strings
+            recipe_id=str(new_recipe.recipe_id),
+            title=new_recipe.title,
+            front_image=new_recipe.front_image,
+            tags=[tag.name for tag in new_recipe.tags]  # Return a list of tag names
         )
 
     except Exception as e:
-        db.rollback()  # ❌ Rollback changes if something fails
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        db.rollback()  # Roll back any changes on error
+        # Optionally log the exception e here
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 # @router.get("/get-all/", response_model=List[RecipeOut])
 # def get_recipes(db: Session = Depends(get_db)):
