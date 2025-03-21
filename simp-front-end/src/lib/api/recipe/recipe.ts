@@ -31,12 +31,12 @@ export async function fetchRecipes(skip: number = 0, limit: number = 10): Promis
 /**
  * Create a new recipe
  */
-export async function createRecipe(recipe: RecipeCreate): Promise<RecipeCreate | null> {
+export async function createRecipe(recipe: RecipeCreate): Promise<ListRecipe | null> {
   try {
     const response = await apiClient.post("/recipes/", recipe);
-    return response.data;
-  } catch (error) {
-    console.error("Error creating recipe:", error);
+    return response.data as ListRecipe;
+  } catch (error: any) {
+    console.error("Error creating recipe:", error.response?.data || error.message);
     return null;
   }
 }
