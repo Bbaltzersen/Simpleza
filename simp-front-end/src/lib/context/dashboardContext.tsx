@@ -47,23 +47,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [hasMore, skip, recipes.length]);
 
-  const addRecipe = async (recipe: RecipeCreate): Promise<void> => {
-    try {
-      const newRecipe = await createRecipe(recipe);
-      if (newRecipe) {
-        // Prepend the new recipe to the list so that it appears at the top.
-        setRecipes((prevRecipes) => [newRecipe, ...prevRecipes]);
-      } else {
-        console.error("Recipe creation returned null.");
-      }
-    } catch (error: any) {
-      console.error("Error adding recipe:", error.response?.data || error.message);
-    }
+  const addRecipe = async (recipe: RecipeCreate) => {
+    // Implement recipe creation logic here.
   };
-  
+
   const retrieveRecipeDetails = async (recipe_id: string) => {
     // Replace this with an actual API call as needed.
-    //setRecipeDetails(dummyRecipe);
+    setRecipeDetails(dummyRecipe);
   };
 
   const searchIngredients = useCallback(async (query: string) => {
@@ -127,4 +117,46 @@ export const useDashboard = () => {
     throw new Error("useDashboard must be used within a DashboardProvider");
   }
   return context;
+};
+
+export const dummyRecipe: RecipeCreate = {
+  title: "Dummy Recipe",
+  description: "A simple dummy recipe for testing purposes.",
+  front_image: "http://example.com/dummy.jpg",
+  author_id: "dummy_author",
+  ingredients: [
+    {
+      ingredient_name: "Flour",
+      amount: 200,
+      measurement: "grams",
+      position: 0,
+    },
+    {
+      ingredient_name: "Sugar",
+      amount: 100,
+      measurement: "grams",
+      position: 1,
+    },
+    {
+      ingredient_name: "Eggs",
+      amount: 2,
+      measurement: "pcs",
+      position: 2,
+    },
+  ],
+  steps: [
+    {
+      step_number: 1,
+      description: "Mix all the ingredients together until smooth.",
+    },
+    {
+      step_number: 2,
+      description: "Bake in a preheated oven for 25 minutes.",
+    },
+  ],
+  images: [{ image_url: "http://example.com/dummy-step1.jpg" }],
+  tags: [
+    { name: "Easy" },
+    { name: "Quick" },
+  ],
 };
