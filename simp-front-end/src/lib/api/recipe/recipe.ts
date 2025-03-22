@@ -41,7 +41,7 @@ export async function createRecipe(recipe: RecipeCreate): Promise<ListRecipe | n
 
 export async function updateRecipe(recipe_id: string, recipe: RecipeCreate): Promise<ListRecipe | null> {
   try {
-    const response = await apiClient.put(`/recipes/recipe-id/${recipe_id}/`, recipe);
+    const response = await apiClient.put(`/recipes/update/${recipe_id}/`, recipe);
     return response.data as ListRecipe;
   } catch (error: any) {
     console.error("Error updating recipe:", error.response?.data || error.message);

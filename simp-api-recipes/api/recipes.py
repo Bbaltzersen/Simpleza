@@ -160,7 +160,7 @@ def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
         raise e
 
 
-@router.put("/recipe-id/{recipe_id}/", response_model=RecipeOut)
+@router.put("/update/{recipe_id}/", response_model=RecipeOut)
 def update_recipe(
     recipe_id: UUID,
     recipe: CreateRecipe,
@@ -258,6 +258,7 @@ def update_recipe(
     except Exception as e:
         db.rollback()
         raise e
+    
 # @router.get("/get-all/", response_model=List[RecipeOut])
 # def get_recipes(db: Session = Depends(get_db)):
 #     return db.query(Recipe).all()

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
   fetchRecipesByAuthorID,
@@ -7,6 +6,7 @@ import {
   fetchIngredientsByName,
   fetchTagsByName,
   fetchRecipeById,
+  updateRecipe,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
@@ -17,6 +17,7 @@ interface DashboardContextType {
   recipe_details?: RecipeCreate;
   fetchMoreRecipes: () => Promise<void>;
   addRecipe: (recipe: RecipeCreate) => Promise<void>;
+  updateRecipe: (recipe_id: string, recipe: RecipeCreate) => Promise<void>;
   retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
   hasMore: boolean;
   ingredientSearchResults: Ingredient[];
@@ -49,13 +50,26 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [hasMore, skip, recipes.length, user]);
 
-  const addRecipe = async (recipe: RecipeCreate): Promise<void> => {
+  const addRecipeFn = async (recipe: RecipeCreate): Promise<void> => {
     try {
       const newRecipe = await createRecipe(recipe);
       if (newRecipe) setRecipes((prev) => [newRecipe, ...prev]);
       else console.error("Recipe creation returned null.");
     } catch (error: any) {
       console.error("Error adding recipe:", error.response?.data || error.message);
+    }
+  };
+
+  const updateRecipeFn = async (recipe_id: string, recipe: RecipeCreate): Promise<void> => {
+    try {
+      const updatedRecipe = await updateRecipe(recipe_id, recipe);
+      if (updatedRecipe) {
+        setRecipes((prev) => prev.map((r) => (r.recipe_id === recipe_id ? updatedRecipe : r)));
+      } else {
+        console.error("Recipe update returned null.");
+      }
+    } catch (error: any) {
+      console.error("Error updating recipe:", error.response?.data || error.message);
     }
   };
 
@@ -102,9 +116,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       value={{
         recipes,
         recipe_details,
-        retrieveRecipeDetails,
         fetchMoreRecipes,
-        addRecipe,
+        addRecipe: addRecipeFn,
+        updateRecipe: updateRecipeFn,
+        retrieveRecipeDetails,
         hasMore,
         ingredientSearchResults,
         searchIngredients,
