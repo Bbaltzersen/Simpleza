@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 import uuid
@@ -8,7 +8,7 @@ from database.connection import SessionLocal
 from models.recipe import Recipe
 from models.recipe_tag import RecipeTag
 from models.tag import Tag
-from schemas.recipe import  RecipeOut, CreateRecipe, CreateRecipeIngredient, CreateRecipeImage, CreateRecipeTag
+from schemas.recipe import  EditRecipe, RecipeOut, CreateRecipe, CreateRecipeIngredient, CreateRecipeImage, CreateRecipeTag
 
 router = APIRouter(tags=["recipes"])
 
@@ -40,15 +40,37 @@ def read_recipes(skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=100
     }
 
 # # API Call to get recipes made by a user.
-@router.get("/{author_id}/", response_model=Dict[str, List[RecipeOut] | int])
-def read_user_recipes(author_id: uuid.UUID, skip: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=20), db: Session = Depends(get_db)):
+@router.get("/author-id/{author_id}/", response_model=Dict[str, List[RecipeOut] | int])
+def read_user_recipes(
+    author_id: uuid.UUID,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=20),
+    db: Session = Depends(get_db)
+):
     total_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).count()
     user_recipes = db.query(Recipe).filter(Recipe.author_id == author_id).offset(skip).limit(limit).all()
     
     return {
-        "total": total_recipes,
-        "recipes": user_recipes 
+        "recipes": [
+            RecipeOut(
+                recipe_id=str(recipe.recipe_id),
+                title=recipe.title,
+                front_image=recipe.front_image,
+                tags=[tag.name for tag in recipe.tags]
+            )
+            for recipe in user_recipes
+        ],
+        "total": total_recipes  
     }
+
+@router.get("/recipe-id/{recipe_id}/", response_model=EditRecipe)
+def read_recipe(
+    recipe_id: uuid.UUID,
+    db: Session = Depends(get_db)
+):
+    recipe = db.query(Recipe).filter(Recipe.recipe_id == recipe_id).first()
+    
+    return recipe
 
 
 @router.post("/", response_model=RecipeOut)

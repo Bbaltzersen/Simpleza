@@ -51,6 +51,19 @@ class CreateRecipe(BaseModel):
     class Config:
         from_attributes = True
 
+class EditRecipe(BaseModel):
+    recipe_id: UUID
+    title: str
+    description: str
+    front_image: str
+    author_id: UUID
+    ingredients: List[CreateRecipeIngredient]
+    images: List[CreateRecipeImage]
+    tags: List[CreateRecipeTag]
+
+    class Config:
+        from_attributes = True
+
 class RetrieveTag(BaseModel):
     tag_id: UUID
     name: str

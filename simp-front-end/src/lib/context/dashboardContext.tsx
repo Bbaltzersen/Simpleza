@@ -2,12 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
-  fetchRecipes,
+  fetchRecipesByAuthorID,
   createRecipe,
   fetchIngredientsByName,
   fetchTagsByName,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
+import { Ingredient } from "@/lib/types/ingredient";
+import { useAuth } from "@/lib/context/authContext";
 
 interface DashboardContextType {
   recipes: ListRecipe[];
@@ -16,21 +18,30 @@ interface DashboardContextType {
   addRecipe: (recipe: RecipeCreate) => Promise<void>;
   retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
   hasMore: boolean;
+  ingredientSearchResults: Ingredient[];
+  searchIngredients: (query: string) => Promise<void>;
+  tags: TagRetrieval[];
+  searchTags: (query: string) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth(); // get the authenticated user
   const [recipes, setRecipes] = useState<ListRecipe[]>([]);
   const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-  
+
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
+  const [tags, setTags] = useState<TagRetrieval[]>([]);
+
   const fetchMoreRecipes = useCallback(async () => {
-    if (!hasMore) return;
+    if (!hasMore || !user) return;
     try {
-      const { recipes: newRecipes, total } = await fetchRecipes(skip, limit);
+      // Pass user.user_id to fetch recipes for that user only.
+      const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(user.user_id, skip, limit);
       setRecipes((prev) => [...prev, ...newRecipes]);
       setSkip((prev) => prev + limit);
       if (recipes.length + newRecipes.length >= total) {
@@ -39,7 +50,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (error) {
       console.error("Error fetching recipes:", error);
     }
-  }, [hasMore, skip, recipes.length]);
+  }, [hasMore, skip, recipes.length, user]);
 
   const addRecipe = async (recipe: RecipeCreate): Promise<void> => {
     try {
@@ -55,10 +66,37 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const retrieveRecipeDetails = async (recipe_id: string) => {
-    // Replace with an actual API call if needed.
+    // Replace with an actual API call as needed.
     // setRecipeDetails(dummyRecipe);
   };
 
+  const searchIngredients = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setIngredientSearchResults([]);
+      return;
+    }
+    try {
+      const results = await fetchIngredientsByName(query);
+      setIngredientSearchResults(results);
+    } catch (error) {
+      console.error("Ingredient search failed:", error);
+      setIngredientSearchResults([]);
+    }
+  }, []);
+
+  const searchTags = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setTags([]);
+      return;
+    }
+    try {
+      const results = await fetchTagsByName(query);
+      setTags(results);
+    } catch (error) {
+      console.error("Tag search failed:", error);
+      setTags([]);
+    }
+  }, []);
 
   useEffect(() => {
     fetchMoreRecipes();
@@ -73,6 +111,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         fetchMoreRecipes,
         addRecipe,
         hasMore,
+        ingredientSearchResults,
+        searchIngredients,
+        tags,
+        searchTags,
       }}
     >
       {children}

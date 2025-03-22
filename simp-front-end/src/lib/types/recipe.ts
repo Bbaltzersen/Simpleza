@@ -131,6 +131,7 @@ export type TagRetrieval = {
 // Create Recipes
 
 export type RecipeCreate = {
+  recipe_id?: string; 
   title: string;
   description: string;
   front_image: string;
@@ -139,7 +140,8 @@ export type RecipeCreate = {
   steps: RecipeStepCreate[]; 
   images: RecipeImageCreate[];
   tags: RecipeTagCreate[];
-}
+};
+
 
 export type RecipeIngredientCreate = {
   ingredient_id?: string;
@@ -163,5 +165,3 @@ export type RecipeTagCreate = {
   tag_id?: string;
   name: string;
 }
-
-// 

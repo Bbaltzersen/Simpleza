@@ -12,10 +12,10 @@ const apiClient = axios.create({
 /**
  * Fetch paginated recipes
  */
-export async function fetchRecipes(skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
+export async function fetchRecipesByAuthorID(author_id: string, skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
   try {
     const response = await apiClient.get<{ recipes: ListRecipe[]; total: number }>(
-      `/recipes/?skip=${skip}&limit=${limit}`
+      `/recipes/author-id/${author_id}/?skip=${skip}&limit=${limit}`
     );
     return response.data;
   } catch (error) {
