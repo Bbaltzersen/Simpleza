@@ -6,6 +6,7 @@ import {
   createRecipe,
   fetchIngredientsByName,
   fetchTagsByName,
+  fetchRecipeById,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
@@ -65,11 +66,15 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const retrieveRecipeDetails = async (recipe_id: string) => {
-    // Replace with an actual API call as needed.
-    // setRecipeDetails(dummyRecipe);
-  };
-
+  const retrieveRecipeDetails = useCallback(async (recipe_id: string) => {
+    const details = await fetchRecipeById(recipe_id);
+    if (details) {
+      setRecipeDetails(details);
+    } else {
+      console.error("Recipe details not found");
+    }
+  }, []);
+  
   const searchIngredients = useCallback(async (query: string) => {
     if (query.length < 3) {
       setIngredientSearchResults([]);

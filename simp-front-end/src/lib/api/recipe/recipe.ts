@@ -10,6 +10,20 @@ const apiClient = axios.create({
 });
 
 /**
+ * Fetch a single recipe by ID.
+ */
+export async function fetchRecipeById(recipe_id: string): Promise<RecipeCreate | null> {
+  try {
+    const response = await apiClient.get<RecipeCreate>(`/recipes/recipe-id/${recipe_id}/`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching recipe:", error.response?.data || error.message);
+    return null;
+  }
+}
+
+
+/**
  * Fetch paginated recipes
  */
 export async function fetchRecipesByAuthorID(author_id: string, skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
