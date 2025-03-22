@@ -25,7 +25,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     author_id: "",
   });
   const { recipe_details, retrieveRecipeDetails } = useDashboard();
-  const safeRetrieveRecipeDetails = useCallback(retrieveRecipeDetails || (() => {}), [retrieveRecipeDetails]);
+  const safeRetrieveRecipeDetails = useCallback(retrieveRecipeDetails || (() => { }), [retrieveRecipeDetails]);
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
   const [steps, setSteps] = useState<RecipeStepCreate[]>([]);
   const [images, setImages] = useState<RecipeImageCreate[]>([]);
@@ -142,6 +142,12 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     onSave({ ...recipeMetadata, ingredients, steps, images, tags });
     onClose();
   };
+
+  function autoResize(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+  
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.recipeModalContainer}>
@@ -149,15 +155,25 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
           <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
           <button type="button" className={styles.closeButton} onClick={onClose}>Close</button>
         </div>
+
         <form onSubmit={handleSubmit}>
           <div className={styles.formContainer}>
             <div className={styles.inputContainer}>
               <label htmlFor="title">Title:</label>
               <input id="title" type="text" name="title" value={recipeMetadata.title} onChange={handleMetadataChange} required />
             </div>
-            <div className={styles.inputContainer}>
+            <div className={styles.descriptionContainer}>
               <label htmlFor="description">Description:</label>
-              <textarea id="description" name="description" value={recipeMetadata.description} onChange={handleMetadataChange} required />
+              <textarea
+                id="description"
+                name="description"
+                value={recipeMetadata.description}
+                onChange={(e) => {
+                  handleMetadataChange(e); // your existing state update
+                  autoResize(e);
+                }}
+                required
+              />
             </div>
             <IngredientList ingredients={ingredients} onAdd={handleAddRow} onChange={handleIngredientChange} onRemove={handleRemoveRow} lastInputRef={lastInputRef} />
             <StepList steps={steps} onAdd={handleAddStepRow} onChange={handleStepChange} onRemove={handleRemoveStepRow} lastInputRef={lastStepInputRef} />

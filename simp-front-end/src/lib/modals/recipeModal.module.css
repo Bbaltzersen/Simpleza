@@ -9,3 +9,19 @@
     display: flex;
     flex-direction: column;
   }
+
+  /* Description Container */
+.descriptionContainer {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+}
+
+.descriptionContainer textarea {
+  min-height: 75px; /* Predefined starting height */
+  height: auto;
+  overflow-y: hidden; /* Hide scrollbars */
+  padding: 8 8 16 8;
+  box-sizing: border-box;
+  resize: none; /* Disable manual resizing */
+}
