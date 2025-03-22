@@ -93,83 +93,86 @@ export const IngredientList = memo(
         </button>
 
         {ingredients.map((ingredient, index) => (
-          <div key={index} className="ingredient-row" style={{ position: "relative" }}>
-            <input
-              type="text"
-              placeholder="Ingredient Name"
-              value={ingredient.ingredient_name}
-              onChange={(e) => {
-                onChange(index, "ingredient_name", e.target.value);
-                if (selectedIndices.has(index)) {
-                  setSelectedIndices((prev) => {
-                    const newSet = new Set(prev);
-                    newSet.delete(index);
-                    return newSet;
-                  });
-                }
-                handleSearch(e.target.value, index);
-              }}
-              onFocus={() => {
-                if (
-                  !selectedIndices.has(index) &&
-                  ingredient.ingredient_name.length > 2
-                ) {
-                  handleSearch(ingredient.ingredient_name, index);
-                }
-              }}
-              onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
-              ref={lastInputRef}
-              style={
-                ingredient.ingredient_error
-                  ? { backgroundColor: "#ffe6e6" }
-                  : {}
-              }
-            />
+  <div key={index} className={styles.ingredientRow}>
+    <input
+      type="text"
+      className={styles.ingredientInput}
+      placeholder="Ingredient Name"
+      value={ingredient.ingredient_name}
+      onChange={(e) => {
+        onChange(index, "ingredient_name", e.target.value);
+        if (selectedIndices.has(index)) {
+          setSelectedIndices((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(index);
+            return newSet;
+          });
+        }
+        handleSearch(e.target.value, index);
+      }}
+      onFocus={() => {
+        if (
+          !selectedIndices.has(index) &&
+          ingredient.ingredient_name.length > 2
+        ) {
+          handleSearch(ingredient.ingredient_name, index);
+        }
+      }}
+      onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
+      ref={lastInputRef}
+      style={
+        ingredient.ingredient_error
+          ? { backgroundColor: "#ffe6e6" }
+          : {}
+      }
+    />
 
-            {activeDropdownIndex === index &&
-              ingredient.ingredient_name.length > 2 &&
-              filteredResults.length > 0 && (
-                <div
-                  ref={(el) => {
-                    dropdownRefs.current[index] = el;
-                  }}
-                  className={styles.dropdown}
-                >
-                  {filteredResults.map((result, i) => (
-                    <div
-                      key={i}
-                      className={styles.dropdownItem}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handleSelect(index, result.name)}
-                    >
-                      {result.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+    {activeDropdownIndex === index &&
+      ingredient.ingredient_name.length > 2 &&
+      filteredResults.length > 0 && (
+        <div
+          ref={(el) => {
+            dropdownRefs.current[index] = el;
+          }}
+          className={styles.dropdown}
+        >
+          {filteredResults.map((result, i) => (
+            <div
+              key={i}
+              className={styles.dropdownItem}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => handleSelect(index, result.name)}
+            >
+              {result.name}
+            </div>
+          ))}
+        </div>
+      )}
 
-            <input
-              type="number"
-              placeholder="Amount"
-              value={ingredient.amount}
-              onChange={(e) =>
-                onChange(index, "amount", Number(e.target.value))
-              }
-            />
-            <input
-              type="text"
-              placeholder="Measurement"
-              value={ingredient.measurement}
-              onChange={(e) =>
-                onChange(index, "measurement", e.target.value)
-              }
-            />
-            <span>Position: {ingredient.position}</span>
-            <button type="button" onClick={() => onRemove(index)}>
-              Remove
-            </button>
-          </div>
-        ))}
+    <input
+      type="number"
+      className={styles.amountInput}
+      placeholder="Amount"
+      value={ingredient.amount}
+      onChange={(e) =>
+        onChange(index, "amount", Number(e.target.value))
+      }
+    />
+    <input
+      type="text"
+      className={styles.measurementInput}
+      placeholder="Measurement"
+      value={ingredient.measurement}
+      onChange={(e) =>
+        onChange(index, "measurement", e.target.value)
+      }
+    />
+    <button type="button" onClick={() => onRemove(index)}>
+      &minus;
+    </button>
+  </div>
+))}
+
       </div>
     );
   }
