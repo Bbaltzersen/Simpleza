@@ -11,20 +11,27 @@ class RecipeOut(BaseModel):
     class Config:
         from_attributes = True
 
+from typing import Optional
+from uuid import UUID
+from pydantic import BaseModel
+
 class CreateRecipeIngredient(BaseModel):
     ingredient_id: Optional[UUID] = None
     ingredient_name: str
     amount: float
     measurement: str
     position: int
-    
+
     class Config:
         from_attributes = True
 
 class CreateRecipeStep(BaseModel):
     step_number: int
     description: str
-    image_url: str = None
+    image_url: Optional[str] = None  # Now accepts null
+
+    class Config:
+        from_attributes = True
 
 class CreateRecipeImage(BaseModel):
     image_url: str
@@ -45,6 +52,7 @@ class CreateRecipe(BaseModel):
     front_image: str
     author_id: UUID
     ingredients: List[CreateRecipeIngredient]
+    steps: List[CreateRecipeStep] 
     images: List[CreateRecipeImage]
     tags: List[CreateRecipeTag]
 
@@ -58,11 +66,14 @@ class EditRecipe(BaseModel):
     front_image: str
     author_id: UUID
     ingredients: List[CreateRecipeIngredient]
+    steps: List[CreateRecipeStep] 
     images: List[CreateRecipeImage]
     tags: List[CreateRecipeTag]
 
     class Config:
         from_attributes = True
+
+
 
 class RetrieveTag(BaseModel):
     tag_id: UUID

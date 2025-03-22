@@ -5,7 +5,11 @@ import uuid
 from uuid import UUID
 from fuzzywuzzy import process  
 from database.connection import SessionLocal
+from models.ingredient import Ingredient
 from models.recipe import Recipe
+from models.recipe_image import RecipeImage
+from models.recipe_ingredient import RecipeIngredient
+from models.recipe_step import RecipeStep
 from models.recipe_tag import RecipeTag
 from models.tag import Tag
 from schemas.recipe import  EditRecipe, RecipeOut, CreateRecipe, CreateRecipeIngredient, CreateRecipeImage, CreateRecipeTag
@@ -76,6 +80,7 @@ def read_recipe(
 @router.post("/", response_model=RecipeOut)
 def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
     try:
+        # Create the new Recipe record.
         new_recipe = Recipe(
             recipe_id=uuid.uuid4(),
             title=recipe.title,
@@ -86,35 +91,73 @@ def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
         )
         db.add(new_recipe)
         
-        # Process each tag from the request
+        # Process tags.
         for tag_input in recipe.tags:
             if tag_input.tag_id:
                 tag_obj = db.query(Tag).filter(Tag.tag_id == tag_input.tag_id).first()
                 if not tag_obj:
                     raise HTTPException(status_code=400, detail=f"Tag {tag_input.tag_id} not found.")
             else:
-                # Check if a tag with the same name already exists
                 tag_obj = db.query(Tag).filter(Tag.name == tag_input.name).first()
                 if not tag_obj:
                     tag_obj = Tag(name=tag_input.name)
                     db.add(tag_obj)
-            # Use the ORM relationship to associate the tag with the recipe
+                    db.flush()  # Ensure tag_obj gets an id.
             new_recipe.tags.append(tag_obj)
         
+        # Process ingredients.
+        for ing_input in recipe.ingredients:
+            # Check if ingredient exists by id or by name.
+            if ing_input.ingredient_id:
+                ingredient_obj = db.query(Ingredient).filter(Ingredient.ingredient_id == ing_input.ingredient_id).first()
+                if not ingredient_obj:
+                    raise HTTPException(status_code=400, detail=f"Ingredient {ing_input.ingredient_id} not found.")
+            else:
+                ingredient_obj = db.query(Ingredient).filter(Ingredient.name == ing_input.ingredient_name).first()
+                if not ingredient_obj:
+                    ingredient_obj = Ingredient(name=ing_input.ingredient_name)
+                    db.add(ingredient_obj)
+                    db.flush()  # Get its id.
+            # Create the association (RecipeIngredient).
+            new_recipe_ing = RecipeIngredient(
+                recipe_id=new_recipe.recipe_id,
+                ingredient_id=ingredient_obj.ingredient_id,
+                amount=ing_input.amount,
+                measurement=ing_input.measurement,
+                position=ing_input.position,
+            )
+            db.add(new_recipe_ing)
+        
+        # Process steps.
+        for step_input in recipe.steps:
+            new_step = RecipeStep(
+                recipe_id=new_recipe.recipe_id,
+                step_number=step_input.step_number,
+                description=step_input.description,
+                image_url=step_input.image_url,
+            )
+            db.add(new_step)
+        
+        # Process images.
+        for image_input in recipe.images:
+            new_image = RecipeImage(
+                recipe_id=new_recipe.recipe_id,
+                image_url=image_input.image_url,
+            )
+            db.add(new_image)
+        
         db.commit()
-        db.refresh(new_recipe)  # Refresh the object with the latest DB state
+        db.refresh(new_recipe)  # Refresh to get latest state from DB
 
         return RecipeOut(
             recipe_id=str(new_recipe.recipe_id),
             title=new_recipe.title,
             front_image=new_recipe.front_image,
-            tags=[tag.name for tag in new_recipe.tags]  # Return a list of tag names
+            tags=[tag.name for tag in new_recipe.tags]
         )
-
     except Exception as e:
-        db.rollback()  # Roll back any changes on error
-        # Optionally log the exception e here
-        raise HTTPException(status_code=500, detail="Internal server error.")
+        db.rollback()
+        raise e
 
 # @router.get("/get-all/", response_model=List[RecipeOut])
 # def get_recipes(db: Session = Depends(get_db)):

@@ -15,3 +15,7 @@ class RecipeIngredient(Base):
 
     recipe = relationship("Recipe", back_populates="ingredients")
     ingredient = relationship("Ingredient")
+
+    @property
+    def ingredient_name(self):
+        return self.ingredient.name if self.ingredient is not None else ""
