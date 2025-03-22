@@ -28,26 +28,22 @@ interface DashboardContextType {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth(); // get the authenticated user
+  const { user } = useAuth();
   const [recipes, setRecipes] = useState<ListRecipe[]>([]);
   const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-
   const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
   const fetchMoreRecipes = useCallback(async () => {
     if (!hasMore || !user) return;
     try {
-      // Pass user.user_id to fetch recipes for that user only.
       const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(user.user_id, skip, limit);
       setRecipes((prev) => [...prev, ...newRecipes]);
       setSkip((prev) => prev + limit);
-      if (recipes.length + newRecipes.length >= total) {
-        setHasMore(false);
-      }
+      if (recipes.length + newRecipes.length >= total) setHasMore(false);
     } catch (error) {
       console.error("Error fetching recipes:", error);
     }
@@ -56,11 +52,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const addRecipe = async (recipe: RecipeCreate): Promise<void> => {
     try {
       const newRecipe = await createRecipe(recipe);
-      if (newRecipe) {
-        setRecipes((prev) => [newRecipe, ...prev]);
-      } else {
-        console.error("Recipe creation returned null.");
-      }
+      if (newRecipe) setRecipes((prev) => [newRecipe, ...prev]);
+      else console.error("Recipe creation returned null.");
     } catch (error: any) {
       console.error("Error adding recipe:", error.response?.data || error.message);
     }
@@ -68,13 +61,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const retrieveRecipeDetails = useCallback(async (recipe_id: string) => {
     const details = await fetchRecipeById(recipe_id);
-    if (details) {
-      setRecipeDetails(details);
-    } else {
-      console.error("Recipe details not found");
-    }
+    if (details) setRecipeDetails(details);
+    else console.error("Recipe details not found");
   }, []);
-  
+
   const searchIngredients = useCallback(async (query: string) => {
     if (query.length < 3) {
       setIngredientSearchResults([]);
@@ -129,8 +119,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const useDashboard = () => {
   const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error("useDashboard must be used within a DashboardProvider");
-  }
+  if (!context) throw new Error("useDashboard must be used within a DashboardProvider");
   return context;
 };
