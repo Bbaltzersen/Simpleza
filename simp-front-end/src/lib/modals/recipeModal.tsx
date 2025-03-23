@@ -159,11 +159,16 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
         <form onSubmit={handleSubmit}>
           <div className={styles.formContainer}>
             <div className={styles.inputContainer}>
+              <div className={styles.inputTitle}>
               <label htmlFor="title">Title:</label>
-              <input id="title" type="text" name="title" value={recipeMetadata.title} onChange={handleMetadataChange} required />
+              <input className={styles.titleInput} id="title" type="text" name="title" value={recipeMetadata.title} onChange={handleMetadataChange} required />
+              </div>
+              
             </div>
             <div className={styles.descriptionContainer}>
+              <div className={styles.inputTitle}>
               <label htmlFor="description">Description:</label>
+              </div>
               <textarea
                 id="description"
                 name="description"

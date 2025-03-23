@@ -17,6 +17,20 @@
   padding-bottom: 20px;
 }
 
+.inputTitle {
+  padding: 16px 0 8px 0;
+  margin: 0 0 16px 0;
+  border-bottom: 1px solid #000;
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
+.titleInput {
+  width: 30rem;
+  padding: 4px;
+  margin: 8px;
+}
+
 .descriptionContainer textarea {
   min-height: 75px; /* Predefined starting height */
   height: auto;

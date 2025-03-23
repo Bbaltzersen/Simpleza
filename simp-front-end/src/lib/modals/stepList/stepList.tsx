@@ -1,6 +1,7 @@
 import { memo } from "react";
 import styles from "./stepList.module.css"; // Create/adjust this CSS file as needed
 import { RecipeStepCreate } from "@/lib/types/recipe";
+import { Minus, Plus } from "lucide-react";
 
 interface StepListProps {
   steps: RecipeStepCreate[];
@@ -23,13 +24,15 @@ export const StepList = memo(({
 }: StepListProps) => {
   return (
     <div className={styles.inputContainer}>
+      <div className={styles.inputHeader}>
       <label>Steps:</label>
-      <button type="button" onClick={onAdd}>
-        Add Step
-      </button>
+      <a type="button" onClick={onAdd} className={styles.addButton}>
+            <Plus size={20} />
+          </a>
+      </div>
       {steps.map((step, index) => (
         <div key={index} className={styles.stepRow} style={{ position: "relative", marginTop: "0.5rem" }}>
-          <div className={styles.stepHeader}>
+          <div className={styles.stepPosition}>
             <span>Step {index + 1}</span>
           </div>
           <textarea
@@ -38,9 +41,9 @@ export const StepList = memo(({
             onChange={(e) => onChange(index, "description", e.target.value)}
             ref={index === steps.length - 1 ? lastInputRef : null}
           />
-          <button type="button" onClick={() => onRemove(index)}>
-            Remove
-          </button>
+          <a onClick={() => onRemove(index)} className={styles.removeButton}>
+              <Minus size={20} />
+            </a>
         </div>
       ))}
     </div>
