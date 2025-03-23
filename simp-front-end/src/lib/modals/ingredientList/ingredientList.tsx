@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef, useState, useCallback } from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Check, X } from "lucide-react";  // Import Check and X icons
 import { fetchIngredientsByName } from "@/lib/api/recipe/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { RecipeIngredientCreate } from "@/lib/types/recipe";
@@ -28,7 +28,6 @@ export const IngredientList = memo(
       null
     );
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-    // Create a ref array for the container wrapping both the input and dropdown
     const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const fetchSearchResults = useCallback(async (query: string) => {
@@ -47,7 +46,6 @@ export const IngredientList = memo(
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        // Check if the click target is not within any of the wrapper containers
         if (
           !wrapperRefs.current.some(
             (ref) => ref && ref.contains(event.target as Node)
@@ -72,10 +70,9 @@ export const IngredientList = memo(
 
     const handleSelect = (index: number, selectedIngredient: string) => {
       onChange(index, "ingredient_name", selectedIngredient);
-      // Optionally, if you want the dropdown to remain open after selection,
-      // comment out or remove the next line.
-      // setActiveDropdownIndex(null);
+      // If an ingredient is selected from the dropdown, mark it as valid
       setSelectedIndices((prev) => new Set(prev).add(index));
+      // Optionally, keep the dropdown open by not clearing activeDropdownIndex
     };
 
     const formatValue = (raw: string | number) => {
@@ -112,7 +109,6 @@ export const IngredientList = memo(
         {ingredients.map((ingredient, index) => (
           <div key={index} className={styles.ingredientRow}>
             <div
-              // Assign the wrapper ref here
               ref={(el) => {
                 wrapperRefs.current[index] = el;
               }}
@@ -120,38 +116,56 @@ export const IngredientList = memo(
                 activeDropdownIndex === index ? styles.active : ""
               }`}
             >
-              <input
-                type="text"
-                className={styles.ingredientInput}
-                placeholder="Ingredient Name"
-                value={ingredient.ingredient_name}
-                onChange={(e) => {
-                  onChange(index, "ingredient_name", e.target.value);
-                  if (selectedIndices.has(index)) {
-                    setSelectedIndices((prev) => {
-                      const newSet = new Set(prev);
-                      newSet.delete(index);
-                      return newSet;
-                    });
+              {/* Wrap the input and icon in a flex container */}
+              <div className={styles.inputWithIcon}>
+                <input
+                  type="text"
+                  className={styles.ingredientInput}
+                  placeholder="Ingredient Name"
+                  value={ingredient.ingredient_name}
+                  onChange={(e) => {
+                    onChange(index, "ingredient_name", e.target.value);
+                    if (selectedIndices.has(index)) {
+                      setSelectedIndices((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(index);
+                        return newSet;
+                      });
+                    }
+                    handleSearch(e.target.value, index);
+                  }}
+                  onFocus={() => {
+                    if (
+                      !selectedIndices.has(index) &&
+                      ingredient.ingredient_name.length > 2
+                    ) {
+                      handleSearch(ingredient.ingredient_name, index);
+                    }
+                  }}
+                  ref={lastInputRef}
+                  style={
+                    ingredient.ingredient_error
+                      ? { backgroundColor: "#ffe6e6" }
+                      : {}
                   }
-                  handleSearch(e.target.value, index);
-                }}
-                onFocus={() => {
-                  if (
-                    !selectedIndices.has(index) &&
-                    ingredient.ingredient_name.length > 2
-                  ) {
-                    handleSearch(ingredient.ingredient_name, index);
-                  }
-                }}
-                // Removed onBlur to keep the dropdown open when clicking the input
-                ref={lastInputRef}
-                style={
-                  ingredient.ingredient_error
-                    ? { backgroundColor: "#ffe6e6" }
-                    : {}
-                }
-              />
+                />
+                {/* Conditionally render validation icon if 3 or more characters */}
+                {ingredient.ingredient_name.length >= 3 && (
+                  selectedIndices.has(index) ? (
+                    <Check
+                      size={20}
+                      className={styles.validationIcon}
+                      color="green"
+                    />
+                  ) : (
+                    <X
+                      size={20}
+                      className={styles.validationIcon}
+                      color="red"
+                    />
+                  )
+                )}
+              </div>
               {activeDropdownIndex === index &&
                 ingredient.ingredient_name.length > 2 &&
                 filteredResults.length > 0 && (

@@ -31,9 +31,18 @@
   margin-right: 8px;
 }
 
+/* New container to hold input and validation icon */
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Adjust input styling to make room for the icon */
 .ingredientInput {
   width: 100%;
   padding: 4px;
+  padding-right: 30px; /* extra space for the icon */
 }
 
 .dropdown {
@@ -89,4 +98,9 @@
   border: none;
   cursor: pointer;
   padding-left: 4px;
+}
+
+/* Deactivated validation icon */
+.validationIcon {
+  display: none;
 }
