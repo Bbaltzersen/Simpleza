@@ -183,7 +183,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <IngredientList ingredients={ingredients} onAdd={handleAddRow} onChange={handleIngredientChange} onRemove={handleRemoveRow} lastInputRef={lastInputRef} />
             <StepList steps={steps} onAdd={handleAddStepRow} onChange={handleStepChange} onRemove={handleRemoveStepRow} lastInputRef={lastStepInputRef} />
             <ImageList images={images} onAdd={handleAddImageRow} onChange={handleImageChange} onRemove={handleRemoveImageRow} lastInputRef={lastImageInputRef} />
-            <TagList tags={tags} onAdd={handleAddTagRow} onChange={handleTagChange} onRemove={handleRemoveTagRow} lastInputRef={lastTagInputRef} />
+            {/* <TagList tags={tags} onAdd={handleAddTagRow} onChange={handleTagChange} onRemove={handleRemoveTagRow} lastInputRef={lastTagInputRef} /> */}
             <div className={styles.submitContainer}>
               <button type="submit">Submit Recipe</button>
             </div>

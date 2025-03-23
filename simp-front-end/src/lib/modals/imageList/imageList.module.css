@@ -1,0 +1,54 @@
+.inputContainer {
+    width: 100%;
+    padding-bottom: 20px;
+  }
+  
+  .inputHeader {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0 8px 0;
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid #000;
+  }
+  
+  .inputHeader label {
+    font-weight: bold;
+    font-size: 1.25rem;
+  }
+  
+  .imageRow {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+  }
+
+  .imageInput {
+    display: flex;
+    width: 100%;
+    margin: 0 8 0 0;
+    padding: 4 4 4 4;
+  }
+
+  .addButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: green;
+    border: none;
+    cursor: pointer;
+  }
+  
+
+  .removeButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: red;
+    border: none;
+    cursor: pointer;
+    padding-left: 4px;
+  }

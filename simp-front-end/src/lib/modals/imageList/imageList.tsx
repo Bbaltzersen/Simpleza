@@ -1,6 +1,7 @@
 import { memo } from "react";
 import styles from "./imageList.module.css"; // Create or adjust this CSS file as needed
 import { RecipeImageCreate } from "@/lib/types/recipe";
+import { Minus, Plus } from "lucide-react";
 
 interface ImageListProps {
   images: RecipeImageCreate[];
@@ -23,22 +24,25 @@ export const ImageList = memo(({
 }: ImageListProps) => {
   return (
     <div className={styles.inputContainer}>
+      <div className={styles.inputHeader}>
       <label>Images:</label>
-      <button type="button" onClick={onAdd}>
-        Add Image
-      </button>
+      <a type="button" onClick={onAdd} className={styles.addButton}>
+            <Plus size={20} />
+          </a>
+      </div>
       {images.map((image, index) => (
-        <div key={index} className="image-row" style={{ position: "relative", marginTop: "0.5rem" }}>
+        <div className={styles.imageRow} key={index} style={{ position: "relative", marginTop: "0.5rem" }}>
           <input
             type="text"
+            className={styles.imageInput}
             placeholder="Image URL"
             value={image.image_url}
             onChange={(e) => onChange(index, "image_url", e.target.value)}
             ref={index === images.length - 1 ? lastInputRef : null}
           />
-          <button type="button" onClick={() => onRemove(index)}>
-            Remove
-          </button>
+          <a onClick={() => onRemove(index)} className={styles.removeButton}>
+              <Minus size={20} />
+            </a>
         </div>
       ))}
     </div>
