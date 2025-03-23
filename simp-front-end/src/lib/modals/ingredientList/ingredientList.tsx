@@ -24,9 +24,12 @@ export const IngredientList = memo(
     lastInputRef: React.RefObject<HTMLInputElement | null>;
   }) => {
     const [searchResults, setSearchResults] = useState<Ingredient[]>([]);
-    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
+    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(
+      null
+    );
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
-    const dropdownRefs = useRef<(HTMLDivElement | null)[]>([]);
+    // Create a ref array for the container wrapping both the input and dropdown
+    const wrapperRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     const fetchSearchResults = useCallback(async (query: string) => {
       if (query.length < 3) {
@@ -44,12 +47,18 @@ export const IngredientList = memo(
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (!dropdownRefs.current.some((ref) => ref && ref.contains(event.target as Node))) {
+        // Check if the click target is not within any of the wrapper containers
+        if (
+          !wrapperRefs.current.some(
+            (ref) => ref && ref.contains(event.target as Node)
+          )
+        ) {
           setActiveDropdownIndex(null);
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleSearch = (query: string, index: number) => {
@@ -63,7 +72,9 @@ export const IngredientList = memo(
 
     const handleSelect = (index: number, selectedIngredient: string) => {
       onChange(index, "ingredient_name", selectedIngredient);
-      setActiveDropdownIndex(null);
+      // Optionally, if you want the dropdown to remain open after selection,
+      // comment out or remove the next line.
+      // setActiveDropdownIndex(null);
       setSelectedIndices((prev) => new Set(prev).add(index));
     };
 
@@ -93,59 +104,71 @@ export const IngredientList = memo(
     return (
       <div className={styles.inputContainer}>
         <div className={styles.inputHeader}>
-        <label>Ingredients:</label>
-        <a type="button" onClick={onAdd} className={styles.addButton}>
-          <Plus size={20} />
-        </a>
+          <label>Ingredients:</label>
+          <a type="button" onClick={onAdd} className={styles.addButton}>
+            <Plus size={20} />
+          </a>
         </div>
         {ingredients.map((ingredient, index) => (
           <div key={index} className={styles.ingredientRow}>
-            <input
-              type="text"
-              className={styles.ingredientInput}
-              placeholder="Ingredient Name"
-              value={ingredient.ingredient_name}
-              onChange={(e) => {
-                onChange(index, "ingredient_name", e.target.value);
-                if (selectedIndices.has(index)) {
-                  setSelectedIndices((prev) => {
-                    const newSet = new Set(prev);
-                    newSet.delete(index);
-                    return newSet;
-                  });
-                }
-                handleSearch(e.target.value, index);
+            <div
+              // Assign the wrapper ref here
+              ref={(el) => {
+                wrapperRefs.current[index] = el;
               }}
-              onFocus={() => {
-                if (!selectedIndices.has(index) && ingredient.ingredient_name.length > 2) {
-                  handleSearch(ingredient.ingredient_name, index);
+              className={`${styles.inputWrapper} ${
+                activeDropdownIndex === index ? styles.active : ""
+              }`}
+            >
+              <input
+                type="text"
+                className={styles.ingredientInput}
+                placeholder="Ingredient Name"
+                value={ingredient.ingredient_name}
+                onChange={(e) => {
+                  onChange(index, "ingredient_name", e.target.value);
+                  if (selectedIndices.has(index)) {
+                    setSelectedIndices((prev) => {
+                      const newSet = new Set(prev);
+                      newSet.delete(index);
+                      return newSet;
+                    });
+                  }
+                  handleSearch(e.target.value, index);
+                }}
+                onFocus={() => {
+                  if (
+                    !selectedIndices.has(index) &&
+                    ingredient.ingredient_name.length > 2
+                  ) {
+                    handleSearch(ingredient.ingredient_name, index);
+                  }
+                }}
+                // Removed onBlur to keep the dropdown open when clicking the input
+                ref={lastInputRef}
+                style={
+                  ingredient.ingredient_error
+                    ? { backgroundColor: "#ffe6e6" }
+                    : {}
                 }
-              }}
-              onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
-              ref={lastInputRef}
-              style={ingredient.ingredient_error ? { backgroundColor: "#ffe6e6" } : {}}
-            />
-            {activeDropdownIndex === index &&
-              ingredient.ingredient_name.length > 2 &&
-              filteredResults.length > 0 && (
-                <div
-                  ref={(el) => {
-                    dropdownRefs.current[index] = el;
-                  }}
-                  className={styles.dropdown}
-                >
-                  {filteredResults.map((result, i) => (
-                    <div
-                      key={i}
-                      className={styles.dropdownItem}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => handleSelect(index, result.name)}
-                    >
-                      {result.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+              />
+              {activeDropdownIndex === index &&
+                ingredient.ingredient_name.length > 2 &&
+                filteredResults.length > 0 && (
+                  <div className={styles.dropdown}>
+                    {filteredResults.map((result, i) => (
+                      <div
+                        key={i}
+                        className={styles.dropdownItem}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSelect(index, result.name)}
+                      >
+                        {result.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+            </div>
             <input
               type="text"
               inputMode="decimal"
