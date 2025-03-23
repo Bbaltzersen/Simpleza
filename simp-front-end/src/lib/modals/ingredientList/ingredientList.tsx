@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useRef, useState, useCallback } from "react";
+import { Plus, Minus } from "lucide-react";
 import { fetchIngredientsByName } from "@/lib/api/recipe/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { RecipeIngredientCreate } from "@/lib/types/recipe";
@@ -88,91 +89,100 @@ export const IngredientList = memo(
     return (
       <div className={styles.inputContainer}>
         <label>Ingredients:</label>
-        <button type="button" onClick={onAdd}>
-          Add Ingredient
+        <button type="button" onClick={onAdd} className={styles.addButton}>
+          <Plus size={18} />
         </button>
 
         {ingredients.map((ingredient, index) => (
-  <div key={index} className={styles.ingredientRow}>
-    <input
-      type="text"
-      className={styles.ingredientInput}
-      placeholder="Ingredient Name"
-      value={ingredient.ingredient_name}
-      onChange={(e) => {
-        onChange(index, "ingredient_name", e.target.value);
-        if (selectedIndices.has(index)) {
-          setSelectedIndices((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(index);
-            return newSet;
-          });
-        }
-        handleSearch(e.target.value, index);
-      }}
-      onFocus={() => {
-        if (
-          !selectedIndices.has(index) &&
-          ingredient.ingredient_name.length > 2
-        ) {
-          handleSearch(ingredient.ingredient_name, index);
-        }
-      }}
-      onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
-      ref={lastInputRef}
-      style={
-        ingredient.ingredient_error
-          ? { backgroundColor: "#ffe6e6" }
-          : {}
-      }
-    />
+          <div key={index} className={styles.ingredientRow}>
+            <input
+              type="text"
+              className={styles.ingredientInput}
+              placeholder="Ingredient Name"
+              value={ingredient.ingredient_name}
+              onChange={(e) => {
+                onChange(index, "ingredient_name", e.target.value);
+                if (selectedIndices.has(index)) {
+                  setSelectedIndices((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(index);
+                    return newSet;
+                  });
+                }
+                handleSearch(e.target.value, index);
+              }}
+              onFocus={() => {
+                if (
+                  !selectedIndices.has(index) &&
+                  ingredient.ingredient_name.length > 2
+                ) {
+                  handleSearch(ingredient.ingredient_name, index);
+                }
+              }}
+              onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
+              ref={lastInputRef}
+              style={
+                ingredient.ingredient_error
+                  ? { backgroundColor: "#ffe6e6" }
+                  : {}
+              }
+            />
 
-    {activeDropdownIndex === index &&
-      ingredient.ingredient_name.length > 2 &&
-      filteredResults.length > 0 && (
-        <div
-          ref={(el) => {
-            dropdownRefs.current[index] = el;
-          }}
-          className={styles.dropdown}
-        >
-          {filteredResults.map((result, i) => (
-            <div
-              key={i}
-              className={styles.dropdownItem}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => handleSelect(index, result.name)}
+            {activeDropdownIndex === index &&
+              ingredient.ingredient_name.length > 2 &&
+              filteredResults.length > 0 && (
+                <div
+                  ref={(el) => {
+                    dropdownRefs.current[index] = el;
+                  }}
+                  className={styles.dropdown}
+                >
+                  {filteredResults.map((result, i) => (
+                    <div
+                      key={i}
+                      className={styles.dropdownItem}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleSelect(index, result.name)}
+                    >
+                      {result.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            <input
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9.,]*"
+              className={styles.amountInput}
+              placeholder="Amount"
+              value={ingredient.amount}
+              onChange={(e) => {
+                // Remove any characters that are not digits, comma, or period.
+                const sanitizedValue = e.target.value.replace(/[^0-9.,]/g, "");
+                // Pass an empty string if nothing is there, otherwise pass the sanitized value.
+                onChange(index, "amount", sanitizedValue);
+              }}
+            />
+
+            <input
+              type="text"
+              className={styles.measurementInput}
+              placeholder="Measurement"
+              value={ingredient.measurement}
+              onChange={(e) =>
+                onChange(index, "measurement", e.target.value)
+              }
+            />
+            <a
+              onClick={() => onRemove(index)}
+              className={styles.removeButton}
             >
-              {result.name}
-            </div>
-          ))}
-        </div>
-      )}
+              <Minus size={20} />
+            </a>
 
-    <input
-      type="number"
-      className={styles.amountInput}
-      placeholder="Amount"
-      value={ingredient.amount}
-      onChange={(e) =>
-        onChange(index, "amount", Number(e.target.value))
-      }
-    />
-    <input
-      type="text"
-      className={styles.measurementInput}
-      placeholder="Measurement"
-      value={ingredient.measurement}
-      onChange={(e) =>
-        onChange(index, "measurement", e.target.value)
-      }
-    />
-    <button type="button" onClick={() => onRemove(index)}>
-      &minus;
-    </button>
-  </div>
-))}
-
+          </div>
+        ))}
       </div>
     );
   }

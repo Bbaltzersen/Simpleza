@@ -6,25 +6,37 @@
   display: flex;
   width: 100%;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: center;
 }
 
 .ingredientInput {
   flex: 2;
+  padding: 4px;
   margin-right: 8px;
 }
 
 .amountInput {
   flex: 1;
+  padding: 4px;
   margin-right: 8px;
 }
 
 .measurementInput {
   flex: 1;
+  padding: 4px;
   margin-right: 8px;
 }
 
-.ingredientRow button {
+.addButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.removeButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: transparent;
   border: none;
   cursor: pointer;
