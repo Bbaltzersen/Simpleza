@@ -23,15 +23,11 @@ export const IngredientList = memo(
     onRemove: (index: number) => void;
     lastInputRef: React.RefObject<HTMLInputElement | null>;
   }) => {
-    // Local state for search results.
     const [searchResults, setSearchResults] = useState<Ingredient[]>([]);
-    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(
-      null
-    );
+    const [activeDropdownIndex, setActiveDropdownIndex] = useState<number | null>(null);
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
     const dropdownRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    // Fetch search results locally.
     const fetchSearchResults = useCallback(async (query: string) => {
       if (query.length < 3) {
         setSearchResults([]);
@@ -46,20 +42,14 @@ export const IngredientList = memo(
       }
     }, []);
 
-    // Close dropdown when clicking outside.
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
-        if (
-          !dropdownRefs.current.some(
-            (ref) => ref && ref.contains(event.target as Node)
-          )
-        ) {
+        if (!dropdownRefs.current.some((ref) => ref && ref.contains(event.target as Node))) {
           setActiveDropdownIndex(null);
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleSearch = (query: string, index: number) => {
@@ -77,7 +67,21 @@ export const IngredientList = memo(
       setSelectedIndices((prev) => new Set(prev).add(index));
     };
 
-    // Filter search results to exclude ingredients already in the form (case-insensitive).
+    const formatValue = (raw: string | number) => {
+      const str = typeof raw === "number" ? raw.toString() : raw;
+      if (!str) return "";
+      const hasTrailingComma = str.endsWith(",");
+      const parts = str.split(",");
+      let integerPart = parts[0];
+      const decimalPart = parts[1] || "";
+      integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      let result = decimalPart ? `${integerPart},${decimalPart}` : integerPart;
+      if (hasTrailingComma && !decimalPart) {
+        result += ",";
+      }
+      return result;
+    };
+
     const filteredResults = searchResults.filter((result) =>
       !ingredients.some(
         (ing) =>
@@ -88,11 +92,12 @@ export const IngredientList = memo(
 
     return (
       <div className={styles.inputContainer}>
+        <div className={styles.inputHeader}>
         <label>Ingredients:</label>
-        <button type="button" onClick={onAdd} className={styles.addButton}>
-          <Plus size={18} />
-        </button>
-
+        <a type="button" onClick={onAdd} className={styles.addButton}>
+          <Plus size={20} />
+        </a>
+        </div>
         {ingredients.map((ingredient, index) => (
           <div key={index} className={styles.ingredientRow}>
             <input
@@ -112,22 +117,14 @@ export const IngredientList = memo(
                 handleSearch(e.target.value, index);
               }}
               onFocus={() => {
-                if (
-                  !selectedIndices.has(index) &&
-                  ingredient.ingredient_name.length > 2
-                ) {
+                if (!selectedIndices.has(index) && ingredient.ingredient_name.length > 2) {
                   handleSearch(ingredient.ingredient_name, index);
                 }
               }}
               onBlur={() => setTimeout(() => setActiveDropdownIndex(null), 150)}
               ref={lastInputRef}
-              style={
-                ingredient.ingredient_error
-                  ? { backgroundColor: "#ffe6e6" }
-                  : {}
-              }
+              style={ingredient.ingredient_error ? { backgroundColor: "#ffe6e6" } : {}}
             />
-
             {activeDropdownIndex === index &&
               ingredient.ingredient_name.length > 2 &&
               filteredResults.length > 0 && (
@@ -149,22 +146,19 @@ export const IngredientList = memo(
                   ))}
                 </div>
               )}
-
             <input
               type="text"
               inputMode="decimal"
-              pattern="[0-9.,]*"
+              pattern="[0-9,]*"
               className={styles.amountInput}
               placeholder="Amount"
-              value={ingredient.amount}
+              value={formatValue(ingredient.amount)}
               onChange={(e) => {
-                // Remove any characters that are not digits, comma, or period.
-                const sanitizedValue = e.target.value.replace(/[^0-9.,]/g, "");
-                // Pass an empty string if nothing is there, otherwise pass the sanitized value.
-                onChange(index, "amount", sanitizedValue);
+                const rawInput = e.target.value.replace(/\./g, "");
+                const sanitized = rawInput.replace(/[^0-9,]/g, "");
+                onChange(index, "amount", sanitized);
               }}
             />
-
             <input
               type="text"
               className={styles.measurementInput}
@@ -174,13 +168,9 @@ export const IngredientList = memo(
                 onChange(index, "measurement", e.target.value)
               }
             />
-            <a
-              onClick={() => onRemove(index)}
-              className={styles.removeButton}
-            >
+            <a onClick={() => onRemove(index)} className={styles.removeButton}>
               <Minus size={20} />
             </a>
-
           </div>
         ))}
       </div>

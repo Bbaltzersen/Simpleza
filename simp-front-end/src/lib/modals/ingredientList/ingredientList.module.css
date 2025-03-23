@@ -2,11 +2,25 @@
   width: 100%;
 }
 
+.inputHeader {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16 0 8 0;
+}
+
+.inputHeader label {
+  font-weight: bold;
+  font-size: 1.25rem;
+}
+
 .ingredientRow {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: center;
+  margin: 8 0 8 0;
 }
 
 .ingredientInput {
@@ -28,7 +42,12 @@
 }
 
 .addButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   background: transparent;
+  justify-content: center;
+  align-items: center;
   border: none;
   cursor: pointer;
 }
