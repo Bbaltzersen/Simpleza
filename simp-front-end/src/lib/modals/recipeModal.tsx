@@ -74,7 +74,7 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const handleAddRow = useCallback(() => {
     setIngredients((prev) => [
       ...prev,
-      { ingredient_name: "", amount: 0, measurement: "", position: prev.length, ingredient_error: "" } as RecipeIngredientCreate & { ingredient_error: string },
+      { ingredient_name: "", amount: undefined, measurement: "", position: prev.length, ingredient_error: "" } as unknown as RecipeIngredientCreate & { ingredient_error: string },
     ]);
     setTimeout(() => { lastInputRef.current?.focus(); }, 0);
   }, []);
