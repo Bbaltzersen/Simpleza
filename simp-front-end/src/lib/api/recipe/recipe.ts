@@ -51,13 +51,14 @@ export async function updateRecipe(recipe_id: string, recipe: RecipeCreate): Pro
 
 export async function deleteRecipe(recipe_id: string): Promise<boolean> {
   try {
-    await apiClient.delete(`/recipes/${recipe_id}`);
+    await apiClient.delete(`/recipes/delete/${recipe_id}/`);
     return true;
   } catch (error) {
     console.error("Error deleting recipe:", error);
     return false;
   }
 }
+
 
 export async function fetchIngredientById(ingredient_id: string): Promise<Ingredient | null> {
   try {
