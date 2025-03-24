@@ -61,3 +61,8 @@
     cursor: pointer;
     padding-left: 4px;
   }
+
+  .mainTitle {
+    display: flex;
+    flex-direction: row;
+  }

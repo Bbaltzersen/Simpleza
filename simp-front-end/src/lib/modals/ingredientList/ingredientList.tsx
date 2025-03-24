@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useRef, useState, useCallback } from "react";
-import { Plus, Minus, Check, X } from "lucide-react";  // Import Check and X icons
+import { Plus, Minus, Check, X, Circle } from "lucide-react";  // Import Check and X icons
 import { fetchIngredientsByName } from "@/lib/api/recipe/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { RecipeIngredientCreate } from "@/lib/types/recipe";
@@ -158,10 +158,10 @@ export const IngredientList = memo(
                       color="green"
                     />
                   ) : (
-                    <X
+                    <Circle
                       size={20}
                       className={styles.validationIcon}
-                      color="red"
+                      color="yellow"
                     />
                   )
                 )}
