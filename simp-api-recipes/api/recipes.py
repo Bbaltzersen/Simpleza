@@ -1,9 +1,11 @@
 from typing import Dict, List, Union
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import delete
 from sqlalchemy.orm import Session, joinedload
 import uuid
 from uuid import UUID
 from fuzzywuzzy import process  
+from database.auth.authorize import get_current_user
 from database.connection import SessionLocal
 from models.ingredient import Ingredient
 from models.recipe import Recipe
@@ -258,7 +260,34 @@ def update_recipe(
     except Exception as e:
         db.rollback()
         raise e
+
+@router.delete("/delete/{recipe_id}/", response_model=dict)
+def delete_recipe(
+    recipe_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    # Retrieve the recipe from the database.
+    recipe = db.query(Recipe).filter(Recipe.recipe_id == recipe_id).first()
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
     
+    # Ensure the logged-in user is the author.
+    if str(recipe.author_id) != str(current_user.get("user_id")):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this recipe")
+    
+    # Delete related child records.
+    db.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe.recipe_id).delete(synchronize_session=False)
+    db.query(RecipeStep).filter(RecipeStep.recipe_id == recipe.recipe_id).delete(synchronize_session=False)
+    db.query(RecipeImage).filter(RecipeImage.recipe_id == recipe.recipe_id).delete(synchronize_session=False)
+    # For RecipeTag, which is a Table, use the delete expression.
+    db.execute(delete(RecipeTag).where(RecipeTag.c.recipe_id == recipe.recipe_id))
+    
+    # Delete the recipe itself.
+    db.delete(recipe)
+    db.commit()
+    
+    return {"message": "Recipe deleted successfully"}
 # @router.get("/get-all/", response_model=List[RecipeOut])
 # def get_recipes(db: Session = Depends(get_db)):
 #     return db.query(Recipe).all()
