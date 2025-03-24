@@ -92,6 +92,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Proactive Refresh: set a timer to refresh the token before it expires.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    // Only schedule a refresh if the user is authenticated and not loading.
+    if (isAuthenticated && !loading) {
+      const tokenLifetime = 3600; // seconds (1 hour)
+      const refreshBuffer = 300;  // seconds (5 minutes before expiration)
+      const timeout = (tokenLifetime - refreshBuffer) * 1000;
+      timer = setTimeout(() => {
+        refreshSession().then(success => {
+          if (success) {
+            console.info('Proactive token refresh succeeded.');
+          } else {
+            console.warn('Proactive token refresh failed.');
+          }
+        });
+      }, timeout);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isAuthenticated, loading]);
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
