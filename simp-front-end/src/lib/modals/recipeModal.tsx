@@ -2,14 +2,22 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Modal from "@/components/ui/modal";
-import { RecipeCreate, RecipeStepCreate, RecipeImageCreate, RecipeIngredientCreate, RecipeTagCreate, ListRecipe } from "@/lib/types/recipe";
+import {
+  RecipeCreate,
+  RecipeStepCreate,
+  RecipeImageCreate,
+  RecipeIngredientCreate,
+  RecipeTagCreate,
+  ListRecipe,
+} from "@/lib/types/recipe";
 import { useDashboard } from "../context/dashboardContext";
+import { useAuth } from "@/lib/context/authContext";
 import { IngredientList } from "./ingredientList/ingredientList";
 import { TagList } from "./tagList/tagList";
 import { ImageList } from "./imageList/imageList";
 import { StepList } from "./stepList/stepList";
-import styles from "./recipeModal.module.css"
-import { Cross, TrashIcon, X } from "lucide-react";
+import styles from "./recipeModal.module.css";
+import { TrashIcon, X } from "lucide-react";
 
 interface RecipeModalProps {
   isOpen: boolean;
@@ -18,15 +26,29 @@ interface RecipeModalProps {
   recipe?: ListRecipe | null;
 }
 
-export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeModalProps) {
+export default function RecipeModal({
+  isOpen,
+  onClose,
+  onSave,
+  recipe,
+}: RecipeModalProps) {
+  const { user } = useAuth();
+  const {
+    recipe_details,
+    retrieveRecipeDetails,
+    deleteRecipe: deleteRecipeContext,
+  } = useDashboard();
+  const safeRetrieveRecipeDetails = useCallback(
+    retrieveRecipeDetails || (() => {}),
+    [retrieveRecipeDetails]
+  );
+
   const [recipeMetadata, setRecipeMetadata] = useState({
     title: "",
     description: "",
     front_image: "",
     author_id: "",
   });
-  const { recipe_details, retrieveRecipeDetails } = useDashboard();
-  const safeRetrieveRecipeDetails = useCallback(retrieveRecipeDetails || (() => { }), [retrieveRecipeDetails]);
   const [ingredients, setIngredients] = useState<RecipeIngredientCreate[]>([]);
   const [steps, setSteps] = useState<RecipeStepCreate[]>([]);
   const [images, setImages] = useState<RecipeImageCreate[]>([]);
@@ -70,7 +92,10 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const recalcErrors = (updatedIngredients: RecipeIngredientCreate[]): RecipeIngredientCreate[] => {
     const names = updatedIngredients.map((ing) => ing.ingredient_name.trim().toLowerCase());
     return updatedIngredients.map((ing) => {
-      if (ing.ingredient_name && names.filter((name) => name === ing.ingredient_name.trim().toLowerCase()).length > 1) {
+      if (
+        ing.ingredient_name &&
+        names.filter((name) => name === ing.ingredient_name.trim().toLowerCase()).length > 1
+      ) {
         return { ...ing, ingredient_error: "Duplicate ingredient not allowed." } as RecipeIngredientCreate & { ingredient_error: string };
       }
       return { ...ing, ingredient_error: "" } as RecipeIngredientCreate & { ingredient_error: string };
@@ -80,9 +105,17 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   const handleAddRow = useCallback(() => {
     setIngredients((prev) => [
       ...prev,
-      { ingredient_name: "", amount: undefined, measurement: "", position: prev.length, ingredient_error: "" } as unknown as RecipeIngredientCreate & { ingredient_error: string },
+      {
+        ingredient_name: "",
+        amount: undefined,
+        measurement: "",
+        position: prev.length,
+        ingredient_error: "",
+      } as unknown as RecipeIngredientCreate & { ingredient_error: string },
     ]);
-    setTimeout(() => { lastInputRef.current?.focus(); }, 0);
+    setTimeout(() => {
+      lastInputRef.current?.focus();
+    }, 0);
   }, []);
 
   const handleIngredientChange = useCallback((index: number, field: keyof RecipeIngredientCreate, value: string | number) => {
@@ -102,8 +135,13 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
   }, []);
 
   const handleAddTagRow = useCallback(() => {
-    setTags((prev) => [...prev, { name: "", tag_error: "" } as RecipeTagCreate & { tag_error?: string }]);
-    setTimeout(() => { lastTagInputRef.current?.focus(); }, 0);
+    setTags((prev) => [
+      ...prev,
+      { name: "", tag_error: "" } as RecipeTagCreate & { tag_error?: string },
+    ]);
+    setTimeout(() => {
+      lastTagInputRef.current?.focus();
+    }, 0);
   }, []);
 
   const handleTagChange = useCallback((index: number, field: keyof RecipeTagCreate, value: string | number) => {
@@ -120,7 +158,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   const handleAddImageRow = useCallback(() => {
     setImages((prev) => [...prev, { image_url: "" } as RecipeImageCreate]);
-    setTimeout(() => { lastImageInputRef.current?.focus(); }, 0);
+    setTimeout(() => {
+      lastImageInputRef.current?.focus();
+    }, 0);
   }, []);
 
   const handleImageChange = useCallback((index: number, field: keyof RecipeImageCreate, value: string) => {
@@ -137,7 +177,9 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
 
   const handleAddStepRow = useCallback(() => {
     setSteps((prev) => [...prev, { step_number: prev.length + 1, description: "" } as RecipeStepCreate]);
-    setTimeout(() => { lastStepInputRef.current?.focus(); }, 0);
+    setTimeout(() => {
+      lastStepInputRef.current?.focus();
+    }, 0);
   }, []);
 
   const handleStepChange = useCallback((index: number, field: keyof RecipeStepCreate, value: string | number) => {
@@ -161,28 +203,48 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
     onClose();
   };
 
-  // New helper to handle click on the <a> submit button
+  // Helper for form submission using an <a> element
   const handleLinkSubmit = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    // Create a fake event object with preventDefault so that handleSubmit can be called.
     const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
     handleSubmit(fakeEvent);
   };
 
+  // New helper to handle deletion
+  const handleDelete = async () => {
+    if (!recipe) return;
+    // Check if the logged-in user is the author
+    if (confirm("Are you sure you want to delete this recipe?")) {
+      try {
+        await deleteRecipeContext(recipe.recipe_id);
+        onClose();
+      } catch (error) {
+        console.error("Error deleting recipe:", error);
+        alert("Failed to delete recipe.");
+      }
+    }
+  };
+
   function autoResize(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    e.target.style.height = 'auto';
+    e.target.style.height = "auto";
     e.target.style.height = `${e.target.scrollHeight}px`;
   }
-  
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className={styles.recipeModalContainer}>
         <div className={styles.modalHeader}>
           <div className={styles.mainTitle}>
             <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
-            {recipe ? <TrashIcon size={16} color="red"/> : ""}
+            {recipe && (
+              <span onClick={handleDelete} style={{ cursor: "pointer" }}>
+                <TrashIcon size={16} color="red" />
+              </span>
+            )}
           </div>
-          <a type="button" className={styles.closeButton} onClick={onClose}><X size={20} /></a>
+          <a type="button" className={styles.closeButton} onClick={onClose}>
+            <X size={20} />
+          </a>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -190,7 +252,15 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
             <div className={styles.inputContainer}>
               <div className={styles.inputTitle}>
                 <label htmlFor="title">Title:</label>
-                <input className={styles.titleInput} id="title" type="text" name="title" value={recipeMetadata.title} onChange={handleMetadataChange} required />
+                <input
+                  className={styles.titleInput}
+                  id="title"
+                  type="text"
+                  name="title"
+                  value={recipeMetadata.title}
+                  onChange={handleMetadataChange}
+                  required
+                />
               </div>
             </div>
             <div className={styles.descriptionContainer}>
@@ -202,18 +272,38 @@ export default function RecipeModal({ isOpen, onClose, onSave, recipe }: RecipeM
                 name="description"
                 value={recipeMetadata.description}
                 onChange={(e) => {
-                  handleMetadataChange(e); // your existing state update
+                  handleMetadataChange(e);
                   autoResize(e);
                 }}
                 required
               />
             </div>
-            <IngredientList ingredients={ingredients} onAdd={handleAddRow} onChange={handleIngredientChange} onRemove={handleRemoveRow} lastInputRef={lastInputRef} />
-            <StepList steps={steps} onAdd={handleAddStepRow} onChange={handleStepChange} onRemove={handleRemoveStepRow} lastInputRef={lastStepInputRef} />
-            <ImageList images={images} onAdd={handleAddImageRow} onChange={handleImageChange} onRemove={handleRemoveImageRow} lastInputRef={lastImageInputRef} />
+            <IngredientList
+              ingredients={ingredients}
+              onAdd={handleAddRow}
+              onChange={handleIngredientChange}
+              onRemove={handleRemoveRow}
+              lastInputRef={lastInputRef}
+            />
+            <StepList
+              steps={steps}
+              onAdd={handleAddStepRow}
+              onChange={handleStepChange}
+              onRemove={handleRemoveStepRow}
+              lastInputRef={lastStepInputRef}
+            />
+            <ImageList
+              images={images}
+              onAdd={handleAddImageRow}
+              onChange={handleImageChange}
+              onRemove={handleRemoveImageRow}
+              lastInputRef={lastImageInputRef}
+            />
             {/* <TagList tags={tags} onAdd={handleAddTagRow} onChange={handleTagChange} onRemove={handleRemoveTagRow} lastInputRef={lastTagInputRef} /> */}
             <div className={styles.submitContainer}>
-              <a href="#" onClick={handleLinkSubmit} className={styles.submitButton}>Submit</a>
+              <a href="#" onClick={handleLinkSubmit} className={styles.submitButton}>
+                Submit
+              </a>
             </div>
           </div>
         </form>

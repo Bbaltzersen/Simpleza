@@ -14,24 +14,31 @@ export default function Recipes() {
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
   const [modalKey, setModalKey] = useState<string>("new");
   const observer = useRef<IntersectionObserver | null>(null);
-  const lastRecipeRef = useCallback((node: HTMLDivElement) => {
-    if (!hasMore) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) fetchMoreRecipes();
-    });
-    if (node) observer.current.observe(node);
-  }, [hasMore, fetchMoreRecipes]);
+  
+  const lastRecipeRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (!hasMore) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) fetchMoreRecipes();
+      });
+      if (node) observer.current.observe(node);
+    },
+    [hasMore, fetchMoreRecipes]
+  );
+
   const handleAddRecipe = () => {
     setSelectedRecipe(null);
     setModalKey(`new-${Date.now()}`);
     setIsModalOpen(true);
   };
+
   const handleEditRecipe = async (recipe: ListRecipe) => {
     setSelectedRecipe(recipe);
     setModalKey(recipe.recipe_id);
     setIsModalOpen(true);
   };
+
   const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
     if (!user) {
       console.error("User is not authenticated");
@@ -46,23 +53,40 @@ export default function Recipes() {
     } else {
       await addRecipe(recipeData);
     }
+    // Clear the selected recipe and close the modal after save.
+    setSelectedRecipe(null);
     setIsModalOpen(false);
   };
+
   const allRecipes: ListRecipe[] = [...recipes];
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h2>Recipe Library</h2>
       </div>
       <div className={styles.recipeGrid}>
-        <div className={styles.addRecipeCard} onClick={handleAddRecipe} aria-label="Add Recipe">
+        <div
+          className={styles.addRecipeCard}
+          onClick={handleAddRecipe}
+          aria-label="Add Recipe"
+        >
           <Plus size={48} />
         </div>
         {allRecipes.length > 0 ? (
           allRecipes.map((recipe, index) => (
-            <div key={recipe.recipe_id} className={styles.recipeCard} ref={index === allRecipes.length - 1 ? lastRecipeRef : null} onClick={() => handleEditRecipe(recipe)}>
+            <div
+              key={recipe.recipe_id}
+              className={styles.recipeCard}
+              ref={index === allRecipes.length - 1 ? lastRecipeRef : null}
+              onClick={() => handleEditRecipe(recipe)}
+            >
               <div className={styles.imageContainer}>
-                <img src={recipe.front_image || "https://picsum.photos/300/200"} alt={`Image of ${recipe.title}`} className={styles.recipeImage} />
+                <img
+                  src={recipe.front_image || "https://picsum.photos/300/200"}
+                  alt={`Image of ${recipe.title}`}
+                  className={styles.recipeImage}
+                />
               </div>
               <div className={styles.recipeContent}>
                 <div className={styles.recipeHeader}>
@@ -79,7 +103,17 @@ export default function Recipes() {
         )}
       </div>
       {hasMore && <p>Loading more recipes...</p>}
-      <RecipeModal key={modalKey} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveRecipeWrapper} recipe={selectedRecipe} />
+      {/* Updated onClose: clear selectedRecipe and then close modal */}
+      <RecipeModal
+        key={modalKey}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setSelectedRecipe(null);
+          setIsModalOpen(false);
+        }}
+        onSave={handleSaveRecipeWrapper}
+        recipe={selectedRecipe}
+      />
     </div>
   );
 }

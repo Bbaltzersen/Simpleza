@@ -7,6 +7,7 @@ import {
   fetchTagsByName,
   fetchRecipeById,
   updateRecipe,
+  deleteRecipe, // import the deleteRecipe API function
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
@@ -18,6 +19,7 @@ interface DashboardContextType {
   fetchMoreRecipes: () => Promise<void>;
   addRecipe: (recipe: RecipeCreate) => Promise<void>;
   updateRecipe: (recipe_id: string, recipe: RecipeCreate) => Promise<void>;
+  deleteRecipe: (recipe_id: string) => Promise<void>;
   retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
   hasMore: boolean;
   ingredientSearchResults: Ingredient[];
@@ -73,6 +75,19 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const deleteRecipeFn = async (recipe_id: string): Promise<void> => {
+    try {
+      const success = await deleteRecipe(recipe_id);
+      if (success) {
+        setRecipes((prev) => prev.filter((r) => r.recipe_id !== recipe_id));
+      } else {
+        console.error("Failed to delete recipe");
+      }
+    } catch (error: any) {
+      console.error("Error deleting recipe:", error.response?.data || error.message);
+    }
+  };
+
   const retrieveRecipeDetails = useCallback(async (recipe_id: string) => {
     const details = await fetchRecipeById(recipe_id);
     if (details) setRecipeDetails(details);
@@ -119,6 +134,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         fetchMoreRecipes,
         addRecipe: addRecipeFn,
         updateRecipe: updateRecipeFn,
+        deleteRecipe: deleteRecipeFn,
         retrieveRecipeDetails,
         hasMore,
         ingredientSearchResults,
