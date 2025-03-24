@@ -11,8 +11,11 @@
   }
 
   .closeButton {
+    display: flex;
+    align-items: center;
     color: red;
     cursor: pointer;
+
   }
 
   /* Description Container */
@@ -58,6 +61,11 @@
   font-weight: bold;
 }
 
+.deleteIcon {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
 .submitContainer {
   display: flex;
   flex-direction: row-reverse;

@@ -237,14 +237,14 @@ export default function RecipeModal({
           <div className={styles.mainTitle}>
             <h2>{recipe ? "Edit Recipe" : "Add Recipe"}</h2>
             {recipe && (
-              <span onClick={handleDelete} style={{ cursor: "pointer" }}>
+              <span onClick={handleDelete} className={styles.deleteIcon}>
                 <TrashIcon size={16} color="red" />
               </span>
             )}
           </div>
-          <a type="button" className={styles.closeButton} onClick={onClose}>
+          <span  className={styles.closeButton} onClick={onClose}>
             <X size={20} />
-          </a>
+          </span>
         </div>
 
         <form onSubmit={handleSubmit}>
