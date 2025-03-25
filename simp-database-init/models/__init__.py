@@ -39,7 +39,7 @@ __all__ = [
     "Nutrition",
     "IngredientProduct",
     "ApproximateMeasurement",
-    "Densirt",
+    "Density",
     "Tag",
     "Product",
     "ProductCompany",

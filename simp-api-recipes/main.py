@@ -5,6 +5,7 @@ from database.auth.authorize import is_authorized
 from api.recipes import router as recipe_router
 from api.tags import router as tag_router
 from api.ingredient import router as ingredient_router
+from api.cauldron import router as cauldron_router
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ app.add_middleware(
 app.include_router(recipe_router, prefix="/v1/recipes", dependencies=[admin_dependency])
 app.include_router(tag_router, prefix="/v1/tags", dependencies=[admin_dependency])
 app.include_router(ingredient_router, prefix="/v1/ingredients",dependencies=[admin_dependency])
+app.include_router(cauldron_router, prefix="/v1/cauldrons", dependencies=[admin_dependency])
 
 if __name__ == "__main__":
     import uvicorn

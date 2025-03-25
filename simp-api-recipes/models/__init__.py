@@ -8,11 +8,15 @@ from .recipe_image import RecipeImage
 from .recipe_step import RecipeStep
 from .recipe_favorite import RecipeFavorite
 from .tag import Tag
+from .recipe_analytics import RecipeAnalytics
+from .cauldron import Cauldron
+from .cauldron_data import CauldronData
 
 __all__ = [
     "Base",
     "User",
     "Recipe",
+    "RecipeAnalytics",
     "RecipeAuthor",
     "RecipeIngredient",
     "RecipeTag",
@@ -20,4 +24,6 @@ __all__ = [
     "RecipeStep",
     "RecipeFavorite",
     "Tag",
+    "Cauldron",
+    "CauldronData",
 ]
