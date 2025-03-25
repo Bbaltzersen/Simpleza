@@ -1,6 +1,5 @@
 import axios from "axios";
-import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
-import { Ingredient } from "@/lib/types/ingredient";
+import { Cauldron, CauldronCreate, CauldronUpdate, CauldronData, CauldronDataCreate, CauldronDataUpdate } from "@/lib/types/cauldron";
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
