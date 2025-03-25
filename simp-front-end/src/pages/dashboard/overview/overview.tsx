@@ -3,10 +3,10 @@ import styles from "./overview.module.css"
 
 export default function Overview() {
   return (
-    <div>
+    <div className={styles.container}>
+        <div className={styles.header}>
         <h2>Overview</h2>
-        <div className={styles.analyticsContainer}>
-        </div>
+      </div>
     </div>
   )
 }

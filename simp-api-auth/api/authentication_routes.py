@@ -136,6 +136,7 @@ def refresh_token_endpoint(request: Request, response: Response, db: Session = D
         
         new_access_token = create_access_token(user_id)
         from database.handling import store_user_session  # Import if needed
+        # Re-store session with the new access token while preserving the refresh and CSRF tokens.
         store_user_session(
             user_id,
             new_access_token,
@@ -145,10 +146,20 @@ def refresh_token_endpoint(request: Request, response: Response, db: Session = D
             refresh_expires_in=604800
         )
         
+        # Update the auth token cookie.
         response.set_cookie(
             key="auth_token",
             value=new_access_token,
             httponly=True,
+            secure=IS_PRODUCTION,
+            samesite="Lax",
+            max_age=3600,
+        )
+        # Also update the csrf token cookie with the same value and new expiration.
+        response.set_cookie(
+            key="csrf_token",
+            value=session_data["csrf_token"],
+            httponly=False,
             secure=IS_PRODUCTION,
             samesite="Lax",
             max_age=3600,
@@ -158,7 +169,6 @@ def refresh_token_endpoint(request: Request, response: Response, db: Session = D
         raise HTTPException(status_code=401, detail="Refresh token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
-
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 def logout(
