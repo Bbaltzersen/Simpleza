@@ -165,3 +165,24 @@ export type RecipeTagCreate = {
   tag_id?: string;
   name: string;
 }
+
+
+  // RecipeAnalytics aggregates global analytics for a recipe (independent of a specific user).
+  export type RecipeAnalytics = {
+    recipe_analytics_id: string;
+    recipe_id: string;
+    minimum_price: number;
+    total_calories?: number;
+    updated_at: string;
+    created_at: string;
+  };
+  
+  // For creating a new recipe analytics record.
+  export type RecipeAnalyticsCreate = {
+    recipe_id: string;
+    minimum_price: number;
+    total_calories?: number;
+  };
+  
+  // For updating an existing recipe analytics record.
+  export type RecipeAnalyticsUpdate = Partial<RecipeAnalyticsCreate>;
