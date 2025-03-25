@@ -19,6 +19,9 @@ from .product_company import ProductCompany
 from .company import Company
 from .user_preference import UserPreference
 from .alcampo_productid import AlcampoProductID
+from .cauldron import Cauldron
+from .cauldron_data import CauldronData
+from .recipe_analytics import RecipeAnalytics
 
 __all__ = [
     "Base",
@@ -30,6 +33,7 @@ __all__ = [
     "RecipeImage",
     "RecipeStep",
     "RecipeFavorite",
+    "RecipeAnalytics",
     "Ingredient",
     "IngredientNutrition",
     "Nutrition",
@@ -42,4 +46,6 @@ __all__ = [
     "Company",
     "UserPreference",
     "AlcampoProductID",
+    "Cauldron",
+    "CauldronData",
 ]
