@@ -22,7 +22,7 @@ import uuid
 
 from database.connection import SessionLocal
 from models.cauldron import Cauldron as CauldronModel
-from schemas.cauldron import CauldronCreate, Cauldron
+from schemas.cauldron import CauldronCreate, Cauldron, CauldronUpdate
 
 router = APIRouter(tags=["cauldrons"])
 
@@ -83,3 +83,22 @@ def delete_cauldron(cauldron_id: uuid.UUID, db: Session = Depends(get_db)):
     db.commit()
     
     return {"detail": "Cauldron deleted successfully"}
+
+@router.put("/{cauldron_id}", response_model=Cauldron)
+def update_cauldron(
+    cauldron_id: uuid.UUID, 
+    cauldron_update: CauldronUpdate, 
+    db: Session = Depends(get_db)
+):
+    cauldron_obj = db.query(CauldronModel).filter(CauldronModel.cauldron_id == cauldron_id).first()
+    if not cauldron_obj:
+        raise HTTPException(status_code=404, detail="Cauldron not found")
+    
+    update_data = cauldron_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(cauldron_obj, key, value)
+    
+    db.commit()
+    db.refresh(cauldron_obj)
+    
+    return cauldron_obj
