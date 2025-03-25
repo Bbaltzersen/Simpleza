@@ -72,3 +72,14 @@ def read_cauldrons_by_user(
         "cauldrons": cauldrons,
         "total": total_cauldrons
     }
+
+@router.delete("/{cauldron_id}", response_model=dict)
+def delete_cauldron(cauldron_id: uuid.UUID, db: Session = Depends(get_db)):
+    cauldron_obj = db.query(CauldronModel).filter(CauldronModel.cauldron_id == cauldron_id).first()
+    if not cauldron_obj:
+        raise HTTPException(status_code=404, detail="Cauldron not found")
+    
+    db.delete(cauldron_obj)
+    db.commit()
+    
+    return {"detail": "Cauldron deleted successfully"}

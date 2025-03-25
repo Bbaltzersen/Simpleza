@@ -18,6 +18,13 @@ class CauldronCreate(CauldronBase):
     """
     pass
 
+class CauldronUpdate(BaseModel):
+    is_active: Optional[bool] = None
+
+    class Config:
+        from_attributes = True
+
+
 class Cauldron(CauldronBase):
     """
     Schema for reading a Cauldron entry from the DB.
