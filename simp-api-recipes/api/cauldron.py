@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -48,3 +48,27 @@ def create_cauldron(cauldron_create: CauldronCreate, db: Session = Depends(get_d
     db.refresh(new_cauldron)
     
     return new_cauldron
+
+@router.get("/user/{user_id}", response_model=Dict[str, List[Cauldron] | int])
+def read_cauldrons_by_user(
+    user_id: uuid.UUID,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    # Query to count total cauldron records for the user.
+    total_cauldrons = db.query(CauldronModel).filter(CauldronModel.user_id == user_id).count()
+
+    # Retrieve the paginated list of cauldrons.
+    cauldrons = (
+        db.query(CauldronModel)
+        .filter(CauldronModel.user_id == user_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return {
+        "cauldrons": cauldrons,
+        "total": total_cauldrons
+    }
