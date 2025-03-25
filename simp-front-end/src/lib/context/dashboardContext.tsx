@@ -1,5 +1,11 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import {
   fetchRecipesByAuthorID,
   createRecipe,
@@ -7,11 +13,23 @@ import {
   fetchTagsByName,
   fetchRecipeById,
   updateRecipe,
-  deleteRecipe, // import the deleteRecipe API function
+  deleteRecipe,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
 import { Ingredient } from "@/lib/types/ingredient";
 import { useAuth } from "@/lib/context/authContext";
+
+import {
+  createCauldron,
+  getCauldronsByUser,
+  updateCauldron,
+  deleteCauldron,
+} from "@/lib/api/cauldron/cauldron";
+import {
+  Cauldron,
+  CauldronCreate,
+  CauldronUpdate,
+} from "@/lib/types/cauldron";
 
 interface DashboardContextType {
   recipes: ListRecipe[];
@@ -26,24 +44,43 @@ interface DashboardContextType {
   searchIngredients: (query: string) => Promise<void>;
   tags: TagRetrieval[];
   searchTags: (query: string) => Promise<void>;
+  // Cauldron functions
+  cauldrons: Cauldron[];
+  fetchUserCauldrons: () => Promise<void>;
+  addCauldron: (data: CauldronCreate) => Promise<void>;
+  updateCauldron: (cauldronId: string, data: CauldronUpdate) => Promise<void>;
+  deleteCauldron: (cauldronId: string) => Promise<void>;
 }
 
-const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+const DashboardContext = createContext<DashboardContextType | undefined>(
+  undefined
+);
 
-export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<ListRecipe[]>([]);
   const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>(
+    []
+  );
   const [tags, setTags] = useState<TagRetrieval[]>([]);
+
+  // CAULDRON STATE
+  const [cauldrons, setCauldrons] = useState<Cauldron[]>([]);
 
   const fetchMoreRecipes = useCallback(async () => {
     if (!hasMore || !user) return;
     try {
-      const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(user.user_id, skip, limit);
+      const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(
+        user.user_id,
+        skip,
+        limit
+      );
       setRecipes((prev) => [...prev, ...newRecipes]);
       setSkip((prev) => prev + limit);
       if (recipes.length + newRecipes.length >= total) setHasMore(false);
@@ -66,7 +103,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       const updatedRecipe = await updateRecipe(recipe_id, recipe);
       if (updatedRecipe) {
-        setRecipes((prev) => prev.map((r) => (r.recipe_id === recipe_id ? updatedRecipe : r)));
+        setRecipes((prev) =>
+          prev.map((r) => (r.recipe_id === recipe_id ? updatedRecipe : r))
+        );
       } else {
         console.error("Recipe update returned null.");
       }
@@ -122,9 +161,61 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, []);
 
+  // CAULDRON FUNCTIONS
+  const fetchUserCauldrons = useCallback(async () => {
+    if (!user) return;
+    try {
+      // Adjust pagination if needed
+      const { cauldrons: userCauldrons } = await getCauldronsByUser(
+        user.user_id,
+        0,
+        100
+      );
+      setCauldrons(userCauldrons);
+    } catch (error) {
+      console.error("Error fetching cauldrons:", error);
+    }
+  }, [user]);
+
+  const addCauldronFn = async (data: CauldronCreate): Promise<void> => {
+    try {
+      const newCauldron = await createCauldron(data);
+      setCauldrons((prev) => [newCauldron, ...prev]);
+    } catch (error) {
+      console.error("Error creating cauldron:", error);
+    }
+  };
+
+  const updateCauldronFn = async (cauldronId: string, data: CauldronUpdate): Promise<void> => {
+    try {
+      const updated = await updateCauldron(cauldronId, data);
+      setCauldrons((prev) =>
+        prev.map((c) => (c.cauldron_id === cauldronId ? updated : c))
+      );
+    } catch (error) {
+      console.error("Error updating cauldron:", error);
+    }
+  };
+
+  const deleteCauldronFn = async (cauldronId: string): Promise<void> => {
+    try {
+      await deleteCauldron(cauldronId);
+      setCauldrons((prev) => prev.filter((c) => c.cauldron_id !== cauldronId));
+    } catch (error) {
+      console.error("Error deleting cauldron:", error);
+    }
+  };
+
   useEffect(() => {
     fetchMoreRecipes();
   }, [fetchMoreRecipes]);
+
+  // Optionally, fetch cauldrons when the user logs in or changes.
+  useEffect(() => {
+    if (user) {
+      fetchUserCauldrons();
+    }
+  }, [user, fetchUserCauldrons]);
 
   return (
     <DashboardContext.Provider
@@ -141,6 +232,11 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         searchIngredients,
         tags,
         searchTags,
+        cauldrons,
+        fetchUserCauldrons,
+        addCauldron: addCauldronFn,
+        updateCauldron: updateCauldronFn,
+        deleteCauldron: deleteCauldronFn,
       }}
     >
       {children}
@@ -150,6 +246,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const useDashboard = () => {
   const context = useContext(DashboardContext);
-  if (!context) throw new Error("useDashboard must be used within a DashboardProvider");
+  if (!context)
+    throw new Error("useDashboard must be used within a DashboardProvider");
   return context;
 };

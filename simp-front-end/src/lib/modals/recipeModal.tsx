@@ -19,6 +19,7 @@ import { StepList } from "./stepList/stepList";
 import styles from "./recipeModal.module.css";
 import { TrashIcon, X } from "lucide-react";
 
+
 interface RecipeModalProps {
   isOpen: boolean;
   onClose: () => void;

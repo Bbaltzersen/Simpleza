@@ -1,5 +1,12 @@
 import axios from "axios";
-import { Cauldron, CauldronCreate, CauldronUpdate, CauldronData, CauldronDataCreate, CauldronDataUpdate } from "@/lib/types/cauldron";
+import {
+  Cauldron,
+  CauldronCreate,
+  CauldronUpdate,
+  CauldronData,
+  CauldronDataCreate,
+  CauldronDataUpdate,
+} from "@/lib/types/cauldron";
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
 
@@ -7,3 +14,50 @@ const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
+
+// Create a new cauldron record
+export async function createCauldron(
+  data: CauldronCreate
+): Promise<Cauldron> {
+  const response = await apiClient.post<Cauldron>("/cauldrons", data);
+  return response.data;
+}
+
+// Update an existing cauldron record
+export async function updateCauldron(
+  cauldronId: string,
+  data: CauldronUpdate
+): Promise<Cauldron> {
+  const response = await apiClient.put<Cauldron>(
+    `/cauldrons/${cauldronId}`,
+    data
+  );
+  return response.data;
+}
+
+// Delete a cauldron record by its ID
+export async function deleteCauldron(
+  cauldronId: string
+): Promise<{ detail: string }> {
+  const response = await apiClient.delete<{ detail: string }>(
+    `/cauldrons/${cauldronId}`
+  );
+  return response.data;
+}
+
+// Retrieve paginated cauldron records for a specific user
+export async function getCauldronsByUser(
+  userId: string,
+  skip = 0,
+  limit = 10
+): Promise<{ cauldrons: Cauldron[]; total: number }> {
+  const response = await apiClient.get<{ cauldrons: Cauldron[]; total: number }>(
+    `/cauldrons/user/${userId}`,
+    {
+      params: { skip, limit },
+    }
+  );
+  return response.data;
+}
+
+// Optionally, you can add similar API calls for CauldronData if needed.
