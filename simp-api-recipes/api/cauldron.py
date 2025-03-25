@@ -33,7 +33,7 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/cauldrons", response_model=Cauldron)
+@router.post("/", response_model=Cauldron)
 def create_cauldron(cauldron_create: CauldronCreate, db: Session = Depends(get_db)):
     # Optionally, add logic to verify that the recipe exists
     # or check if a cauldron for this user and recipe already exists.
