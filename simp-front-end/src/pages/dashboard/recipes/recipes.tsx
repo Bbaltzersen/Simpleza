@@ -84,7 +84,7 @@ export default function Recipes() {
               <div className={styles.imageContainer}>
                 <img
                   src={recipe.front_image || "https://picsum.photos/300/200"}
-                  alt={`Image of ${recipe.title}`}
+                  alt={`${recipe.title}`}
                   className={styles.recipeImage}
                 />
               </div>

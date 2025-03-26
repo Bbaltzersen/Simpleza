@@ -5,32 +5,34 @@
 
 /* Header Styling */
 .header {
-    padding-top: 16px;
+    padding: 16px 0 24px;
     display: flex;
     align-items: center;
-    padding-bottom: 24px;
     gap: 10px;
 }
 
-/* Heading */
 .header h2 {
     font-weight: 600;
     font-size: 1.5rem;
     margin: 0;
 }
 
-/* Grid Layout */
+/* Recipe Grid Layout */
 .recipeGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, 208px);
     gap: 28px;
+
     justify-content: left;
 }
 
-/* Add Recipe Button - Looks Like a Card */
+/* Add Recipe Card */
 .addRecipeCard {
-    background: #ffffff;
+    background: #fff;
     border: 1px solid #b1b1b1;
+    width: 208px;
+    height: 255px;
+    /* Matches recipeCard height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,21 +41,17 @@
     color: #00c73c;
     cursor: pointer;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    width: 208px;
-    height: 255px; /* Matches recipeCard height */
-    
 }
 
-/* Hover Effect for Add Button */
 .addRecipeCard:hover {
     border-color: #304436;
     color: #304436;
 }
 
-
-/* Recipe Card - Variable Height */
+/* Recipe Card */
 .recipeCard {
     background: #fff;
+
     border: 1px solid #b1b1b1;
     overflow: hidden;
     border-radius: 4px;
@@ -62,12 +60,24 @@
     flex-direction: column;
     width: 208px;
     height: 255px;
+    position: relative;
 }
 
-/* Hover Effect */
 .recipeCard:hover {
-    border: 1px solid #304436;
+    border-color: #304436;
     cursor: pointer;
+}
+
+/* Cauldron Button (if used) */
+.cauldronButton {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 10;
 }
 
 /* Image Container */
@@ -80,49 +90,47 @@
     border-bottom: 1px solid #ddd;
 }
 
-/* Image Styling */
 .recipeImage {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: cover;
 }
 
-/* Content Styling */
+/* Recipe Content */
 .recipeContent {
     padding: 16px;
     text-align: left;
     height: 75px;
-    justify-content: center;
     display: flex;
     flex-direction: column;
+
+    justify-content: center;
 }
 
-/* Recipe Header */
+/* Recipe Header (Title Section) */
 .recipeHeader {
+    width: 100%;
+    margin-bottom: 4px;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    align-items: left;
 }
 
-/* Recipe Title */
 .recipeHeader h4 {
     font-size: 1.125rem;
-    margin-bottom: 1px;
-    white-space: nowrap;  
-    overflow: hidden;     
-    text-overflow: ellipsis; 
-    max-width: 100%; 
-    margin-bottom: 1px;
-    
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Metadata Row */
 .metadataRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    width: 100%;
     font-size: 1rem;
     color: #666;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
 }
 
 /* Delete Button */
