@@ -6,6 +6,7 @@ import {
   CauldronData,
   CauldronDataCreate,
   CauldronDataUpdate,
+  CauldronRecipe,
 } from "@/lib/types/cauldron";
 
 const API_BASE_URL = process.env.RECIPES_API_URL || "http://localhost:8020/v1";
@@ -57,6 +58,23 @@ export async function getCauldronsByUser(
       params: { skip, limit },
     }
   );
+  return response.data;
+}
+
+
+// Retrieve paginated cauldron recipes for a specific cauldron
+// Retrieve paginated cauldron recipes (combined cauldron and recipe data) for a specific user
+export async function getCauldronRecipes(
+  userId: string,
+  skip = 0,
+  limit = 10
+): Promise<{ cauldron_recipes: CauldronRecipe[]; total_cauldron_recipes: number }> {
+  const response = await apiClient.get<{
+    cauldron_recipes: CauldronRecipe[];
+    total_cauldron_recipes: number;
+  }>(`/cauldrons/recipes`, {
+    params: { user_id: userId, skip, limit },
+  });
   return response.data;
 }
 

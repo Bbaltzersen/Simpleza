@@ -5,14 +5,14 @@ import { useDashboard } from "@/lib/context/dashboardContext";
 import { useAuth } from "@/lib/context/authContext";
 
 export default function Cauldron() {
-  const { cauldrons, fetchUserCauldrons } = useDashboard();
+  const { cauldronRecipes, fetchUserCauldronRecipes } = useDashboard();
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
-      fetchUserCauldrons();
+      fetchUserCauldronRecipes();
     }
-  }, [user, fetchUserCauldrons]);
+  }, [user, fetchUserCauldronRecipes]);
 
   return (
     <div className={styles.container}>
@@ -20,14 +20,27 @@ export default function Cauldron() {
         <h2>Cauldron</h2>
       </div>
       <div className={styles.cauldronGrid}>
-        {cauldrons.length === 0 ? (
-          <p>No cauldron entries found.</p>
+        {cauldronRecipes.length === 0 ? (
+          <p>No cauldron recipes found.</p>
         ) : (
-          cauldrons.map((c) => (
-            <div key={c.cauldron_id} className={styles.cauldronCard}>
+          cauldronRecipes.map((cr) => (
+            <div key={cr.cauldron_id} className={styles.cauldronCard}>
+              <div className={styles.imageContainer}>
+                {cr.front_image ? (
+                  <img
+                    src={cr.front_image}
+                    alt={cr.title}
+                    className={styles.recipeImage}
+                  />
+                ) : (
+                  <div className={styles.noImage}>No Image</div>
+                )}
+              </div>
               <div className={styles.cardContent}>
-                <h4>Cauldron {c.cauldron_id}</h4>
-                {/* You can add more details about each cauldron here */}
+                <h4>{cr.title}</h4>
+                {cr.tags && cr.tags.length > 0 && (
+                  <p>{cr.tags.join(", ")}</p>
+                )}
               </div>
             </div>
           ))

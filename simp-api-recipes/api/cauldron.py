@@ -93,7 +93,7 @@ def update_cauldron(
     db.refresh(cauldron_obj)
     return cauldron_obj
 
-@router.get("/cauldrons/recipes", response_model=Dict[str, Any])
+@router.get("/recipes", response_model=Dict[str, Any])
 def read_cauldron_recipes(
     user_id: uuid.UUID,
     skip: int = Query(0, ge=0),
