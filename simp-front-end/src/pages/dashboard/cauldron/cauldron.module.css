@@ -17,3 +17,52 @@
     font-size: 1.5rem;
     margin: 0;
 }
+/* cauldron.module.css */
+.container {
+    margin: auto;
+  }
+  
+  .header {
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    padding-bottom: 24px;
+    gap: 10px;
+  }
+  
+  /* Grid layout for cauldron cards */
+  .cauldronGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 208px);
+    gap: 28px;
+    justify-content: left;
+  }
+  
+  /* Card styling similar to recipeCard */
+  .cauldronCard {
+    background: #fff;
+    border: 1px solid #b1b1b1;
+    overflow: hidden;
+    border-radius: 4px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    width: 208px;
+    height: 255px;
+  }
+  
+  /* Content styling */
+  .cardContent {
+    padding: 16px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 75px;
+  }
+  
+  .cauldronCard:hover {
+    border: 1px solid #304436;
+    cursor: pointer;
+  }
+  

@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import styles from "./cauldron.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
-import { Plus } from "lucide-react";
 import { useAuth } from "@/lib/context/authContext";
 
 export default function Cauldron() {
@@ -20,17 +19,18 @@ export default function Cauldron() {
       <div className={styles.header}>
         <h2>Cauldron</h2>
       </div>
-      <div className={styles.list}>
+      <div className={styles.cauldronGrid}>
         {cauldrons.length === 0 ? (
           <p>No cauldron entries found.</p>
         ) : (
-          <ul>
-            {cauldrons.map((c) => (
-                <div>
-                    Hello {c.cauldron_id}
-                </div>
-            ))}
-          </ul>
+          cauldrons.map((c) => (
+            <div key={c.cauldron_id} className={styles.cauldronCard}>
+              <div className={styles.cardContent}>
+                <h4>Cauldron {c.cauldron_id}</h4>
+                {/* You can add more details about each cauldron here */}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
