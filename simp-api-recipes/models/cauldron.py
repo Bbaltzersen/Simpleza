@@ -11,7 +11,7 @@ class Cauldron(Base):
     cauldron_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="RESTRICT"), nullable=False)
     recipe_id = Column(UUID(as_uuid=True), ForeignKey("recipes.recipe_id", ondelete="RESTRICT"), nullable=False)
-    is_active = Column(Boolean, default=True)  # Indicates if the recipe is currently in rotation for the user
+    is_active = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
     

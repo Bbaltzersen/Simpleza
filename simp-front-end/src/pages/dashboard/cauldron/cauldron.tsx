@@ -19,9 +19,6 @@ export default function Cauldron() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h2>Cauldron</h2>
-        <button className={styles.addButton}>
-          <Plus />
-        </button>
       </div>
       <div className={styles.list}>
         {cauldrons.length === 0 ? (
@@ -29,18 +26,9 @@ export default function Cauldron() {
         ) : (
           <ul>
             {cauldrons.map((c) => (
-              <li key={c.cauldron_id} className={styles.listItem}>
-                <p>
-                  <strong>Recipe ID:</strong> {c.recipe_id}
-                </p>
-                <p>
-                  <strong>Status:</strong> {c.is_active ? "Active" : "Inactive"}
-                </p>
-                <p>
-                  <strong>Added:</strong>{" "}
-                  {new Date(c.created_at).toLocaleDateString()}
-                </p>
-              </li>
+                <div>
+                    Hello {c.cauldron_id}
+                </div>
             ))}
           </ul>
         )}

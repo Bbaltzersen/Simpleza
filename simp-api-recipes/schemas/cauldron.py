@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
-from typing import Optional
+from typing import List, Optional
 
 # -------------------------
 # Cauldron Schemas
@@ -24,8 +24,7 @@ class CauldronUpdate(BaseModel):
     class Config:
         from_attributes = True
 
-
-class Cauldron(CauldronBase):
+class CauldronSchema(CauldronBase):
     """
     Schema for reading a Cauldron entry from the DB.
     """
@@ -85,6 +84,24 @@ class RecipeAnalytics(RecipeAnalyticsBase):
     recipe_analytics_id: UUID
     updated_at: datetime
     created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# -------------------------
+# CauldronRecipe Output Schema
+# -------------------------
+
+class CauldronRecipeOut(BaseModel):
+    cauldron_id: UUID
+    user_id: UUID
+    recipe_id: UUID
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    title: str
+    tags: List[str]
+    front_image: Optional[str]
 
     class Config:
         from_attributes = True
