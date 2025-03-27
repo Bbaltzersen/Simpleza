@@ -3,7 +3,8 @@ import React, { useState, useRef, useCallback } from "react";
 import styles from "./recipes.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
-import { Plus } from "lucide-react";
+import { Icon, Plus } from "lucide-react";
+import { cauldron } from '@lucide/lab';
 import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
 
@@ -14,7 +15,7 @@ export default function Recipes() {
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
   const [modalKey, setModalKey] = useState<string>("new");
   const observer = useRef<IntersectionObserver | null>(null);
-  
+
   const lastRecipeRef = useCallback(
     (node: HTMLDivElement) => {
       if (!hasMore) return;
@@ -81,6 +82,15 @@ export default function Recipes() {
               ref={index === allRecipes.length - 1 ? lastRecipeRef : null}
               onClick={() => handleEditRecipe(recipe)}
             >
+              <button
+                className={styles.cauldronButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Optional: add any specific functionality for the cauldron icon here.
+                }}
+              >
+                 <Icon className={styles.cauldronButton} iconNode={cauldron} />
+              </button>
               <div className={styles.imageContainer}>
                 <img
                   src={recipe.front_image || "https://picsum.photos/300/200"}
@@ -101,6 +111,7 @@ export default function Recipes() {
         ) : (
           <p>No recipes available.</p>
         )}
+
       </div>
       {hasMore && <p>Loading more recipes...</p>}
       {/* Updated onClose: clear selectedRecipe and then close modal */}
