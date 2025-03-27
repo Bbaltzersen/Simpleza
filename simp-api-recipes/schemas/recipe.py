@@ -7,13 +7,10 @@ class RecipeOut(BaseModel):
     title: str
     front_image: str
     tags: List[str]
+    in_cauldron: bool = False
 
     class Config:
         from_attributes = True
-
-from typing import Optional
-from uuid import UUID
-from pydantic import BaseModel
 
 class CreateRecipeIngredient(BaseModel):
     ingredient_id: Optional[UUID] = None
