@@ -14,6 +14,8 @@ export default function Recipes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
   const [modalKey, setModalKey] = useState<string>("new");
+  // State to track which recipes are added to the cauldron.
+  const [cauldronRecipes, setCauldronRecipes] = useState<{ [key: string]: boolean }>({});
   const observer = useRef<IntersectionObserver | null>(null);
 
   const lastRecipeRef = useCallback(
@@ -40,6 +42,14 @@ export default function Recipes() {
     setIsModalOpen(true);
   };
 
+  const handleToggleCauldron = (recipeId: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setCauldronRecipes((prev) => ({
+      ...prev,
+      [recipeId]: !prev[recipeId],
+    }));
+  };
+
   const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
     if (!user) {
       console.error("User is not authenticated");
@@ -54,7 +64,6 @@ export default function Recipes() {
     } else {
       await addRecipe(recipeData);
     }
-    // Clear the selected recipe and close the modal after save.
     setSelectedRecipe(null);
     setIsModalOpen(false);
   };
@@ -75,46 +84,56 @@ export default function Recipes() {
           <Plus size={48} />
         </div>
         {allRecipes.length > 0 ? (
-          allRecipes.map((recipe, index) => (
-            <div
-              key={recipe.recipe_id}
-              className={styles.recipeCard}
-              ref={index === allRecipes.length - 1 ? lastRecipeRef : null}
-              onClick={() => handleEditRecipe(recipe)}
-            >
-              <button
-                className={styles.cauldronButton}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Optional: add any specific functionality for the cauldron icon here.
-                }}
+          allRecipes.map((recipe, index) => {
+            const inCauldron = cauldronRecipes[recipe.recipe_id];
+            return (
+              <div
+                key={recipe.recipe_id}
+                className={styles.recipeCard}
+                ref={index === allRecipes.length - 1 ? lastRecipeRef : null}
               >
-                 <Icon className={styles.cauldronButton} iconNode={cauldron} />
-              </button>
-              <div className={styles.imageContainer}>
-                <img
-                  src={recipe.front_image || "https://picsum.photos/300/200"}
-                  alt={`${recipe.title}`}
-                  className={styles.recipeImage}
-                />
-              </div>
-              <div className={styles.recipeContent}>
-                <div className={styles.recipeHeader}>
-                  <h4>{recipe.title}</h4>
+                {/* Cauldron Icon Button: Changes style based on whether the recipe is added */}
+                <button
+                  className={styles.cauldronWrapper}
+                  onClick={(e) => handleToggleCauldron(recipe.recipe_id, e)}
+                >
+                  <Icon
+                    className={inCauldron ? styles.cauldronAdded : styles.cauldronButton}
+                    iconNode={cauldron}
+                  />
+                </button>
+                <div className={styles.imageContainer}>
+                  <img
+                    src={recipe.front_image || "https://picsum.photos/300/200"}
+                    alt={recipe.title}
+                    className={styles.recipeImage}
+                  />
                 </div>
-                <div className={styles.metadataRow}>
-                  <p>Tags: {recipe.tags.join(", ")}</p>
-                </div>
+                {/* Recipe Content area is now an anchor tag */}
+                <a
+                  href="#"
+                  className={styles.recipeContent}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleEditRecipe(recipe);
+                  }}
+                >
+                  <div className={styles.recipeHeader}>
+                    <h4>{recipe.title}</h4>
+                  </div>
+                  <div className={styles.metadataRow}>
+                    <p>{recipe.tags.join(", ")}</p>
+                  </div>
+                </a>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <p>No recipes available.</p>
         )}
-
       </div>
       {hasMore && <p>Loading more recipes...</p>}
-      {/* Updated onClose: clear selectedRecipe and then close modal */}
       <RecipeModal
         key={modalKey}
         isOpen={isModalOpen}
