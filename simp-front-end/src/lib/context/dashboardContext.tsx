@@ -12,7 +12,7 @@ import {
   fetchIngredientsByName,
   fetchTagsByName,
   fetchRecipeById,
-  updateRecipe,
+  updateRecipe as updateRecipeApi,
   deleteRecipe,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
@@ -22,17 +22,12 @@ import { useAuth } from "@/lib/context/authContext";
 import {
   createCauldron,
   getCauldronsByUser,
-  getCauldronRecipes, // new API call to retrieve cauldron recipes
-  updateCauldron,
+  getCauldronRecipes, // Retrieves combined cauldron and recipe data
+  updateCauldron as updateCauldronApi,
   deleteCauldron,
 } from "@/lib/api/cauldron/cauldron";
-import {
-  Cauldron,
-  CauldronCreate,
-  CauldronUpdate,
-  // Optionally, import CauldronRecipe if you export it from your types
-} from "@/lib/types/cauldron";
-import { CauldronRecipe } from "@/lib/types/cauldron"; // combined type
+import { Cauldron, CauldronCreate, CauldronUpdate } from "@/lib/types/cauldron";
+import { CauldronRecipe } from "@/lib/types/cauldron";
 
 interface DashboardContextType {
   recipes: ListRecipe[];
@@ -53,32 +48,28 @@ interface DashboardContextType {
   addCauldron: (data: CauldronCreate) => Promise<void>;
   updateCauldron: (cauldronId: string, data: CauldronUpdate) => Promise<void>;
   deleteCauldron: (cauldronId: string) => Promise<void>;
-  // New cauldron recipes functions
+  // Combined cauldron recipes (cauldron entry + recipe details)
   cauldronRecipes: CauldronRecipe[];
   fetchUserCauldronRecipes: () => Promise<void>;
 }
 
-const DashboardContext = createContext<DashboardContextType | undefined>(
-  undefined
-);
+const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
 export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<ListRecipe[]>([]);
-  const [recipe_details, setRecipeDetails] = useState<RecipeCreate>();
+  const [recipe_details, setRecipeDetails] = useState<RecipeCreate | undefined>(undefined);
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>(
-    []
-  );
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
   // CAULDRON STATE
   const [cauldrons, setCauldrons] = useState<Cauldron[]>([]);
-  // New state for combined cauldron recipes
+  // Combined cauldron recipes (cauldron entry with corresponding recipe details)
   const [cauldronRecipes, setCauldronRecipes] = useState<CauldronRecipe[]>([]);
 
   const fetchMoreRecipes = useCallback(async () => {
@@ -109,7 +100,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateRecipeFn = async (recipe_id: string, recipe: RecipeCreate): Promise<void> => {
     try {
-      const updatedRecipe = await updateRecipe(recipe_id, recipe);
+      const updatedRecipe = await updateRecipeApi(recipe_id, recipe);
       if (updatedRecipe) {
         setRecipes((prev) =>
           prev.map((r) => (r.recipe_id === recipe_id ? updatedRecipe : r))
@@ -173,11 +164,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const fetchUserCauldrons = useCallback(async () => {
     if (!user) return;
     try {
-      const { cauldrons: userCauldrons } = await getCauldronsByUser(
-        user.user_id,
-        0,
-        100
-      );
+      const { cauldrons: userCauldrons } = await getCauldronsByUser(user.user_id, 0, 100);
       setCauldrons(userCauldrons);
     } catch (error) {
       console.error("Error fetching cauldrons:", error);
@@ -195,10 +182,8 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const updateCauldronFn = async (cauldronId: string, data: CauldronUpdate): Promise<void> => {
     try {
-      const updated = await updateCauldron(cauldronId, data);
-      setCauldrons((prev) =>
-        prev.map((c) => (c.cauldron_id === cauldronId ? updated : c))
-      );
+      const updated = await updateCauldronApi(cauldronId, data);
+      setCauldrons((prev) => prev.map((c) => (c.cauldron_id === cauldronId ? updated : c)));
     } catch (error) {
       console.error("Error updating cauldron:", error);
     }
@@ -213,18 +198,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // NEW: Fetch combined cauldron recipes (cauldron + recipe details)
+  // NEW: Fetch combined cauldron recipes (cauldron entry + recipe details)
   const fetchUserCauldronRecipes = useCallback(async () => {
     if (!user) return;
     try {
-      // You can adjust pagination parameters as needed.
-      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(
-        user.user_id,
-        0,
-        100
-      );
+      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(user.user_id, 0, 100);
       setCauldronRecipes(cauldron_recipes);
-      // Optionally, store the total in state or log it:
       console.log("Total cauldron recipes:", total_cauldron_recipes);
     } catch (error) {
       console.error("Error fetching cauldron recipes:", error);
@@ -235,11 +214,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     fetchMoreRecipes();
   }, [fetchMoreRecipes]);
 
-  // Optionally, fetch cauldrons when the user logs in or changes.
   useEffect(() => {
     if (user) {
       fetchUserCauldrons();
-      fetchUserCauldronRecipes(); // fetch the combined cauldron recipes as well
+      fetchUserCauldronRecipes();
     }
   }, [user, fetchUserCauldrons, fetchUserCauldronRecipes]);
 

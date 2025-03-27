@@ -16,7 +16,7 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Create a new cauldron record
+// Create a new cauldron record (to add a recipe to the user's cauldron)
 export async function createCauldron(
   data: CauldronCreate
 ): Promise<Cauldron> {
@@ -29,20 +29,15 @@ export async function updateCauldron(
   cauldronId: string,
   data: CauldronUpdate
 ): Promise<Cauldron> {
-  const response = await apiClient.put<Cauldron>(
-    `/cauldrons/${cauldronId}`,
-    data
-  );
+  const response = await apiClient.put<Cauldron>(`/cauldrons/${cauldronId}`, data);
   return response.data;
 }
 
-// Delete a cauldron record by its ID
+// Delete a cauldron record by its ID (to remove a recipe from the user's cauldron)
 export async function deleteCauldron(
   cauldronId: string
 ): Promise<{ detail: string }> {
-  const response = await apiClient.delete<{ detail: string }>(
-    `/cauldrons/${cauldronId}`
-  );
+  const response = await apiClient.delete<{ detail: string }>(`/cauldrons/${cauldronId}`);
   return response.data;
 }
 
@@ -52,17 +47,12 @@ export async function getCauldronsByUser(
   skip = 0,
   limit = 10
 ): Promise<{ cauldrons: Cauldron[]; total: number }> {
-  const response = await apiClient.get<{ cauldrons: Cauldron[]; total: number }>(
-    `/cauldrons/user/${userId}`,
-    {
-      params: { skip, limit },
-    }
-  );
+  const response = await apiClient.get<{ cauldrons: Cauldron[]; total: number }>(`/cauldrons/user/${userId}`, {
+    params: { skip, limit },
+  });
   return response.data;
 }
 
-
-// Retrieve paginated cauldron recipes for a specific cauldron
 // Retrieve paginated cauldron recipes (combined cauldron and recipe data) for a specific user
 export async function getCauldronRecipes(
   userId: string,

@@ -6,7 +6,7 @@ import uuid
 
 from database.connection import SessionLocal
 from schemas.cauldron import CauldronCreate, CauldronSchema, CauldronUpdate
-from models.cauldron import Cauldron as CauldronModel  # Import SQLAlchemy model as CauldronModel
+from models.cauldron import Cauldron as CauldronModel  # SQLAlchemy model for Cauldron
 from models.recipe import Recipe
 
 router = APIRouter(tags=["cauldrons"])
@@ -20,7 +20,10 @@ def get_db():
 
 @router.post("/", response_model=CauldronSchema)
 def create_cauldron(cauldron_create: CauldronCreate, db: Session = Depends(get_db)):
-    # Optionally, add logic to verify that the recipe exists or check for duplicates
+    """
+    Create a new cauldron entry to add a recipe to the user's cauldron.
+    """
+    # Optionally verify the recipe exists or check for duplicates here.
     new_cauldron = CauldronModel(
         user_id=cauldron_create.user_id,
         recipe_id=cauldron_create.recipe_id,
@@ -31,6 +34,48 @@ def create_cauldron(cauldron_create: CauldronCreate, db: Session = Depends(get_d
     db.refresh(new_cauldron)
     return new_cauldron
 
+@router.delete("/{cauldron_id}", response_model=Dict[str, str])
+def delete_cauldron(cauldron_id: uuid.UUID, db: Session = Depends(get_db)):
+    """
+    Delete a cauldron entry, effectively removing the recipe from the user's cauldron.
+    """
+    cauldron_obj = (
+        db.query(CauldronModel)
+        .filter(CauldronModel.cauldron_id == cauldron_id)
+        .first()
+    )
+    if not cauldron_obj:
+        raise HTTPException(status_code=404, detail="Cauldron not found")
+    
+    db.delete(cauldron_obj)
+    db.commit()
+    return {"detail": "Cauldron deleted successfully"}
+
+@router.put("/{cauldron_id}", response_model=CauldronSchema)
+def update_cauldron(
+    cauldron_id: uuid.UUID,
+    cauldron_update: CauldronUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update a cauldron entry. For example, you might change the is_active flag.
+    """
+    cauldron_obj = (
+        db.query(CauldronModel)
+        .filter(CauldronModel.cauldron_id == cauldron_id)
+        .first()
+    )
+    if not cauldron_obj:
+        raise HTTPException(status_code=404, detail="Cauldron not found")
+    
+    update_data = cauldron_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(cauldron_obj, key, value)
+    
+    db.commit()
+    db.refresh(cauldron_obj)
+    return cauldron_obj
+
 @router.get("/user/{user_id}", response_model=Dict[str, Union[List[CauldronSchema], int]])
 def read_cauldrons_by_user(
     user_id: uuid.UUID,
@@ -38,6 +83,9 @@ def read_cauldrons_by_user(
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
+    """
+    Retrieve paginated cauldron entries for a user.
+    """
     total_cauldrons = (
         db.query(CauldronModel)
         .filter(CauldronModel.user_id == user_id)
@@ -57,42 +105,6 @@ def read_cauldrons_by_user(
         "total": total_cauldrons,
     }
 
-@router.delete("/{cauldron_id}", response_model=Dict[str, str])
-def delete_cauldron(cauldron_id: uuid.UUID, db: Session = Depends(get_db)):
-    cauldron_obj = (
-        db.query(CauldronModel)
-        .filter(CauldronModel.cauldron_id == cauldron_id)
-        .first()
-    )
-    if not cauldron_obj:
-        raise HTTPException(status_code=404, detail="Cauldron not found")
-    
-    db.delete(cauldron_obj)
-    db.commit()
-    return {"detail": "Cauldron deleted successfully"}
-
-@router.put("/{cauldron_id}", response_model=CauldronSchema)
-def update_cauldron(
-    cauldron_id: uuid.UUID,
-    cauldron_update: CauldronUpdate,
-    db: Session = Depends(get_db)
-):
-    cauldron_obj = (
-        db.query(CauldronModel)
-        .filter(CauldronModel.cauldron_id == cauldron_id)
-        .first()
-    )
-    if not cauldron_obj:
-        raise HTTPException(status_code=404, detail="Cauldron not found")
-    
-    update_data = cauldron_update.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(cauldron_obj, key, value)
-    
-    db.commit()
-    db.refresh(cauldron_obj)
-    return cauldron_obj
-
 @router.get("/recipes", response_model=Dict[str, Any])
 def read_cauldron_recipes(
     user_id: uuid.UUID,
@@ -100,14 +112,16 @@ def read_cauldron_recipes(
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    # Count total cauldron entries for the user.
+    """
+    Retrieve cauldron recipes (i.e. recipes added to the cauldron) for a given user.
+    This endpoint joins the cauldron entries with their corresponding recipe data.
+    """
     total = (
         db.query(func.count(CauldronModel.cauldron_id))
         .filter(CauldronModel.user_id == user_id)
         .scalar()
     )
 
-    # Retrieve paginated cauldron entries joined with their recipes.
     results = (
         db.query(CauldronModel, Recipe)
         .join(Recipe, CauldronModel.recipe_id == Recipe.recipe_id)

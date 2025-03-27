@@ -9,6 +9,7 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
+// Fetch a recipe by its ID.
 export async function fetchRecipeById(recipe_id: string): Promise<RecipeCreate | null> {
   try {
     const response = await apiClient.get<RecipeCreate>(`/recipes/recipe-id/${recipe_id}/`);
@@ -19,9 +20,16 @@ export async function fetchRecipeById(recipe_id: string): Promise<RecipeCreate |
   }
 }
 
-export async function fetchRecipesByAuthorID(author_id: string, skip: number = 0, limit: number = 10): Promise<{ recipes: ListRecipe[]; total: number }> {
+// Fetch recipes by author. The returned recipe objects now include an "in_cauldron" boolean.
+export async function fetchRecipesByAuthorID(
+  author_id: string,
+  skip: number = 0,
+  limit: number = 10
+): Promise<{ recipes: ListRecipe[]; total: number }> {
   try {
-    const response = await apiClient.get<{ recipes: ListRecipe[]; total: number }>(`/recipes/author-id/${author_id}/?skip=${skip}&limit=${limit}`);
+    const response = await apiClient.get<{ recipes: ListRecipe[]; total: number }>(
+      `/recipes/author-id/${author_id}/?skip=${skip}&limit=${limit}`
+    );
     return response.data;
   } catch (error) {
     console.error("Error fetching recipes:", error);
@@ -29,6 +37,7 @@ export async function fetchRecipesByAuthorID(author_id: string, skip: number = 0
   }
 }
 
+// Create a new recipe. The response returns a ListRecipe which now includes in_cauldron.
 export async function createRecipe(recipe: RecipeCreate): Promise<ListRecipe | null> {
   try {
     const response = await apiClient.post("/recipes/", recipe);
@@ -39,6 +48,7 @@ export async function createRecipe(recipe: RecipeCreate): Promise<ListRecipe | n
   }
 }
 
+// Update an existing recipe. The updated recipe object includes in_cauldron.
 export async function updateRecipe(recipe_id: string, recipe: RecipeCreate): Promise<ListRecipe | null> {
   try {
     const response = await apiClient.put(`/recipes/update/${recipe_id}/`, recipe);
@@ -49,6 +59,7 @@ export async function updateRecipe(recipe_id: string, recipe: RecipeCreate): Pro
   }
 }
 
+// Delete a recipe.
 export async function deleteRecipe(recipe_id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/recipes/delete/${recipe_id}/`);
@@ -59,7 +70,7 @@ export async function deleteRecipe(recipe_id: string): Promise<boolean> {
   }
 }
 
-
+// Fetch a single ingredient by ID.
 export async function fetchIngredientById(ingredient_id: string): Promise<Ingredient | null> {
   try {
     const response = await apiClient.get<Ingredient>(`/ingredients/${ingredient_id}`);
@@ -70,6 +81,7 @@ export async function fetchIngredientById(ingredient_id: string): Promise<Ingred
   }
 }
 
+// Fetch ingredients by name.
 export async function fetchIngredientsByName(query: string): Promise<Ingredient[]> {
   if (query.length < 3) return [];
   try {
@@ -81,6 +93,7 @@ export async function fetchIngredientsByName(query: string): Promise<Ingredient[
   }
 }
 
+// Fetch tags by name.
 export async function fetchTagsByName(query: string): Promise<TagRetrieval[]> {
   if (query.length < 3) return [];
   try {

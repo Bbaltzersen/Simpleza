@@ -121,6 +121,7 @@ export type ListRecipe = {
   title: string;
   tags: string[];
   front_image: string;
+  in_cauldron: boolean;
 }
 
 export type TagRetrieval = {

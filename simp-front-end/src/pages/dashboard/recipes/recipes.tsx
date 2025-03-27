@@ -4,18 +4,26 @@ import styles from "./recipes.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
 import { Icon, Plus } from "lucide-react";
-import { cauldron } from '@lucide/lab';
+import { cauldron } from "@lucide/lab";
 import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
 
 export default function Recipes() {
-  const { recipes, fetchMoreRecipes, addRecipe, updateRecipe, hasMore } = useDashboard();
+  const {
+    recipes,
+    fetchMoreRecipes,
+    addRecipe,
+    updateRecipe,
+    hasMore,
+    cauldronRecipes,
+    fetchUserCauldronRecipes,
+    addCauldron,
+    deleteCauldron,
+  } = useDashboard();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
   const [modalKey, setModalKey] = useState<string>("new");
-  // State to track which recipes are added to the cauldron.
-  const [cauldronRecipes, setCauldronRecipes] = useState<{ [key: string]: boolean }>({});
   const observer = useRef<IntersectionObserver | null>(null);
 
   const lastRecipeRef = useCallback(
@@ -36,18 +44,43 @@ export default function Recipes() {
     setIsModalOpen(true);
   };
 
-  const handleEditRecipe = async (recipe: ListRecipe) => {
+  const handleEditRecipe = (recipe: ListRecipe) => {
     setSelectedRecipe(recipe);
     setModalKey(recipe.recipe_id);
     setIsModalOpen(true);
   };
 
-  const handleToggleCauldron = (recipeId: string, e: React.MouseEvent<HTMLButtonElement>) => {
+  // When the cauldron icon is clicked, we check whether the recipe is already in the cauldron
+  // (using the Dashboard context's cauldronRecipes array) and then call the appropriate API call.
+  const handleToggleCauldron = async (
+    recipe: ListRecipe,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
     e.stopPropagation();
-    setCauldronRecipes((prev) => ({
-      ...prev,
-      [recipeId]: !prev[recipeId],
-    }));
+    if (!user) return;
+
+    // Determine if the recipe is in the cauldron by checking if any active cauldron record exists for this recipe.
+    const effectiveInCauldron = cauldronRecipes.some(
+      (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
+    );
+
+    if (effectiveInCauldron) {
+      // Find the cauldron record for this recipe.
+      const record = cauldronRecipes.find(
+        (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
+      );
+      if (record) {
+        await deleteCauldron(record.cauldron_id);
+      }
+    } else {
+      await addCauldron({
+        user_id: user.user_id,
+        recipe_id: recipe.recipe_id,
+        is_active: true,
+      });
+    }
+    // Refresh cauldron recipes in the context.
+    await fetchUserCauldronRecipes();
   };
 
   const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
@@ -68,8 +101,6 @@ export default function Recipes() {
     setIsModalOpen(false);
   };
 
-  const allRecipes: ListRecipe[] = [...recipes];
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -83,22 +114,29 @@ export default function Recipes() {
         >
           <Plus size={48} />
         </div>
-        {allRecipes.length > 0 ? (
-          allRecipes.map((recipe, index) => {
-            const inCauldron = cauldronRecipes[recipe.recipe_id];
+        {recipes.length > 0 ? (
+          recipes.map((recipe, index) => {
+            // Determine effective in_cauldron using the context's cauldronRecipes.
+            const effectiveInCauldron = cauldronRecipes.some(
+              (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
+            );
             return (
               <div
                 key={recipe.recipe_id}
                 className={styles.recipeCard}
-                ref={index === allRecipes.length - 1 ? lastRecipeRef : null}
+                ref={index === recipes.length - 1 ? lastRecipeRef : null}
               >
-                {/* Cauldron Icon Button: Changes style based on whether the recipe is added */}
+                {/* Cauldron Icon Button */}
                 <button
                   className={styles.cauldronWrapper}
-                  onClick={(e) => handleToggleCauldron(recipe.recipe_id, e)}
+                  onClick={(e) => handleToggleCauldron(recipe, e)}
                 >
                   <Icon
-                    className={inCauldron ? styles.cauldronAdded : styles.cauldronButton}
+                    className={
+                      effectiveInCauldron
+                        ? styles.cauldronAdded
+                        : styles.cauldronButton
+                    }
                     iconNode={cauldron}
                   />
                 </button>
@@ -109,7 +147,7 @@ export default function Recipes() {
                     className={styles.recipeImage}
                   />
                 </div>
-                {/* Recipe Content area is now an anchor tag */}
+                {/* Recipe Content area as an anchor tag */}
                 <a
                   href="#"
                   className={styles.recipeContent}
