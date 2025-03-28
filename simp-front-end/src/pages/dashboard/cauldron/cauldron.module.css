@@ -6,12 +6,12 @@
   margin-bottom: 32px;
   display: flex;
   flex-direction: column;
-  max-width: 1200px;
+  width: 100%;
 }
 
 /* Header Styling */
 .header {
-  padding: 16px 0 24px;
+  padding: 16px 16px 24px;
   display: flex;
   align-items: center;
   justify-content: left;
@@ -95,7 +95,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px 0;
+  margin: 24px 0 16px 0;
 }
 
 .pagination ul {
