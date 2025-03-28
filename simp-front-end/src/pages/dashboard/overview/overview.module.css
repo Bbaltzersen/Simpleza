@@ -1,6 +1,12 @@
+/* Container Styling */
 .container {
     margin: auto;
-}
+    height: 300px;
+    border: 1px solid #b1b1b1;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 32px;
+  }
 
 /* Header Styling */
 .header {

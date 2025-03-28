@@ -1,43 +1,54 @@
 /* Container Styling */
 .container {
   margin: auto;
+  background-color: #f5f5f5ce;
+  padding: 10px;
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
 }
 
 /* Header Styling */
 .header {
-  padding-top: 16px;
+  padding: 16px 0 24px;
   display: flex;
   align-items: center;
-  padding-bottom: 24px;
-  gap: 10px;
+  justify-content: left;
 }
 
-/* Heading */
 .header h2 {
   font-weight: 600;
   font-size: 1.5rem;
   margin: 0;
 }
 
-/* Grid Layout for Cauldron Cards */
-.cauldronGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 208px);
-  gap: 28px;
-  justify-content: left;
+/* Content area: takes up remaining space and is scrollable */
+.content {
+  flex: 1;
+  overflow-y: auto;
 }
 
-/* Cauldron Card Styling (like recipeCard) */
+/* Grid Layout for Cauldron Cards: auto-fit cards with a minimum width */
+.cauldronGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(187px, 1fr));
+  gap: 28px;
+  justify-content: center;
+}
+
+/* Cauldron Card Styling */
 .cauldronCard {
   background: #fff;
-  border: 1px solid #b1b1b1;
-  overflow: hidden;
+  border: 1px solid #000;
   border-radius: 4px;
+  overflow: hidden;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  width: 208px;
-  height: 255px;
+  width: 187px;
+  height: 230px;
+  margin: 0 auto;
 }
 
 /* Image Container */
@@ -47,11 +58,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #000;
 }
 
-/* Image Styling */
-.cauldronImage {
+.recipeImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -67,12 +77,86 @@
   justify-content: center;
 }
 
-/* Cauldron Title */
 .cardContent h4 {
   font-size: 1.125rem;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 1px;
+}
+
+/* Pagination Styling */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.pagination ul {
+  list-style: none;
+  display: flex;
+  padding: 0;
+  margin: 0;
+}
+
+.pagination li {
+  margin: 0 5px;
+}
+
+.pagination button {
+  display: inline-block;
+  padding: 8px 12px;
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pagination button:hover .active{
+  background-color: #f0f0f0;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pagination .active button {
+  background-color: #333;
+  color: #fff;
+  border-color: #333;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .cauldronGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+  }
+  
+  .cauldronCard {
+    width: 140px;
+    height: 210px;
+  }
+  
+  .imageContainer {
+    height: 140px;
+  }
+  
+  .cardContent {
+    padding: 10px;
+    height: 75px;
+  }
+  
+  .cardContent h4 {
+    font-size: 1rem;
+  }
 }

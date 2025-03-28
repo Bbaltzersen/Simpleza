@@ -44,13 +44,17 @@ interface DashboardContextType {
   searchTags: (query: string) => Promise<void>;
   // Cauldron functions
   cauldrons: Cauldron[];
-  fetchUserCauldrons: () => Promise<void>;
+  fetchUserCauldrons: (page?: number) => Promise<void>;
   addCauldron: (data: CauldronCreate) => Promise<void>;
   updateCauldron: (cauldronId: string, data: CauldronUpdate) => Promise<void>;
   deleteCauldron: (cauldronId: string) => Promise<void>;
+  totalCauldrons: number;
+  cauldronPage: number;
   // Combined cauldron recipes (cauldron entry + recipe details)
   cauldronRecipes: CauldronRecipe[];
-  fetchUserCauldronRecipes: () => Promise<void>;
+  fetchUserCauldronRecipes: (page?: number) => Promise<void>;
+  totalCauldronRecipes: number;
+  cauldronRecipesPage: number;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -68,9 +72,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
   // CAULDRON STATE
+  const pageSize = 10;
   const [cauldrons, setCauldrons] = useState<Cauldron[]>([]);
+  const [cauldronPage, setCauldronPage] = useState(1);
+  const [totalCauldrons, setTotalCauldrons] = useState(0);
   // Combined cauldron recipes (cauldron entry with corresponding recipe details)
   const [cauldronRecipes, setCauldronRecipes] = useState<CauldronRecipe[]>([]);
+  const [cauldronRecipesPage, setCauldronRecipesPage] = useState(1);
+  const [totalCauldronRecipes, setTotalCauldronRecipes] = useState(0);
 
   const fetchMoreRecipes = useCallback(async () => {
     if (!hasMore || !user) return;
@@ -161,11 +170,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // CAULDRON FUNCTIONS
-  const fetchUserCauldrons = useCallback(async () => {
+  const fetchUserCauldrons = useCallback(async (page: number = 1) => {
     if (!user) return;
     try {
-      const { cauldrons: userCauldrons } = await getCauldronsByUser(user.user_id, 0, 100);
+      const offset = (page - 1) * pageSize;
+      const { cauldrons: userCauldrons, total } = await getCauldronsByUser(user.user_id, offset, pageSize);
       setCauldrons(userCauldrons);
+      setTotalCauldrons(total);
+      setCauldronPage(page);
     } catch (error) {
       console.error("Error fetching cauldrons:", error);
     }
@@ -175,6 +187,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const newCauldron = await createCauldron(data);
       setCauldrons((prev) => [newCauldron, ...prev]);
+      setTotalCauldrons((prevTotal) => prevTotal + 1);
     } catch (error) {
       console.error("Error creating cauldron:", error);
     }
@@ -193,18 +206,21 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await deleteCauldron(cauldronId);
       setCauldrons((prev) => prev.filter((c) => c.cauldron_id !== cauldronId));
+      setTotalCauldrons((prevTotal) => prevTotal - 1);
     } catch (error) {
       console.error("Error deleting cauldron:", error);
     }
   };
 
-  // NEW: Fetch combined cauldron recipes (cauldron entry + recipe details)
-  const fetchUserCauldronRecipes = useCallback(async () => {
+  // Fetch combined cauldron recipes (cauldron entry + recipe details)
+  const fetchUserCauldronRecipes = useCallback(async (page: number = 1) => {
     if (!user) return;
     try {
-      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(user.user_id, 0, 100);
+      const offset = (page - 1) * pageSize;
+      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(user.user_id, offset, pageSize);
       setCauldronRecipes(cauldron_recipes);
-      console.log("Total cauldron recipes:", total_cauldron_recipes);
+      setTotalCauldronRecipes(total_cauldron_recipes);
+      setCauldronRecipesPage(page);
     } catch (error) {
       console.error("Error fetching cauldron recipes:", error);
     }
@@ -241,8 +257,12 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         addCauldron: addCauldronFn,
         updateCauldron: updateCauldronFn,
         deleteCauldron: deleteCauldronFn,
+        totalCauldrons,
+        cauldronPage,
         cauldronRecipes,
         fetchUserCauldronRecipes,
+        totalCauldronRecipes,
+        cauldronRecipesPage,
       }}
     >
       {children}
