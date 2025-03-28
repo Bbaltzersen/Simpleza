@@ -1,3 +1,4 @@
+// DashboardProvider.tsx
 "use client";
 import React, {
   createContext,
@@ -24,8 +25,7 @@ import {
   getCauldronsByUser,
   getCauldronRecipes,
   updateCauldron as updateCauldronApi,
-  // Use the new delete function below:
-  deleteCauldronByUserAndRecipe,
+  deleteCauldron,
 } from "@/lib/api/cauldron/cauldron";
 import { Cauldron, CauldronCreate, CauldronUpdate } from "@/lib/types/cauldron";
 import { CauldronRecipe } from "@/lib/types/cauldron";
@@ -48,10 +48,10 @@ interface DashboardContextType {
   fetchUserCauldrons: (page?: number) => Promise<void>;
   addCauldron: (data: CauldronCreate) => Promise<void>;
   updateCauldron: (cauldronId: string, data: CauldronUpdate) => Promise<void>;
-  deleteCauldron: (recipeId: string) => Promise<void>;
+  deleteCauldron: (cauldronId: string) => Promise<void>;
   totalCauldrons: number;
   cauldronPage: number;
-  // Combined cauldron recipes (paginated)
+  // Combined cauldron recipes
   cauldronRecipes: CauldronRecipe[];
   fetchUserCauldronRecipes: (page?: number) => Promise<void>;
   totalCauldronRecipes: number;
@@ -59,8 +59,6 @@ interface DashboardContextType {
   // Recipes pagination
   totalRecipes: number;
   currentRecipePage: number;
-  // New: Helper to explicitly set a recipe's is_cauldron flag locally.
-  toggleRecipeLocal: (recipeId: string, value: boolean) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -70,22 +68,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { user } = useAuth();
   const [recipes, setRecipes] = useState<ListRecipe[]>([]);
-  const [recipe_details, setRecipeDetails] = useState<RecipeCreate | undefined>(
-    undefined
-  );
+  const [recipe_details, setRecipeDetails] = useState<RecipeCreate | undefined>(undefined);
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  // For initial load we fetch 19 recipes; afterward, infinite scroll fetches 20 at a time.
-  const initialLimit = 19;
-  const infiniteLimit = 20;
-  const [ingredientSearchResults, setIngredientSearchResults] = useState<
-    Ingredient[]
-  >([]);
+  // Define limits for initial load and infinite scroll.
+  const initialLimit = 19; // Initial fetch returns 19 recipes.
+  const infiniteLimit = 20; // Each subsequent call returns 20 recipes.
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
+
+  // Other state values (pagination for dropdown, if needed)
   const [recipePage, setRecipePage] = useState<number>(1);
   const [totalRecipes, setTotalRecipes] = useState<number>(0);
 
-  // CAULDRON STATE (paginated)
+  // CAULDRON STATE
   const pageSize = 10;
   const [cauldrons, setCauldrons] = useState<Cauldron[]>([]);
   const [cauldronPage, setCauldronPage] = useState(1);
@@ -94,19 +90,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const [cauldronRecipesPage, setCauldronRecipesPage] = useState(1);
   const [totalCauldronRecipes, setTotalCauldronRecipes] = useState(0);
 
-  // New helper: explicitly set a recipe's is_cauldron flag.
-  const toggleRecipeLocal = useCallback(
-    (recipeId: string, value: boolean) => {
-      setRecipes((prevRecipes) =>
-        prevRecipes.map((r) =>
-          r.recipe_id === recipeId ? { ...r, is_cauldron: value } : r
-        )
-      );
-    },
-    []
-  );
-
-  // --- Initial Fetch: Load 19 recipes ---
+  // --- Method 1: Initial Fetch (19 recipes) ---
   const fetchInitialRecipes = useCallback(async () => {
     if (!user) return;
     try {
@@ -125,7 +109,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
-  // --- Infinite Scroll Fetch: Load 20 recipes per call ---
+  // --- Method 2: Infinite Scroll Fetch (20 recipes per call) ---
   const fetchInfiniteRecipes = useCallback(async () => {
     if (!hasMore || !user) return;
     try {
@@ -147,88 +131,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [hasMore, user, skip]);
 
-  // CAULDRON FUNCTIONS
-
-  const fetchUserCauldrons = useCallback(async (page: number = 1) => {
-    if (!user) return;
-    try {
-      const offset = (page - 1) * pageSize;
-      const { cauldrons: userCauldrons, total } = await getCauldronsByUser(
-        user.user_id,
-        offset,
-        pageSize
-      );
-      setCauldrons(userCauldrons);
-      setTotalCauldrons(total);
-      setCauldronPage(page);
-    } catch (error) {
-      console.error("Error fetching cauldrons:", error);
-    }
-  }, [user]);
-
-  const addCauldronFn = async (data: CauldronCreate): Promise<void> => {
-    try {
-      const newCauldron = await createCauldron(data);
-      setCauldrons((prev) => [newCauldron, ...prev]);
-      setTotalCauldrons((prevTotal) => prevTotal + 1);
-    } catch (error) {
-      console.error("Error creating cauldron:", error);
-    }
-  };
-
-  const updateCauldronFn = async (
-    cauldronId: string,
-    data: CauldronUpdate
-  ): Promise<void> => {
-    try {
-      const updated = await updateCauldronApi(cauldronId, data);
-      setCauldrons((prev) =>
-        prev.map((c) => (c.cauldron_id === cauldronId ? updated : c))
-      );
-    } catch (error) {
-      console.error("Error updating cauldron:", error);
-    }
-  };
-
-  // Use the new delete function that finds the entry by user and recipe IDs.
-  const deleteCauldronFn = async (recipeId: string): Promise<void> => {
-    try {
-      await deleteCauldronByUserAndRecipe(user!.user_id, recipeId);
-      // Optionally update local cauldron state.
-      setCauldrons((prev) => prev.filter((c) => c.recipe_id !== recipeId));
-      setTotalCauldrons((prevTotal) => prevTotal - 1);
-    } catch (error) {
-      console.error("Error deleting cauldron:", error);
-    }
-  };
-
-  const fetchUserCauldronRecipes = useCallback(async (page: number = 1) => {
-    if (!user) return;
-    try {
-      const offset = (page - 1) * pageSize;
-      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(
-        user.user_id,
-        offset,
-        pageSize
-      );
-      setCauldronRecipes(cauldron_recipes);
-      setTotalCauldronRecipes(total_cauldron_recipes);
-      setCauldronRecipesPage(page);
-    } catch (error) {
-      console.error("Error fetching cauldron recipes:", error);
-    }
-  }, [user]);
-
+  // Other methods (addRecipeFn, updateRecipeFn, etc.) remain unchanged.
   const addRecipeFn = async (recipe: RecipeCreate): Promise<void> => {
     try {
       const newRecipe = await createRecipe(recipe);
       if (newRecipe) setRecipes((prev) => [newRecipe, ...prev]);
       else console.error("Recipe creation returned null.");
     } catch (error: any) {
-      console.error(
-        "Error adding recipe:",
-        error.response?.data || error.message
-      );
+      console.error("Error adding recipe:", error.response?.data || error.message);
     }
   };
 
@@ -243,10 +153,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Recipe update returned null.");
       }
     } catch (error: any) {
-      console.error(
-        "Error updating recipe:",
-        error.response?.data || error.message
-      );
+      console.error("Error updating recipe:", error.response?.data || error.message);
     }
   };
 
@@ -259,10 +166,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Failed to delete recipe");
       }
     } catch (error: any) {
-      console.error(
-        "Error deleting recipe:",
-        error.response?.data || error.message
-      );
+      console.error("Error deleting recipe:", error.response?.data || error.message);
     }
   };
 
@@ -300,19 +204,85 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  // CAULDRON FUNCTIONS remain unchanged.
+  const fetchUserCauldrons = useCallback(async (page: number = 1) => {
+    if (!user) return;
+    try {
+      const offset = (page - 1) * pageSize;
+      const { cauldrons: userCauldrons, total } = await getCauldronsByUser(
+        user.user_id,
+        offset,
+        pageSize
+      );
+      setCauldrons(userCauldrons);
+      setTotalCauldrons(total);
+      setCauldronPage(page);
+    } catch (error) {
+      console.error("Error fetching cauldrons:", error);
+    }
+  }, [user]);
+
+  const addCauldronFn = async (data: CauldronCreate): Promise<void> => {
+    try {
+      const newCauldron = await createCauldron(data);
+      setCauldrons((prev) => [newCauldron, ...prev]);
+      setTotalCauldrons((prevTotal) => prevTotal + 1);
+    } catch (error) {
+      console.error("Error creating cauldron:", error);
+    }
+  };
+
+  const updateCauldronFn = async (cauldronId: string, data: CauldronUpdate): Promise<void> => {
+    try {
+      const updated = await updateCauldronApi(cauldronId, data);
+      setCauldrons((prev) => prev.map((c) => (c.cauldron_id === cauldronId ? updated : c)));
+    } catch (error) {
+      console.error("Error updating cauldron:", error);
+    }
+  };
+
+  const deleteCauldronFn = async (cauldronId: string): Promise<void> => {
+    try {
+      await deleteCauldron(cauldronId);
+      setCauldrons((prev) => prev.filter((c) => c.cauldron_id !== cauldronId));
+      setTotalCauldrons((prevTotal) => prevTotal - 1);
+    } catch (error) {
+      console.error("Error deleting cauldron:", error);
+    }
+  };
+
+  const fetchUserCauldronRecipes = useCallback(async (page: number = 1) => {
+    if (!user) return;
+    try {
+      const offset = (page - 1) * pageSize;
+      const { cauldron_recipes, total_cauldron_recipes } = await getCauldronRecipes(
+        user.user_id,
+        offset,
+        pageSize
+      );
+      setCauldronRecipes(cauldron_recipes);
+      setTotalCauldronRecipes(total_cauldron_recipes);
+      setCauldronRecipesPage(page);
+    } catch (error) {
+      console.error("Error fetching cauldron recipes:", error);
+    }
+  }, [user]);
+
+  // On mount, use the initial fetch (19 recipes) plus cauldron fetches.
   useEffect(() => {
     if (user) {
       fetchInitialRecipes();
       fetchUserCauldrons();
       fetchUserCauldronRecipes();
     }
-  }, [user, fetchInitialRecipes, fetchUserCauldrons, fetchUserCauldronRecipes]);
+  }, [user, fetchInitialRecipes, fetchUserCauldronRecipes, fetchUserCauldrons]);
 
   return (
     <DashboardContext.Provider
       value={{
         recipes,
         recipe_details,
+        // For infinite scroll, we now expose the infinite method.
         fetchMoreRecipes: fetchInfiniteRecipes,
         addRecipe: addRecipeFn,
         updateRecipe: updateRecipeFn,
@@ -336,7 +306,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         cauldronRecipesPage,
         totalRecipes,
         currentRecipePage: recipePage,
-        toggleRecipeLocal,
       }}
     >
       {children}
