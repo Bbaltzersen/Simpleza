@@ -26,6 +26,7 @@ import {
   getCauldronRecipes,
   updateCauldron as updateCauldronApi,
   deleteCauldron,
+  deleteCauldronByUserAndRecipe,
 } from "@/lib/api/cauldron/cauldron";
 import { Cauldron, CauldronCreate, CauldronUpdate } from "@/lib/types/cauldron";
 import { CauldronRecipe } from "@/lib/types/cauldron";
@@ -48,7 +49,7 @@ interface DashboardContextType {
   fetchUserCauldrons: (page?: number) => Promise<void>;
   addCauldron: (data: CauldronCreate) => Promise<void>;
   updateCauldron: (cauldronId: string, data: CauldronUpdate) => Promise<void>;
-  deleteCauldron: (cauldronId: string) => Promise<void>;
+  deleteCauldron: (user_id: string, recipe_id: string) => Promise<void>;
   totalCauldrons: number;
   cauldronPage: number;
   // Combined cauldron recipes
@@ -241,10 +242,10 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const deleteCauldronFn = async (cauldronId: string): Promise<void> => {
+  const deleteCauldronFn = async (user_id: string, recipe_id: string): Promise<void> => {
     try {
-      await deleteCauldron(cauldronId);
-      setCauldrons((prev) => prev.filter((c) => c.cauldron_id !== cauldronId));
+      await deleteCauldronByUserAndRecipe(user_id, recipe_id);
+      setCauldrons((prev) => prev.filter((c) => c.recipe_id !== recipe_id));
       setTotalCauldrons((prevTotal) => prevTotal - 1);
     } catch (error) {
       console.error("Error deleting cauldron:", error);

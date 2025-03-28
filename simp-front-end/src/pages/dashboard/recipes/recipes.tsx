@@ -60,23 +60,18 @@ export default function Recipes() {
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.stopPropagation();
+
     if (!user) return;
-    const effectiveInCauldron = cauldronRecipes.some(
-      (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-    );
-    if (effectiveInCauldron) {
-      const record = cauldronRecipes.find(
-        (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-      );
-      if (record) {
-        await deleteCauldron(record.cauldron_id);
-      }
+    if (recipe.in_cauldron) {
+        await deleteCauldron(user.user_id, recipe.recipe_id);
+        recipe.in_cauldron = false;
     } else {
       await addCauldron({
         user_id: user.user_id,
         recipe_id: recipe.recipe_id,
         is_active: true,
       });
+      recipe.in_cauldron = true;
     }
     await fetchUserCauldronRecipes();
   };
@@ -114,9 +109,6 @@ export default function Recipes() {
         </div>
         {recipes.length > 0 ? (
           recipes.map((recipe, index) => {
-            const effectiveInCauldron = cauldronRecipes.some(
-              (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-            );
             return (
               <div
                 key={recipe.recipe_id}
@@ -129,7 +121,7 @@ export default function Recipes() {
                 >
                   <Icon
                     className={
-                      effectiveInCauldron
+                      recipe.in_cauldron
                         ? styles.cauldronAdded
                         : styles.cauldronButton
                     }
