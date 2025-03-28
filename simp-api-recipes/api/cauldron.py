@@ -149,3 +149,29 @@ def read_cauldron_recipes(
         "cauldron_recipes": cauldron_recipes,
         "total_cauldron_recipes": total,
     }
+
+@router.delete("/user/{user_id}/recipe/{recipe_id}", response_model=Dict[str, str])
+def delete_cauldron_by_user_and_recipe(
+    user_id: uuid.UUID,
+    recipe_id: uuid.UUID,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a cauldron entry for a specific user and recipe.
+    """
+    cauldron_obj = (
+        db.query(CauldronModel)
+        .filter(
+            CauldronModel.user_id == user_id,
+            CauldronModel.recipe_id == recipe_id
+        )
+        .first()
+    )
+    if not cauldron_obj:
+        raise HTTPException(
+            status_code=404,
+            detail="Cauldron entry not found for the given user and recipe"
+        )
+    db.delete(cauldron_obj)
+    db.commit()
+    return {"detail": "Cauldron entry deleted successfully"}

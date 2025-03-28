@@ -15,10 +15,10 @@ export default function Recipes() {
     addRecipe,
     updateRecipe,
     hasMore,
-    cauldronRecipes,
-    fetchUserCauldronRecipes,
     addCauldron,
     deleteCauldron,
+    toggleRecipeLocal,
+    fetchUserCauldronRecipes,
   } = useDashboard();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,28 +55,23 @@ export default function Recipes() {
     setIsModalOpen(true);
   };
 
+  // Use the recipe's is_cauldron flag and call the new delete function (which uses user id and recipe id)
   const handleToggleCauldron = async (
     recipe: ListRecipe,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.stopPropagation();
     if (!user) return;
-    const effectiveInCauldron = cauldronRecipes.some(
-      (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-    );
-    if (effectiveInCauldron) {
-      const record = cauldronRecipes.find(
-        (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-      );
-      if (record) {
-        await deleteCauldron(record.cauldron_id);
-      }
+    if (recipe.in_cauldron) {
+      await deleteCauldron(recipe.recipe_id);
+      toggleRecipeLocal(recipe.recipe_id, false);
     } else {
       await addCauldron({
         user_id: user.user_id,
         recipe_id: recipe.recipe_id,
         is_active: true,
       });
+      toggleRecipeLocal(recipe.recipe_id, true);
     }
     await fetchUserCauldronRecipes();
   };
@@ -114,9 +109,7 @@ export default function Recipes() {
         </div>
         {recipes.length > 0 ? (
           recipes.map((recipe, index) => {
-            const effectiveInCauldron = cauldronRecipes.some(
-              (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
-            );
+            const effectiveInCauldron = recipe.in_cauldron;
             return (
               <div
                 key={recipe.recipe_id}

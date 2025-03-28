@@ -68,4 +68,14 @@ export async function getCauldronRecipes(
   return response.data;
 }
 
+// Delete a cauldron record by user id and recipe id.
+// This endpoint finds the cauldron entry based on the user and recipe IDs.
+export async function deleteCauldronByUserAndRecipe(
+  userId: string,
+  recipeId: string
+): Promise<{ detail: string }> {
+  const response = await apiClient.delete<{ detail: string }>(`/cauldrons/user/${userId}/recipe/${recipeId}`);
+  return response.data;
+}
+
 // Optionally, you can add similar API calls for CauldronData if needed.
