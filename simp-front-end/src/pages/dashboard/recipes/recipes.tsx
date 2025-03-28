@@ -30,7 +30,6 @@ export default function Recipes() {
     (node: HTMLDivElement) => {
       if (observer.current) observer.current.disconnect();
       if (!hasMore) return;
-      // Set observer options to trigger slightly before the element fully enters view.
       observer.current = new IntersectionObserver(
         (entries) => {
           if (entries[0].isIntersecting) {
@@ -56,21 +55,16 @@ export default function Recipes() {
     setIsModalOpen(true);
   };
 
-  // Toggle the recipe's cauldron status.
   const handleToggleCauldron = async (
     recipe: ListRecipe,
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
     e.stopPropagation();
     if (!user) return;
-
-    // Check if the recipe is already active in the cauldron.
     const effectiveInCauldron = cauldronRecipes.some(
       (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
     );
-
     if (effectiveInCauldron) {
-      // Find the cauldron record for this recipe.
       const record = cauldronRecipes.find(
         (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
       );
@@ -84,7 +78,6 @@ export default function Recipes() {
         is_active: true,
       });
     }
-    // Refresh the cauldron recipes to update the UI.
     await fetchUserCauldronRecipes();
   };
 
@@ -121,7 +114,6 @@ export default function Recipes() {
         </div>
         {recipes.length > 0 ? (
           recipes.map((recipe, index) => {
-            // Determine if the recipe is effectively in the cauldron.
             const effectiveInCauldron = cauldronRecipes.some(
               (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
             );
@@ -131,7 +123,6 @@ export default function Recipes() {
                 className={styles.recipeCard}
                 ref={index === recipes.length - 1 ? lastRecipeRef : null}
               >
-                {/* Cauldron Icon Button */}
                 <button
                   className={styles.cauldronWrapper}
                   onClick={(e) => handleToggleCauldron(recipe, e)}
@@ -147,12 +138,11 @@ export default function Recipes() {
                 </button>
                 <div className={styles.imageContainer}>
                   <img
-                    src={recipe.front_image || "https://picsum.photos/300/200"}
+                    src={recipe.front_image || "https://placehold.co/100x100"}
                     alt={recipe.title}
                     className={styles.recipeImage}
                   />
                 </div>
-                {/* Recipe Content area as an anchor tag */}
                 <a
                   href="#"
                   className={styles.recipeContent}

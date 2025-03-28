@@ -26,15 +26,19 @@
 /* Content area: takes up remaining space and is scrollable */
 .content {
   flex: 1;
-  overflow-y: auto;
+  justify-content: center;
+  display: flex;
 }
+
 
 /* Grid Layout for Cauldron Cards: auto-fit cards with a minimum width */
 .cauldronGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(187px, 1fr));
+  width: 1075px;
+  min-height: 488px;
+  justify-content: left;
+  grid-template-columns: repeat(auto-fit, 187px);
   gap: 28px;
-  justify-content: center;
 }
 
 /* Cauldron Card Styling */
@@ -48,7 +52,8 @@
   flex-direction: column;
   width: 187px;
   height: 230px;
-  margin: 0 auto;
+  margin-left: 14px;
+
 }
 
 /* Image Container */

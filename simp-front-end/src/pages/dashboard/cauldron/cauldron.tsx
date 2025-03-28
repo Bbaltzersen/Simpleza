@@ -36,6 +36,7 @@ export default function Cauldron() {
         <h2>Cauldron</h2>
       </div>
       <div className={styles.content}>
+        <div className={styles.gridCenter}>
         <div className={styles.cauldronGrid}>
           {cauldronRecipes.length === 0 ? (
             <p>No cauldron recipes found.</p>
@@ -44,7 +45,7 @@ export default function Cauldron() {
               <div key={cr.cauldron_id} className={styles.cauldronCard}>
                 <div className={styles.imageContainer}>
                   <img
-                    src={cr.front_image || "https://picsum.photos/300/200"}
+                    src={cr.front_image || "https://placehold.co/100x100"}
                     alt={cr.title}
                     className={styles.recipeImage}
                   />
@@ -58,6 +59,7 @@ export default function Cauldron() {
             ))
           )}
         </div>
+      </div>
       </div>
       <div className={styles.pagination}>
         <ul>

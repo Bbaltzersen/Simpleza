@@ -1,3 +1,4 @@
+// DashboardProvider.tsx
 "use client";
 import React, {
   createContext,
@@ -22,7 +23,7 @@ import { useAuth } from "@/lib/context/authContext";
 import {
   createCauldron,
   getCauldronsByUser,
-  getCauldronRecipes, // Retrieves combined cauldron and recipe data
+  getCauldronRecipes,
   updateCauldron as updateCauldronApi,
   deleteCauldron,
 } from "@/lib/api/cauldron/cauldron";
@@ -50,12 +51,12 @@ interface DashboardContextType {
   deleteCauldron: (cauldronId: string) => Promise<void>;
   totalCauldrons: number;
   cauldronPage: number;
-  // Combined cauldron recipes (cauldron entry + recipe details)
+  // Combined cauldron recipes
   cauldronRecipes: CauldronRecipe[];
   fetchUserCauldronRecipes: (page?: number) => Promise<void>;
   totalCauldronRecipes: number;
   cauldronRecipesPage: number;
-  // Recipes pagination for dropdown pagination
+  // Recipes pagination
   totalRecipes: number;
   currentRecipePage: number;
 }
@@ -70,11 +71,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const [recipe_details, setRecipeDetails] = useState<RecipeCreate | undefined>(undefined);
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const limit = 10;
+  // Define limits for initial load and infinite scroll.
+  const initialLimit = 19; // Initial fetch returns 19 recipes.
+  const infiniteLimit = 20; // Each subsequent call returns 20 recipes.
   const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
-  // Recipes pagination state for dropdown pagination
+  // Other state values (pagination for dropdown, if needed)
   const [recipePage, setRecipePage] = useState<number>(1);
   const [totalRecipes, setTotalRecipes] = useState<number>(0);
 
@@ -83,20 +86,38 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   const [cauldrons, setCauldrons] = useState<Cauldron[]>([]);
   const [cauldronPage, setCauldronPage] = useState(1);
   const [totalCauldrons, setTotalCauldrons] = useState(0);
-  // Combined cauldron recipes
   const [cauldronRecipes, setCauldronRecipes] = useState<CauldronRecipe[]>([]);
   const [cauldronRecipesPage, setCauldronRecipesPage] = useState(1);
   const [totalCauldronRecipes, setTotalCauldronRecipes] = useState(0);
 
-  const fetchMoreRecipes = useCallback(async () => {
+  // --- Method 1: Initial Fetch (19 recipes) ---
+  const fetchInitialRecipes = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(
+        user.user_id,
+        0,
+        initialLimit
+      );
+      setRecipes(newRecipes);
+      setSkip(newRecipes.length);
+      if (newRecipes.length >= total) {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error fetching initial recipes:", error);
+    }
+  }, [user]);
+
+  // --- Method 2: Infinite Scroll Fetch (20 recipes per call) ---
+  const fetchInfiniteRecipes = useCallback(async () => {
     if (!hasMore || !user) return;
     try {
       const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(
         user.user_id,
         skip,
-        limit
+        infiniteLimit
       );
-      // Use a functional update to avoid stale closures.
       setRecipes((prevRecipes) => {
         const updatedRecipes = [...prevRecipes, ...newRecipes];
         if (updatedRecipes.length >= total) {
@@ -104,13 +125,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         }
         return updatedRecipes;
       });
-      setSkip((prevSkip) => prevSkip + limit);
+      setSkip((prevSkip) => prevSkip + newRecipes.length);
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error("Error fetching infinite recipes:", error);
     }
-  }, [hasMore, user, skip, limit]);
-  
+  }, [hasMore, user, skip]);
 
+  // Other methods (addRecipeFn, updateRecipeFn, etc.) remain unchanged.
   const addRecipeFn = async (recipe: RecipeCreate): Promise<void> => {
     try {
       const newRecipe = await createRecipe(recipe);
@@ -183,7 +204,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // CAULDRON FUNCTIONS
+  // CAULDRON FUNCTIONS remain unchanged.
   const fetchUserCauldrons = useCallback(async (page: number = 1) => {
     if (!user) return;
     try {
@@ -230,7 +251,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Combined cauldron recipes
   const fetchUserCauldronRecipes = useCallback(async (page: number = 1) => {
     if (!user) return;
     try {
@@ -248,23 +268,22 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchMoreRecipes();
-  }, [fetchMoreRecipes]);
-
+  // On mount, use the initial fetch (19 recipes) plus cauldron fetches.
   useEffect(() => {
     if (user) {
+      fetchInitialRecipes();
       fetchUserCauldrons();
       fetchUserCauldronRecipes();
     }
-  }, [user, fetchUserCauldrons, fetchUserCauldronRecipes]);
+  }, [user, fetchInitialRecipes, fetchUserCauldronRecipes, fetchUserCauldrons]);
 
   return (
     <DashboardContext.Provider
       value={{
         recipes,
         recipe_details,
-        fetchMoreRecipes,
+        // For infinite scroll, we now expose the infinite method.
+        fetchMoreRecipes: fetchInfiniteRecipes,
         addRecipe: addRecipeFn,
         updateRecipe: updateRecipeFn,
         deleteRecipe: deleteRecipeFn,
