@@ -13,7 +13,6 @@ class RecipeOut(BaseModel):
         from_attributes = True
 
 class CreateRecipeIngredient(BaseModel):
-    ingredient_id: Optional[UUID] = None
     ingredient_name: str
     amount: float
     measurement: str

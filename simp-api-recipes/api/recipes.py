@@ -143,16 +143,12 @@ def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
         
         # Process ingredients.
         for ing_input in recipe.ingredients:
-            if ing_input.ingredient_id:
-                ingredient_obj = db.query(Ingredient).filter(Ingredient.ingredient_id == ing_input.ingredient_id).first()
-                if not ingredient_obj:
-                    raise HTTPException(status_code=400, detail=f"Ingredient {ing_input.ingredient_id} not found.")
-            else:
-                ingredient_obj = db.query(Ingredient).filter(Ingredient.name == ing_input.ingredient_name).first()
-                if not ingredient_obj:
-                    ingredient_obj = Ingredient(name=ing_input.ingredient_name)
-                    db.add(ingredient_obj)
-                    db.flush()  # Get its id.
+            # Search by name if no valid ingredient_id provided.
+            ingredient_obj = db.query(Ingredient).filter(Ingredient.name.ilike(ing_input.ingredient_name)).first()
+            if not ingredient_obj:
+                ingredient_obj = Ingredient(name=ing_input.ingredient_name)
+                db.add(ingredient_obj)
+                db.flush()  # Ensure ingredient_obj gets an id.
             new_recipe_ing = RecipeIngredient(
                 recipe_id=new_recipe.recipe_id,
                 ingredient_id=ingredient_obj.ingredient_id,
@@ -174,6 +170,9 @@ def create_recipe(recipe: CreateRecipe, db: Session = Depends(get_db)):
         
         # Process images.
         for image_input in recipe.images:
+            # Skip insertion if image_url is empty (or whitespace)
+            if not image_input.image_url or not image_input.image_url.strip():
+                continue
             new_image = RecipeImage(
                 recipe_id=new_recipe.recipe_id,
                 image_url=image_input.image_url,

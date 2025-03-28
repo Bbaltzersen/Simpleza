@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useEffect, JSX } from "react";
 import styles from "./recipes.module.css";
 import { useDashboard } from "@/lib/context/dashboardContext";
 import RecipeModal from "@/lib/modals/recipeModal";
@@ -8,64 +8,66 @@ import { cauldron } from "@lucide/lab";
 import { ListRecipe, RecipeCreate } from "@/lib/types/recipe";
 import { useAuth } from "@/lib/context/authContext";
 
-export default function Recipes() {
+export default function Recipes(): JSX.Element {
   const {
     recipes,
-    fetchMoreRecipes,
+    fetchRecipesForPage, // New page-based function for recipes
+    totalRecipes,         // Total number of recipes available
+    currentRecipePage,    // Current page number
     addRecipe,
     updateRecipe,
-    hasMore,
     cauldronRecipes,
     fetchUserCauldronRecipes,
     addCauldron,
     deleteCauldron,
   } = useDashboard();
   const { user } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedRecipe, setSelectedRecipe] = useState<ListRecipe | null>(null);
   const [modalKey, setModalKey] = useState<string>("new");
-  const observer = useRef<IntersectionObserver | null>(null);
 
-  const lastRecipeRef = useCallback(
-    (node: HTMLDivElement) => {
-      if (!hasMore) return;
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) fetchMoreRecipes();
-      });
-      if (node) observer.current.observe(node);
-    },
-    [hasMore, fetchMoreRecipes]
-  );
+  // On initial load, fetch the first page.
+  useEffect(() => {
+    if (user) {
+      fetchRecipesForPage(1);
+    }
+  }, [user, fetchRecipesForPage]);
 
-  const handleAddRecipe = () => {
+  const pageSize = 10;
+  const totalPages = Math.ceil(totalRecipes / pageSize);
+
+  const handlePageChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    const page = Number(e.target.value);
+    if (page !== currentRecipePage) {
+      fetchRecipesForPage(page);
+    }
+  };
+
+  const handleAddRecipe = (): void => {
     setSelectedRecipe(null);
     setModalKey(`new-${Date.now()}`);
     setIsModalOpen(true);
   };
 
-  const handleEditRecipe = (recipe: ListRecipe) => {
+  const handleEditRecipe = (recipe: ListRecipe): void => {
     setSelectedRecipe(recipe);
     setModalKey(recipe.recipe_id);
     setIsModalOpen(true);
   };
 
-  // When the cauldron icon is clicked, we check whether the recipe is already in the cauldron
-  // (using the Dashboard context's cauldronRecipes array) and then call the appropriate API call.
   const handleToggleCauldron = async (
     recipe: ListRecipe,
     e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  ): Promise<void> => {
     e.stopPropagation();
     if (!user) return;
 
-    // Determine if the recipe is in the cauldron by checking if any active cauldron record exists for this recipe.
     const effectiveInCauldron = cauldronRecipes.some(
       (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
     );
 
     if (effectiveInCauldron) {
-      // Find the cauldron record for this recipe.
       const record = cauldronRecipes.find(
         (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
       );
@@ -79,11 +81,10 @@ export default function Recipes() {
         is_active: true,
       });
     }
-    // Refresh cauldron recipes in the context.
     await fetchUserCauldronRecipes();
   };
 
-  const handleSaveRecipeWrapper = async (recipeData: RecipeCreate) => {
+  const handleSaveRecipeWrapper = async (recipeData: RecipeCreate): Promise<void> => {
     if (!user) {
       console.error("User is not authenticated");
       return;
@@ -115,18 +116,12 @@ export default function Recipes() {
           <Plus size={48} />
         </div>
         {recipes.length > 0 ? (
-          recipes.map((recipe, index) => {
-            // Determine effective in_cauldron using the context's cauldronRecipes.
+          recipes.map((recipe: ListRecipe) => {
             const effectiveInCauldron = cauldronRecipes.some(
               (cr) => cr.recipe_id === recipe.recipe_id && cr.is_active
             );
             return (
-              <div
-                key={recipe.recipe_id}
-                className={styles.recipeCard}
-                ref={index === recipes.length - 1 ? lastRecipeRef : null}
-              >
-                {/* Cauldron Icon Button */}
+              <div key={recipe.recipe_id} className={styles.recipeCard}>
                 <button
                   className={styles.cauldronWrapper}
                   onClick={(e) => handleToggleCauldron(recipe, e)}
@@ -147,13 +142,11 @@ export default function Recipes() {
                     className={styles.recipeImage}
                   />
                 </div>
-                {/* Recipe Content area as an anchor tag */}
                 <a
                   href="#"
                   className={styles.recipeContent}
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
                     handleEditRecipe(recipe);
                   }}
                 >
@@ -171,7 +164,15 @@ export default function Recipes() {
           <p>No recipes available.</p>
         )}
       </div>
-      {hasMore && <p>Loading more recipes...</p>}
+      <div className={styles.paginationDropdown}>
+        <select value={currentRecipePage} onChange={handlePageChange}>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <option key={page} value={page}>
+              Page {page}
+            </option>
+          ))}
+        </select>
+      </div>
       <RecipeModal
         key={modalKey}
         isOpen={isModalOpen}
@@ -180,7 +181,7 @@ export default function Recipes() {
           setIsModalOpen(false);
         }}
         onSave={handleSaveRecipeWrapper}
-        recipe={selectedRecipe}
+        recipe={selectedRecipe || undefined}
       />
     </div>
   );
