@@ -33,7 +33,6 @@ interface DashboardContextType {
   recipes: ListRecipe[];
   recipe_details?: RecipeCreate;
   fetchMoreRecipes: () => Promise<void>;
-  fetchRecipesForPage: (page: number) => Promise<void>;
   addRecipe: (recipe: RecipeCreate) => Promise<void>;
   updateRecipe: (recipe_id: string, recipe: RecipeCreate) => Promise<void>;
   deleteRecipe: (recipe_id: string) => Promise<void>;
@@ -97,30 +96,20 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         skip,
         limit
       );
-      setRecipes((prev) => [...prev, ...newRecipes]);
-      setSkip((prev) => prev + limit);
-      if (recipes.length + newRecipes.length >= total) setHasMore(false);
+      // Use a functional update to avoid stale closures.
+      setRecipes((prevRecipes) => {
+        const updatedRecipes = [...prevRecipes, ...newRecipes];
+        if (updatedRecipes.length >= total) {
+          setHasMore(false);
+        }
+        return updatedRecipes;
+      });
+      setSkip((prevSkip) => prevSkip + limit);
     } catch (error) {
       console.error("Error fetching recipes:", error);
     }
-  }, [hasMore, skip, recipes.length, user]);
-
-  const fetchRecipesForPage = useCallback(async (page: number = 1) => {
-    if (!user) return;
-    try {
-      const offset = (page - 1) * limit;
-      const { recipes: newRecipes, total } = await fetchRecipesByAuthorID(
-        user.user_id,
-        offset,
-        limit
-      );
-      setRecipes(newRecipes);
-      setRecipePage(page);
-      setTotalRecipes(total);
-    } catch (error) {
-      console.error("Error fetching recipes for page:", error);
-    }
-  }, [user]);
+  }, [hasMore, user, skip, limit]);
+  
 
   const addRecipeFn = async (recipe: RecipeCreate): Promise<void> => {
     try {
@@ -276,7 +265,6 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
         recipes,
         recipe_details,
         fetchMoreRecipes,
-        fetchRecipesForPage,
         addRecipe: addRecipeFn,
         updateRecipe: updateRecipeFn,
         deleteRecipe: deleteRecipeFn,
