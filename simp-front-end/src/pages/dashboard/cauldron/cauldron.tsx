@@ -101,7 +101,7 @@ export default function Cauldron() {
             <button
               type="button"
               onClick={() => handlePageChange(cauldronRecipesPage + 1)}
-              disabled={cauldronRecipesPage === totalPages}
+              disabled={cauldronRecipesPage === totalPages || totalPages === 0}
             >
               Next
             </button>
