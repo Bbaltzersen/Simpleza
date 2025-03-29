@@ -26,16 +26,42 @@
 /* Content area: takes up remaining space and is scrollable */
 .content {
   flex: 1;
+  width: 100%;
   justify-content: center;
   display: flex;
 }
 
+.emptyCauldron {
+  display: flex;
+  flex-direction: column;
+  width: 1075px;
+  height: 480px;
+  opacity: 70%;
+  color: var(--foreground);
+  justify-content: center;
+  align-items: center;
+}
+
+.emptyCauldronIcon {
+  color: var(--foreground);
+  stroke-width: 2px;
+  opacity: 70%;
+  margin-bottom: 10px;
+}
+
+.emptyCauldronText {
+  font-size: 1.5rem;
+  font-weight: 600;
+  opacity: 70%;
+  color: var(--foreground);
+  margin: 0;
+}
 
 /* Grid Layout for Cauldron Cards: auto-fit cards with a minimum width */
 .cauldronGrid {
   display: grid;
   width: 1075px;
-  min-height: 488px;
+  height: 488px;
   justify-content: left;
   grid-template-columns: repeat(auto-fit, 187px);
   gap: 28px;
