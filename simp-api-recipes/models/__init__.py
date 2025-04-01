@@ -1,29 +1,58 @@
-from .base import Base
-from .user import User
-from .recipe import Recipe
-from .recipe_author import RecipeAuthor
-from .recipe_ingredient import RecipeIngredient
-from .recipe_tag import RecipeTag
-from .recipe_image import RecipeImage
-from .recipe_step import RecipeStep
-from .recipe_favorite import RecipeFavorite
-from .tag import Tag
-from .recipe_analytics import RecipeAnalytics
-from .cauldron import Cauldron
-from .cauldron_data import CauldronData
+# Assuming your models are defined in a file named 'database_tables.py'
+# (or similar) in the same directory
+from .database_tables import (
+    Base,
+    User,
+    Recipe,
+    RecipeAuthor,
+    RecipeIngredient,
+    RecipeTag,  # Note: This is a Table object, not a class
+    RecipeImage,
+    RecipeStep,
+    RecipeFavorite,
+    RecipeAnalytic,
+    Ingredient,
+    IngredientNutritionValue,
+    Nutrient,
+    IngredientProduct,
+    ApproximateMeasurement,
+    Density,
+    Tag,
+    Product,
+    ProductCompany,
+    Company,
+    UserPreference,
+    Cauldron,
+    CauldronMetric,
+    # --- Added new models ---
+    PopulationGroup,
+    DietaryReferenceValue
+)
 
 __all__ = [
     "Base",
     "User",
     "Recipe",
-    "RecipeAnalytics",
     "RecipeAuthor",
     "RecipeIngredient",
-    "RecipeTag",
+    "RecipeTag",  # Keep if direct import of the Table object is desired
     "RecipeImage",
     "RecipeStep",
     "RecipeFavorite",
+    "RecipeAnalytic",
+    "Ingredient",
+    "IngredientNutritionValue",
+    "Nutrient",
+    "IngredientProduct",
+    "ApproximateMeasurement",
+    "Density",
     "Tag",
+    "Product",
+    "ProductCompany",
+    "Company",
+    "UserPreference",
     "Cauldron",
-    "CauldronData",
+    "CauldronMetric",
+    "PopulationGroup",
+    "DietaryReferenceValue",
 ]
