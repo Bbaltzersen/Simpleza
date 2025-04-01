@@ -8,14 +8,7 @@ from uuid import UUID
 from fuzzywuzzy import process  
 from database.auth.authorize import get_current_user
 from database.connection import SessionLocal
-from models.cauldron import Cauldron
-from models.ingredient import Ingredient
-from models.recipe import Recipe
-from models.recipe_image import RecipeImage
-from models.recipe_ingredient import RecipeIngredient
-from models.recipe_step import RecipeStep
-from models.recipe_tag import RecipeTag
-from models.tag import Tag
+from models.database_tables import Cauldron, Ingredient, Recipe, RecipeIngredient, RecipeStep, RecipeImage, RecipeTag, Tag
 from schemas.recipe import  EditRecipe, RecipeOut, CreateRecipe, CreateRecipeIngredient, CreateRecipeImage, CreateRecipeTag
 
 router = APIRouter(tags=["recipes"])

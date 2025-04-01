@@ -6,8 +6,8 @@ import uuid
 
 from database.connection import SessionLocal
 from schemas.cauldron import CauldronCreate, CauldronSchema, CauldronUpdate
-from models.cauldron import Cauldron as CauldronModel  # SQLAlchemy model for Cauldron
-from models.recipe import Recipe
+from models.database_tables import Cauldron as CauldronModel  # SQLAlchemy model for Cauldron
+from models.database_tables import Recipe
 
 router = APIRouter(tags=["cauldrons"])
 
