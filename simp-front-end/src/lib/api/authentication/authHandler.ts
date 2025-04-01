@@ -15,12 +15,10 @@ export async function retrieveAuth(): Promise<{ user: User | null; error?: strin
         headers: { 'X-CSRF-Token': csrfToken || '' }, // Include CSRF token
       });
   
-      // ✅ If response contains a user, return it
       if (response.status === 200 && response.data?.user) {
         return { user: response.data.user };
       }
   
-      // ✅ If response contains an error message, return it
       if (response.data?.details) {
         return { user: null, error: response.data.details };
       }

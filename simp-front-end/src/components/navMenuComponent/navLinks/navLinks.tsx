@@ -16,7 +16,7 @@ export default function NavLinks() {
       <a href="/catalogue" className={styles.navLink}>Catalogue</a>
       {user && (
         <>
-            {user.role === "admin" && (
+            {user.role === "ADMIN" && (
               <a href="/management" className={styles.navLink}>Management</a>
             )}
             </>
