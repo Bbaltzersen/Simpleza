@@ -4,9 +4,7 @@ from typing import Dict, List
 import uuid
 
 from database.connection import SessionLocal
-from models.product import Product
-from models.company import Company
-from models.product_company import ProductCompany
+from models.database_tables import Product, Company, ProductCompany
 from schemas.product import ProductOut, ProductCreate, ProductCompanyOut
 
 router = APIRouter(prefix="", tags=["Products"])
