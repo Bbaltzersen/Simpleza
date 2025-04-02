@@ -16,3 +16,9 @@ export type Ingredient = {
     product_id: string; // UUID (ForeignKey)
   };
   
+
+  export type ingredientCreate = {
+    name: string;
+    default_unit: string; // Default is "g"
+    calories_per_100g?: number; // Optional
+  };
