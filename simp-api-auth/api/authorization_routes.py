@@ -23,10 +23,10 @@ def is_authorized(required_role: str):
 
 
 @router.get("/admin-only")
-def admin_dashboard(user_data: dict = Depends(is_authorized("ADMIN"))):
+def admin_dashboard(user_data: dict = Depends(is_authorized("admin"))):
     return {"message": f"Welcome, Admin {user_data.get('user_id')}!"}
 
 
 @router.get("/user-only")
-def user_dashboard(user_data: dict = Depends(is_authorized("USER"))):
+def user_dashboard(user_data: dict = Depends(is_authorized("user"))):
     return {"message": f"Welcome, user {user_data.get('user_id')}!"}

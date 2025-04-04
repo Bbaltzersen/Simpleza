@@ -22,7 +22,7 @@ def create_user(db: Session, username: str, email: str, hashed_password: str):
         username=username,
         email=email,
         hashed_password=hashed_password,
-        role="USER"  
+        role="user"  
     )
     db.add(user)
     db.commit()
