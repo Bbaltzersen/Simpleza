@@ -7,38 +7,25 @@
 
 .header {
   display: flex;
-  justify-content: space-between; /* Pushes title left, actionsArea right */
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  gap: 1rem; /* Add some gap between title and actions */
 }
 
 .title {
   text-decoration: underline;
   text-underline-offset: 0.5rem;
-  margin: 0; /* Remove default margin if needed */
-  flex-shrink: 0; /* Prevent title from shrinking */
 }
 
-/* NEW: Styles for the wrapper containing right-aligned items */
-.headerActionsArea {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem; /* Space between items in the actions area (e.g., validation btn and 'New' btn) */
-}
-
-/* Styles specifically for the action button passed via props */
-/* Apply these styles directly to the button element passed in actionButton prop
-   or create a wrapper component if needed */
-.actionButton { /* This class might be applied by the parent component now */
+.actionButton {
   background: none;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
-  color: #ff0000; /* Example color */
+  color: #ff0000;
 }
 
 .actionButton:hover {
-  color: #700000; /* Example hover color */
+  color: #700000;
 }
