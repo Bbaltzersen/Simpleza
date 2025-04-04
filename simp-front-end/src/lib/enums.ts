@@ -4,20 +4,20 @@
 // Measurement Units
 // -------------------------
 export const MeasurementUnit = {
-    GRAM: "g",
-    MILLILITER: "ml",
-    LITER: "l",
-    KILOGRAM: "kg",
-    PIECE: "piece",
-    TEASPOON: "tsp",
-    TABLESPOON: "tbsp",
-    CUP: "cup",
-    OUNCE: "oz",
-    POUND: "lb",
-    MILLIGRAM: "mg",
-    MICROGRAM: "µg", // Represents micrograms
+    GRAM: "GRAM",
+    MILLILITER: "MILLILITER",
+    LITER: "LITER",
+    KILOGRAM: "KILOGRAM",
+    PIECE: "PIECE",
+    TEASPOON: "TEASPOON",
+    TABLESPOON: "TABLESPOON",
+    CUP: "CUP",
+    OUNCE: "OUNCE",
+    POUND: "POUND",
+    MILLIGRAM: "MILLIGRAM",
+    MICROGRAM: "MICROGRAM", // Represents micrograms
     IU: "IU", // International Units
-    KCAL: "kcal", // Kilocalories (often used like a unit)
+    KCAL: "KCAL", // Kilocalories (often used like a unit)
 } as const;
 
 // Type representing the possible string values for MeasurementUnit

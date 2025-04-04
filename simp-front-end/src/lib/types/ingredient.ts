@@ -6,7 +6,7 @@ import { MeasurementUnitEnum } from "@/lib/enums"; // Import required enum type
 export type Ingredient = {
   ingredient_id: string; // UUID
   name: string;
-  default_unit: MeasurementUnitEnum; // Use Enum Type HERE for received data
+  default_unit: string; // Use Enum Type HERE for received data
   calories_per_100g?: number | null;
   validated: boolean;
   diet_level: number;
