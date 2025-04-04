@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import uuid
 
 from database.connection import SessionLocal
-from models.database_tables import Company
+from models.company import Company
 from schemas.company import CompanyCreate, CompanyOut, PaginatedCompanies
 
 router = APIRouter(prefix="", tags=["Companies"])

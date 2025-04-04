@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 import uuid
 
 from database.connection import SessionLocal
-from models.database_tables import Nutrient
+from models.nutrition import Nutrition
 from schemas.nutrition import NutritionCreate, NutritionOut
 
 router = APIRouter(prefix="", tags=["Nutritions"])
@@ -18,11 +18,11 @@ def get_db():
 
 @router.post("/", response_model=NutritionOut, status_code=status.HTTP_201_CREATED)
 def create_nutrition(nutrition: NutritionCreate, db: Session = Depends(get_db)):
-    existing_nutrition = db.query(Nutrient).filter(Nutrient.name == nutrition.name).first()
+    existing_nutrition = db.query(Nutrition).filter(Nutrition.name == nutrition.name).first()
     if existing_nutrition:
         raise HTTPException(status_code=400, detail="Nutrition already exists")
 
-    new_nutrition = Nutrient(
+    new_nutrition = Nutrition(
         name=nutrition.name,
         measurement=nutrition.measurement,
         recommended=nutrition.recommended
@@ -38,8 +38,8 @@ def read_nutritions(
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    total_nutritions = db.query(Nutrient).count()
-    nutritions = db.query(Nutrient).offset(skip).limit(limit).all()
+    total_nutritions = db.query(Nutrition).count()
+    nutritions = db.query(Nutrition).offset(skip).limit(limit).all()
 
     return {
         "nutritions": nutritions,
@@ -48,14 +48,14 @@ def read_nutritions(
 
 @router.get("/{nutrition_id}", response_model=NutritionOut)
 def read_nutrition(nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
-    nutrition = db.query(Nutrient).filter(Nutrient.nutrition_id == nutrition_id).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.nutrition_id == nutrition_id).first()
     if not nutrition:
         raise HTTPException(status_code=404, detail="Nutrition not found")
     return nutrition
 
 @router.put("/{nutrition_id}", response_model=NutritionOut)
 def update_nutrition(nutrition_id: uuid.UUID, nutrition_update: NutritionCreate, db: Session = Depends(get_db)):
-    nutrition = db.query(Nutrient).filter(Nutrient.nutrition_id == nutrition_id).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.nutrition_id == nutrition_id).first()
     if not nutrition:
         raise HTTPException(status_code=404, detail="Nutrition not found")
 
@@ -69,7 +69,7 @@ def update_nutrition(nutrition_id: uuid.UUID, nutrition_update: NutritionCreate,
 
 @router.delete("/{nutrition_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_nutrition(nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
-    nutrition = db.query(Nutrient).filter(Nutrient.nutrition_id == nutrition_id).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.nutrition_id == nutrition_id).first()
     if not nutrition:
         raise HTTPException(status_code=404, detail="Nutrition not found")
 
@@ -79,7 +79,7 @@ def delete_nutrition(nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
 
 @router.get("/retrieve/{nutrition_name}", response_model=NutritionOut)
 def get_nutrition_by_name(nutrition_name: str, db: Session = Depends(get_db)):
-    nutrition = db.query(Nutrient).filter(Nutrient.name == nutrition_name.lower()).first()
+    nutrition = db.query(Nutrition).filter(Nutrition.name == nutrition_name.lower()).first()
 
     if not nutrition:
         raise HTTPException(status_code=404, detail="Nutrition not found")

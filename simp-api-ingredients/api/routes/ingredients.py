@@ -5,8 +5,11 @@ import uuid
 from decimal import Decimal
 
 from database.connection import SessionLocal
-from models.database_tables import Ingredient, IngredientProduct, Product
-from models.database_tables import IngredientNutritionValue, Nutrient
+from models.ingredient import Ingredient
+from models.ingredient_nutrition import IngredientNutrition
+from models.ingredient_product import IngredientProduct
+from models.nutrition import Nutrition
+from models.product import Product
 from schemas.ingredient import IngredientCreate, IngredientOut, NutritionLink
 from schemas.product import ProductOut
 from schemas.nutrition import NutritionOut
@@ -117,7 +120,7 @@ def get_ingredient_products(ingredient_id: uuid.UUID, db: Session = Depends(get_
 
 @router.post("/link-nutrition")
 def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends(get_db)):
-    ingredient_nutrition = IngredientNutritionValue(
+    ingredient_nutrition = IngredientNutrition(
         ingredient_id=link_data.ingredient_id,
         nutrition_id=link_data.nutrition_id
     )
@@ -129,9 +132,9 @@ def link_nutrition_to_ingredient(link_data: NutritionLink, db: Session = Depends
 @router.get("/{ingredient_id}/nutritions", response_model=List[NutritionOut])
 def get_ingredient_nutritions(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
     linked_nutritions = (
-        db.query(Nutrient)
-        .join(IngredientNutritionValue, Nutrient.nutrition_id == IngredientNutritionValue.nutrition_id)
-        .filter(IngredientNutritionValue.ingredient_id == ingredient_id)
+        db.query(Nutrition)
+        .join(IngredientNutrition, Nutrition.nutrition_id == IngredientNutrition.nutrition_id)
+        .filter(IngredientNutrition.ingredient_id == ingredient_id)
         .all()
     )
 
@@ -153,9 +156,9 @@ def detach_product(ingredient_id: uuid.UUID, product_id: uuid.UUID, db: Session 
 
 @router.delete("/{ingredient_id}/detach-nutrition/{nutrition_id}")
 def detach_nutrition(ingredient_id: uuid.UUID, nutrition_id: uuid.UUID, db: Session = Depends(get_db)):
-    link = db.query(IngredientNutritionValue).filter(
-        IngredientNutritionValue.ingredient_id == ingredient_id,
-        IngredientNutritionValue.nutrition_id == nutrition_id
+    link = db.query(IngredientNutrition).filter(
+        IngredientNutrition.ingredient_id == ingredient_id,
+        IngredientNutrition.nutrition_id == nutrition_id
     ).first()
 
     if not link:
