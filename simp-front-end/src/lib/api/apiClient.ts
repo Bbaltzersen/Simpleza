@@ -59,6 +59,7 @@ apiClient.interceptors.response.use(
 
         // --- FIX: If the refresh URL itself failed with 401, ABORT ---
         if (isRefreshRequest) {
+            console.error("[Interceptor] Refresh token request failed with 401. Cannot recover session. Aborting queue and rejecting.");
             isRefreshing = false; // Reset the flag
             processQueue(error); // Reject any queued requests with this critical error
             // !! Add logic here to force user logout/redirect if desired !!

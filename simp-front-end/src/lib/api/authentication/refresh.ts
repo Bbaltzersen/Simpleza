@@ -15,6 +15,7 @@ export async function refreshAuth(): Promise<boolean> {
       return false;
     }
   } catch (error: any) {
+    console.error("Error in refreshAuth:", error.message || error);
     return false;
   }
 }

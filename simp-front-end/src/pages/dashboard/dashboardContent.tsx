@@ -13,7 +13,6 @@ function DashboardContent() {
       <Cauldron />
       <Recipes/>
     </DashboardProvider>
-    
   )
 }
 
