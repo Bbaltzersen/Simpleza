@@ -4,7 +4,7 @@ import logging
 from alembic import command
 from alembic.config import Config
 from database.session import engine
-from models.database_tables import Base
+from models.base import Base
 from triggers.tsvectors import initialize_vectors
 
 # Alembic Config Path

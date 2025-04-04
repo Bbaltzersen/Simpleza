@@ -44,13 +44,13 @@
 
 .emptyCauldronIcon {
   color: var(--foreground);
-  stroke-width: 1.5px;
+  stroke-width: 2px;
   opacity: 70%;
   margin-bottom: 10px;
 }
 
 .emptyCauldronText {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   opacity: 70%;
   color: var(--foreground);

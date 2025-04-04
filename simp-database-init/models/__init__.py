@@ -1,33 +1,27 @@
-# Assuming your models are defined in a file named 'database_tables.py'
-# (or similar) in the same directory
-from .database_tables import (
-    Base,
-    User,
-    Recipe,
-    RecipeAuthor,
-    RecipeIngredient,
-    RecipeTag,  # Note: This is a Table object, not a class
-    RecipeImage,
-    RecipeStep,
-    RecipeFavorite,
-    RecipeAnalytic,
-    Ingredient,
-    IngredientNutritionValue,
-    Nutrient,
-    IngredientProduct,
-    ApproximateMeasurement,
-    Density,
-    Tag,
-    Product,
-    ProductCompany,
-    Company,
-    UserPreference,
-    Cauldron,
-    CauldronMetric,
-    # --- Added new models ---
-    PopulationGroup,
-    DietaryReferenceValue
-)
+from .base import Base
+from .user import User
+from .recipe import Recipe
+from .recipe_author import RecipeAuthor
+from .recipe_ingredient import RecipeIngredient
+from .recipe_tag import RecipeTag
+from .recipe_image import RecipeImage
+from .recipe_step import RecipeStep
+from .recipe_favorite import RecipeFavorite
+from .ingredient import Ingredient
+from .ingredient_nutrition import IngredientNutrition
+from .density import Density
+from .approximate_measurement import ApproximateMeasurement
+from .nutrition import Nutrition
+from .ingredient_product import IngredientProduct
+from .tag import Tag
+from .product import Product
+from .product_company import ProductCompany
+from .company import Company
+from .user_preference import UserPreference
+from .alcampo_productid import AlcampoProductID
+from .cauldron import Cauldron
+from .cauldron_data import CauldronData
+from .recipe_analytics import RecipeAnalytics
 
 __all__ = [
     "Base",
@@ -35,14 +29,14 @@ __all__ = [
     "Recipe",
     "RecipeAuthor",
     "RecipeIngredient",
-    "RecipeTag",  # Keep if direct import of the Table object is desired
+    "RecipeTag",
     "RecipeImage",
     "RecipeStep",
     "RecipeFavorite",
-    "RecipeAnalytic",
+    "RecipeAnalytics",
     "Ingredient",
-    "IngredientNutritionValue",
-    "Nutrient",
+    "IngredientNutrition",
+    "Nutrition",
     "IngredientProduct",
     "ApproximateMeasurement",
     "Density",
@@ -51,8 +45,7 @@ __all__ = [
     "ProductCompany",
     "Company",
     "UserPreference",
+    "AlcampoProductID",
     "Cauldron",
-    "CauldronMetric",
-    "PopulationGroup",
-    "DietaryReferenceValue",
+    "CauldronData",
 ]
