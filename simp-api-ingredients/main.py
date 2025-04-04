@@ -12,7 +12,7 @@ load_dotenv()
 app = FastAPI()
 
 # Global dependency: Require admin access for all routes
-admin_dependency = Depends(is_authorized("ADMIN"))
+admin_dependency = Depends(is_authorized("admin"))
 ALLOWED_ORIGINS = "http://localhost:3000"
 
 app.add_middleware(
@@ -24,12 +24,11 @@ app.add_middleware(
 )
 
 
-print("Dependency:", admin_dependency)
 # Include all API routes with admin dependency
-app.include_router(companies_router, prefix="/v1/admin/companies", dependencies=[admin_dependency])
-app.include_router(products_router, prefix="/v1/admin/products", dependencies=[admin_dependency])
-app.include_router(nutritions_router, prefix="/v1/admin/nutritions", dependencies=[admin_dependency])
-app.include_router(ingredients_router, prefix="/v1/admin/ingredients", dependencies=[admin_dependency])
+app.include_router(companies_router, prefix="/v1/companies", dependencies=[admin_dependency])
+app.include_router(products_router, prefix="/v1/products", dependencies=[admin_dependency])
+app.include_router(nutritions_router, prefix="/v1/nutritions", dependencies=[admin_dependency])
+app.include_router(ingredients_router, prefix="/v1/ingredients", dependencies=[admin_dependency])
 
 if __name__ == "__main__":
     import uvicorn

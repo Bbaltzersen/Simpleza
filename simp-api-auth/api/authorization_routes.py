@@ -17,7 +17,7 @@ def get_user_role(user_id: str, db: Session = Depends(get_db)):
 def is_authorized(required_role: str):
     def role_checker(user_data: dict = Depends(get_current_user)):
         if user_data.get("role") != required_role:
-            raise HTTPException(status_code=403, detail="Access denied not authorized")
+            raise HTTPException(status_code=403, detail="Access denied")
         return user_data
     return role_checker
 

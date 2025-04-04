@@ -53,15 +53,14 @@ def get_current_user(request: Request, db: Session = Depends(get_db)):
 
         # Retrieve user from database
         user = db.query(User).filter(User.user_id == user_id).first()
-
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        print(f"role here: {user.role}")  # Debugging user role issues
+
         return {
             "user_id": user.user_id,
             "username": user.username,
             "email": user.email,
-            "role": user.role.name,
+            "role": user.role,
         }
 
     except ExpiredSignatureError:
@@ -74,7 +73,6 @@ def is_authorized(required_role: str):
     """Dependency to enforce role-based authorization."""
     def role_checker(user_data: dict = Depends(get_current_user)):
         if user_data.get("role") != required_role:
-            print(f"User role: {user_data.get('role')}, Required role: {required_role}")
             raise HTTPException(status_code=403, detail="Access denied")
         return user_data
     return role_checker

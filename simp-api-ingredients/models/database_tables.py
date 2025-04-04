@@ -34,20 +34,20 @@ Base = declarative_base(cls=Base)
 
 # --- Enums (Expanded) ---
 class MeasurementUnitEnum(enum.Enum):
-    GRAM = "GRAM"
-    MILLILITER = "MILLILITER"
-    LITER = "LITER"
-    KILOGRAM = "KILOGRAM"
-    PIECE = "PIECE"
-    TEASPOON = "TEASPOON"
-    TABLESPOON = "TABLESPOON"
-    CUP = "CUP"
-    OUNCE = "OUNCE"
-    POUND = "POUND"
-    MILLIGRAM = "MILLIGRAM"
-    MICROGRAM = "MICROGRAM" # Represents micrograms
+    GRAM = "g"
+    MILLILITER = "ml"
+    LITER = "l"
+    KILOGRAM = "kg"
+    PIECE = "piece"
+    TEASPOON = "tsp"
+    TABLESPOON = "tbsp"
+    CUP = "cup"
+    OUNCE = "oz"
+    POUND = "lb"
+    MILLIGRAM = "mg"
+    MICROGRAM = "µg" # Represents micrograms
     IU = "IU" # International Units
-    KCAL = "KCAL" # Kilocalories
+    KCAL = "kcal" # Kilocalories
 
 class UserRoleEnum(enum.Enum):
     USER = "user"
@@ -196,7 +196,7 @@ class Ingredient(Base):
     default_unit = Column(SQLAlchemyEnum(MeasurementUnitEnum, name="measurement_unit_enum_ingr"), nullable=False, default=MeasurementUnitEnum.GRAM)
     calories_per_100g = Column(Numeric(10, 2), nullable=True)
     validated = Column(Boolean, nullable=False, default=False, index=True)
-    diet_level = Column(Integer, nullable=False, default=4) # Kept if needed
+    # diet_level = Column(Integer, nullable=False, default=4) # Kept if needed
 
     __table_args__ = (
         Index("idx_ingredient_name_tsv", "name_tsv", postgresql_using="gin"),
