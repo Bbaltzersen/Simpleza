@@ -13,7 +13,7 @@ export default async function IngredientsPage() {
   const { user, isAuthenticated } = await initServerSideSession();
 
   // If not authenticated or the user role is not admin, redirect to home.
-  if (!isAuthenticated || user?.role !== "ADMIN") {
+  if (!isAuthenticated || user?.role !== "admin") {
     redirect("/");
   }
 
