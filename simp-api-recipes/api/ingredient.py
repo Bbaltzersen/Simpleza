@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 import uuid
 from database.connection import SessionLocal
-from models.database_tables import Ingredient
+from models.ingredient import Ingredient
 from schemas.ingredient import IngredientCreate, IngredientOut, IngredientSchema
 
 router = APIRouter(tags=["ingredients"])
