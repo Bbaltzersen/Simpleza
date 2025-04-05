@@ -15,6 +15,7 @@ from .recipe_favorite import RecipeFavorite
 from .recipe_analytics import RecipeAnalytics
 from .ingredient import Ingredient
 from .ingredient_nutrient import IngredientNutrient
+from .ingredient_alias import IngredientAlias
 from .nutrient import Nutrient
 from .ingredient_product import IngredientProduct
 from .approximate_measurement import ApproximateMeasurement
@@ -49,6 +50,7 @@ __all__ = [
     "RecipeAnalytics",
     "Ingredient",
     "IngredientNutrient",
+    "IngredientAlias",
     "Nutrient",
     "IngredientProduct",
     "ApproximateMeasurement",
