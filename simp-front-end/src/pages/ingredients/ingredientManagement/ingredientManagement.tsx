@@ -18,7 +18,7 @@ import {
     detachNutrition,
 } from "@/lib/api/ingredient/ingredient";
 import { getProductByRetailId } from "@/lib/api/ingredient/product";
-import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
+// import { getNutritionByName } from "@/lib/api/ingredient/nutrition";
 import { Plus } from "lucide-react";
 
 const ITEMS_PER_PAGE = 10;
@@ -190,7 +190,7 @@ const IngredientManagement: React.FC = () => {
                 }
             />
 
-            <EntityLinkForm
+            {/* <EntityLinkForm
                 title="Link Nutrition to Ingredient"
                 placeholder="Enter Nutrition Name"
                 selectedEntities={selectedNutritions}
@@ -206,7 +206,7 @@ const IngredientManagement: React.FC = () => {
                         setSelectedNutritions((prev) => prev.filter((n) => n.id !== nutrition.id))
                     )
                 }
-            />
+            /> */}
 
             <SimpleTable
     title="Ingredient List"

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Ingredient } from "@/lib/types/ingredient";
-import { Nutrition } from "@/lib/types/nutrition";
+import { Nutrition } from "@/lib/types/nutrient";
 import { Product } from "@/lib/types/product";
 
 const API_BASE_URL = process.env.INGREDIENTS_API_URL || "http://localhost:8010/v1";

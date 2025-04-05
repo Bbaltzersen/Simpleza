@@ -14,7 +14,7 @@ from schemas.nutrient import NutrientCreate, NutrientUpdate, NutrientOut # Corre
 
 # Define the router with a prefix and descriptive tag
 router = APIRouter(
-    prefix="/nutrients", # Added prefix for better organization
+    prefix="", # Added prefix for better organization
     tags=["Nutrients"]   # Updated tag name
 )
 
