@@ -66,7 +66,7 @@ def create_nutrient(nutrient_in: NutrientCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=Dict[str, List[NutrientOut] | int])
 def read_nutrients(
     skip: int = Query(0, ge=0, description="Number of records to skip for pagination"),
-    limit: int = Query(10, ge=1, le=200, description="Maximum number of records to return"), # Increased limit slightly
+    limit: int = Query(10, ge=1, le=600, description="Maximum number of records to return"), # Increased limit slightly
     sort_by: Optional[str] = Query("nutrient_name", description="Field to sort by (e.g., nutrient_name, unit, primary_group)"),
     sort_order: Optional[str] = Query("asc", description="Sort order: 'asc' or 'desc'"),
     db: Session = Depends(get_db)
