@@ -1,13 +1,13 @@
 "use client";
 
-import React from "react";
-import styles from "./simpleform.module.css"; // Import CSS Module
+import React, { useCallback } from "react"; // Import useCallback
+import styles from "./simpleform.module.css";
 
-// Interface includes 'checkbox' type
 export interface FormField<T> {
   name: keyof T;
   type: "text" | "number" | "textarea" | "checkbox";
-  placeholder: string; // Used as label for checkbox
+  placeholder: string;
+  title?: string;
   required?: boolean;
 }
 
@@ -35,31 +35,25 @@ const SimpleForm = <T extends object>({
   disabled = false,
 }: FormProps<T>) => {
 
-  // General handler (can accept boolean from checkbox handler indirectly)
-  const handleInputChange = (
-    name: keyof T,
-    value: string | boolean, // Accepts boolean
-    fieldType: FormField<T>['type']
-  ) => {
-    setState((prevState) => {
-      let processedValue: string | boolean | undefined = value; // Keep boolean
+  // --- Helper function to auto-resize textarea ---
+  const autoResizeTextarea = useCallback((element: HTMLTextAreaElement) => {
+    // Temporarily shrink height to get accurate scrollHeight
+    element.style.height = 'auto';
+    // Set height to scrollHeight to fit content
+    element.style.height = `${element.scrollHeight}px`;
+  }, []);
 
-      // Sanitize if it's a number-hinted text field and value is string
+  const handleInputChange = ( name: keyof T, value: string, fieldType: FormField<T>['type']) => {
+    setState((prevState) => {
+      let processedValue: string | boolean | undefined = value;
       if (fieldType === "number" && typeof value === 'string') {
         processedValue = value.replace(/[^0-9.-]/g, "");
       }
-      // Checkbox value is passed directly as boolean
-
       return { ...prevState, [name]: processedValue };
     });
   };
 
-  // Specific handler for checkbox changes
-  const handleCheckboxChange = (
-      name: keyof T,
-      checked: boolean
-  ) => {
-      // Directly set the boolean value in the state
+  const handleCheckboxChange = ( name: keyof T, checked: boolean ) => {
       setState((prevState) => ({ ...prevState, [name]: checked }));
   }
 
@@ -68,60 +62,78 @@ const SimpleForm = <T extends object>({
       <form onSubmit={isEditMode ? onEdit : onAdd} className={styles.form}>
         {fields.map((field) => {
           const elementKey = field.name as string;
+          const elementId = field.name as string;
 
-          // --- Conditional Rendering for Checkbox ---
+          const labelElement = (field.type !== 'checkbox' && field.title) ? (
+            <label htmlFor={elementId} className={styles.label}>
+              {field.title}
+              {field.required && <span className={styles.requiredIndicator}>*</span>}
+            </label>
+          ) : null;
+
           if (field.type === "checkbox") {
             return (
-              <div key={elementKey} className={styles.checkboxWrapper}> {/* Add styling */}
+              <div key={elementKey} className={styles.checkboxWrapper}>
                 <input
                   type="checkbox"
-                  id={elementKey}
+                  id={elementId}
                   name={elementKey}
-                  checked={Boolean(state[field.name])} // Bind to boolean state value
-                  onChange={(e) => handleCheckboxChange(field.name, e.target.checked)} // Use specific handler
+                  checked={Boolean(state[field.name])}
+                  onChange={(e) => handleCheckboxChange(field.name, e.target.checked)}
                   className={styles.checkbox}
-                  required={field.required ?? false} // Checkbox can be required
+                  required={field.required ?? false}
                 />
-                {/* Use placeholder as the visible label */}
-                <label htmlFor={elementKey} className={styles.checkboxLabel}>
+                <label htmlFor={elementId} className={styles.checkboxLabel}>
                   {field.placeholder}
+                  {field.required && <span className={styles.requiredIndicator}>*</span>}
                 </label>
               </div>
             );
           }
 
-          // --- Props for other input types ---
+          // --- Props specifically for text/textarea ---
           const elementProps = {
-            name: field.name as string,
-            id: elementKey,
+            name: elementKey,
+            id: elementId,
             placeholder: field.placeholder,
             value: state[field.name] != null ? String(state[field.name]) : "",
-            // Use general handler for text/textarea/number(as text)
-            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-              handleInputChange(field.name, e.target.value, field.type),
             className: styles.input,
             required: field.required ?? false,
           };
 
-          // --- Conditional Rendering for Textarea ---
           if (field.type === "textarea") {
             return (
-              <textarea
-                key={elementKey} // Pass key directly
-                {...elementProps}
-                rows={3}
-                className={`${styles.input} ${styles.textarea}`}
-              />
+              <div key={elementKey} className={styles.fieldWrapper}>
+                {labelElement}
+                <textarea
+                  {...elementProps}
+                  rows={1} // Start with minimum rows (optional)
+                  className={`${styles.input} ${styles.textarea}`}
+                  // Updated onChange for textarea
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                      handleInputChange(field.name, e.target.value, field.type);
+                      autoResizeTextarea(e.target); // Resize on change
+                  }}
+                  // Optional: Resize on initial render if needed via ref/useEffect,
+                  // but onChange often covers most use cases.
+                  // ref={el => el && autoResizeTextarea(el)} // Example using ref callback
+                />
+              </div>
             );
-          } else {
-            // --- Render Text Input (for 'text' and 'number') ---
+          } else { // Text Input ('text' or 'number' type)
             return (
-              <input
-                key={elementKey} // Pass key directly
-                type="text"
-                inputMode={field.type === 'number' ? 'decimal' : 'text'}
-                {...elementProps}
-              />
+              <div key={elementKey} className={styles.fieldWrapper}>
+                {labelElement}
+                <input
+                  type="text"
+                  inputMode={field.type === 'number' ? 'decimal' : 'text'}
+                  {...elementProps}
+                  // Use standard handler for text/number inputs
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleInputChange(field.name, e.target.value, field.type)
+                  }
+                />
+              </div>
             );
           }
         })}

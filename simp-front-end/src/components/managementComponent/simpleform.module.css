@@ -1,31 +1,110 @@
+/* Styles for the overall form wrapper (fieldset) */
+.formWrapper {
+  border: none; /* Remove default fieldset border */
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* Styles copied from your old CSS */
 .form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 15px; /* Slightly increased gap */
   margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem; /* Increased bottom margin */
 }
 
+/* Wrapper for label + input/textarea (optional spacing) */
+.fieldWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Small gap between label and input */
+  width: 100%;
+}
+
+/* Basic styles for labels */
+.label {
+  font-weight: 500; /* Medium weight */
+  font-size: 1.125rem;
+  color: #333;
+  display: block; /* Ensure it takes its own line */
+}
+
+/* Style for the required indicator (*) */
+.requiredIndicator {
+  color: #d9534f; /* Red color */
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+/* Input and Textarea base styles (copied from your old CSS) */
 .input {
-  padding: 10px;
+  padding: 10px 12px;
   border: 1px solid #ccc;
+  border-radius: 4px;
   width: 100%;
   font-size: 1rem;
+  box-sizing: border-box; /* Important for height calculation */
+  transition: border-color 0.2s ease-in-out;
+  /* Remove fixed resize if you had it */
+  resize: none;
 }
 
 .input:focus {
   outline: none;
-  border-color: #54755e;
+  border-color: #54755e; /* Green focus */
+  box-shadow: 0 0 0 2px rgba(84, 117, 94, 0.2); /* Subtle focus ring */
 }
 
+/* Specific styles for textarea */
+.textarea {
+  /* Remove min-height if you want it to shrink fully */
+  /* min-height: 80px; */
+  overflow: hidden; /* Hide scrollbar during resize calculation */
+  font-family: inherit;
+  /* You might need line-height for accurate scrollHeight calculation */
+  line-height: 1.5; /* Example line height */
+}
+
+/* Wrapper for checkbox and its label */
+.checkboxWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between checkbox and label */
+  padding: 5px 0; /* Add some vertical padding */
+}
+
+/* Styles for the checkbox input itself */
+.checkbox {
+  width: 18px; /* Adjust size */
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Styles for the checkbox label */
+.checkboxLabel {
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  user-select: none; /* Prevent text selection on click */
+  display: flex; /* Align required indicator if added here */
+  align-items: center;
+}
+
+
+/* Button styles (copied from your old CSS) */
 .addButton {
-  background-color: #54755e; /* ✅ Kept Green */
+  background-color: #54755e; /* Green */
   color: white;
-  padding: 10px;
+  padding: 12px 15px; /* Slightly larger padding */
   border: none;
+  border-radius: 4px; /* Added rounding */
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 500;
   width: 100%;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .addButton:hover {
@@ -33,15 +112,30 @@
 }
 
 .editButton {
-  background-color: #dfbe00; /* 🔹 New Blue */
-  color: white;
-  padding: 10px;
+  background-color: #dfbe00; /* Gold/Yellow (Corrected comment) */
+  color: #333; /* Changed text to dark for better contrast on yellow */
+  padding: 12px 15px;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 500;
   width: 100%;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .editButton:hover {
-  background-color: #816e00; /* 🔹 Darker Blue */
+  background-color: #b99d00; /* Darker Gold/Yellow */
+}
+
+/* Disabled state for buttons/fieldset */
+.formWrapper:disabled input,
+.formWrapper:disabled textarea,
+.formWrapper:disabled button {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.formWrapper:disabled .addButton:hover,
+.formWrapper:disabled .editButton:hover {
+    background-color: initial; /* Prevent hover effect when disabled */
 }

@@ -165,6 +165,7 @@ export async function getIngredientByName(name: string): Promise<IngredientOut |
 export async function getIngredientNutrients(ingredientId: string): Promise<IngredientNutrientOut[] | null> {
     try {
         const response = await apiClient.get<IngredientNutrientOut[]>(`/${ingredientId}/nutrients`);
+        
         return response.data ?? []; // Return empty array if data is null/undefined
     } catch (error) {
         const axiosError = error as AxiosError<{ detail?: string }>;

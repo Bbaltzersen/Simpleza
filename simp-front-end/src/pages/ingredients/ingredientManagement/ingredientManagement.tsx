@@ -51,8 +51,8 @@ const initialIngredientFormState: IngredientFormData = {
   name: "",
   description: "",
   density_g_per_ml: "", // Keep as string for input binding initially
-  default_unit: "gram", // Default to 'gram' value from Enum/Const
-  diet_level: 4,        // Default to 4 (Omnivore value)
+  default_unit: "", // Default to 'gram' value from Enum/Const
+  diet_level: undefined,        // Default to 4 (Omnivore value)
   validated: false,
 };
 
@@ -364,16 +364,16 @@ const IngredientManagement: React.FC = () => {
   // --- Memos ---
   const ingredientFormFields: FormField<IngredientFormData>[] = useMemo(() => [
       // Fields for the Ingredient model based on IngredientBase
-      { name: "name", type: "text", placeholder: "Ingredient Name", required: true },
-      { name: "description", type: "textarea", placeholder: "Description" },
-      { name: "density_g_per_ml", type: "number", placeholder: "Density (g/mL)" },
-      { name: "default_unit", type: "text", placeholder: "Default Unit (e.g., gram)", required: true }, // Consider select dropdown using UnitNameOptions
-      { name: "diet_level", type: "number", placeholder: "Diet Level (1-4)" }, // Consider select dropdown using DietLevelOptions
-      { name: "validated", type: "checkbox", placeholder: "Validated"}, // Need to handle checkbox type in SimpleForm
+      { title: "Ingredient Name", name: "name", type: "text", placeholder: "Ingredient Name", required: true },
+      { title: "Description", name: "description", type: "textarea", placeholder: "Description" },
+      { title: "Density", name: "density_g_per_ml", type: "number", placeholder: "Density (g/mL)" },
+      { title: "Default Unit", name: "default_unit", type: "text", placeholder: "Default Unit (e.g., gram)", required: true }, // Consider select dropdown using UnitNameOptions
+      { title: "Diet Level", name: "diet_level", type: "number", placeholder: "Diet Level (1-4)" }, // Consider select dropdown using DietLevelOptions
+      { title: "Validated", name: "validated", type: "checkbox", placeholder: "Validated"}, // Need to handle checkbox type in SimpleForm
   ], []);
 
   const tableColumns: string[] = useMemo(() => [
-      "Name", "Default Unit", "Diet Level", "Validated", "Description" // Example columns
+      "Name", "Default Unit", "Diet Level", "Validated" // Example columns
   ], []);
 
   const tableData = useMemo(() => ingredients.map((ing) => ({
@@ -383,8 +383,7 @@ const IngredientManagement: React.FC = () => {
       ing.default_unit, // Show full name like "gram"
       ing.diet_level, // Show number, or map to label using DietLevelOptions
       ing.validated ? "Yes" : "No",
-      (ing.description && ing.description.length > 30) ? `${ing.description.substring(0, 30)}...` : (ing.description ?? "-"),
-    ],
+        ],
   })), [ingredients]);
 
 
