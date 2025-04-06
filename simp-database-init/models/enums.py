@@ -59,3 +59,21 @@ class SourceTypeEnum(enum.Enum):
     WEBSITE = 'Reputable Website/Fact Sheet'
     REPORT = 'Technical Report'
     OTHER = 'Other'
+
+class UnitNameEnum(enum.Enum):
+    """ Defines standard units using full names. """
+    GRAM = "gram"
+    MILLIGRAM = "milligram"
+    MICROGRAM = "microgram"
+    KILOCALORIE = "kilocalorie"
+    KILOJOULE = "kilojoule"
+    MILLILITER = "milliliter"
+    PERCENT = "percent"
+    INTERNATIONAL_UNIT = "international unit"
+    
+class DietLevelEnum(enum.Enum):
+    """ Defines diet classification levels. """
+    VEGAN = 1
+    VEGETARIAN = 2
+    PESCATARIAN = 3
+    OMNIVORE = 4

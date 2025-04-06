@@ -1,9 +1,15 @@
 # models/ingredient.py
 import uuid
+import enum # Import enum module
 from decimal import Decimal
 from sqlalchemy import (
-    Boolean, Column, Numeric, Index, Integer, String, ForeignKey, Text
+    Boolean, Column, Numeric, Index, Integer, String, ForeignKey, Text,
+    DateTime, func, CheckConstraint # Added DateTime, func, CheckConstraint
 )
+# Import Enum type from SQLAlchemy
+from sqlalchemy import Enum as SQLEnum
+# Assuming enums are defined in models/enums.py
+from .enums import UnitNameEnum, DietLevelEnum
 from sqlalchemy.dialects.postgresql import UUID, TSVECTOR
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -11,59 +17,62 @@ from .base import Base
 class Ingredient(Base):
     """
     Represents a food item or ingredient.
+    Includes standardization for units/diet level, timestamps, and constraints.
     """
     __tablename__ = "ingredients"
 
     ingredient_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     # --- Core Identification ---
-    # Primary display name - NOT unique to allow variations via aliases
     name = Column(Text, nullable=False, index=True)
-    description = Column(Text, nullable=True) # Optional detailed description
-    # For full-text search capabilities on the name/aliases
-    name_tsv = Column(TSVECTOR)
+    description = Column(Text, nullable=True)
+    name_tsv = Column(TSVECTOR) # Requires trigger/logic to populate
 
     # --- Physical Properties ---
-    # Density in g/mL (or chosen standard units) for volume conversions
     density_g_per_ml = Column(Numeric(10, 5), nullable=True)
-    # Default unit for quantity input (e.g., in recipes). Purpose should be clear in application logic.
-    default_unit = Column(String(10), nullable=False, default="g")
+
+    # Use Enum for default_unit (using full names as requested previously)
+    default_unit = Column(
+        SQLEnum(UnitNameEnum, name='unit_name_enum', create_type=False), # Assumes Nutrient model creates the DB Enum type first
+        nullable=False,
+        default=UnitNameEnum.GRAM # Use Enum member for default
+    )
 
     # --- Classification & Metadata ---
-    # Diet Classification (e.g., 1=Vegan, 2=Vegetarian, 3=Pescatarian, 4=Omnivore)
-    diet_level = Column(Integer, nullable=False, default=4)
-    # Admin validation status for the ingredient itself
+    # Use Enum for diet_level
+    diet_level = Column(
+        SQLEnum(DietLevelEnum, name='diet_level_enum', create_type=True), # Assume this model creates the DB Enum type
+        nullable=False,
+        default=DietLevelEnum.OMNIVORE
+    )
     validated = Column(Boolean, nullable=False, default=False, index=True)
 
-    # --- Optional Foreign Keys (Uncomment and define related tables if used) ---
-    # food_group_id = Column(Integer, ForeignKey('food_groups.group_id'), nullable=True)
-    # data_source_id = Column(Integer, ForeignKey('data_sources.source_id'), nullable=True)
+    # --- Timestamps ---
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    # --- Relationships ---
-    # Nutrient values associated with this ingredient
+    # --- Relationships (Keep as is for now) ---
     nutrient_values = relationship(
         "IngredientNutrient",
         back_populates="ingredient",
-        cascade="all, delete-orphan", # Delete nutrient values if ingredient is deleted
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Alternative names/aliases for this ingredient
     aliases = relationship(
         "IngredientAlias",
         back_populates="ingredient",
-        cascade="all, delete-orphan", # Delete aliases if ingredient is deleted
+        cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    # Relationships back to optional FK tables (Uncomment if FKs are used)
-    # food_group = relationship("FoodGroup", back_populates="ingredients")
-    # data_source = relationship("DataSource", back_populates="ingredients")
 
+    # --- Table Arguments (Indices and Constraints) ---
     __table_args__ = (
         Index("idx_ingredient_name", "name"),
         Index("idx_ingredient_name_tsv", "name_tsv", postgresql_using="gin"),
         Index("idx_ingredient_validated", "validated"),
-        # Optional: Index on diet_level if frequently queried
-        # Index("idx_ingredient_diet_level", "diet_level"),
+        # Add CHECK constraint for density
+        CheckConstraint('density_g_per_ml IS NULL OR density_g_per_ml > 0', name='ingredient_density_positive_or_null'),
+        # CheckConstraint for diet_level is implicitly handled by Enum now
     )
 
     def __repr__(self):

@@ -2,14 +2,18 @@
 
 import uuid
 from pydantic import BaseModel, Field, ConfigDict
-from typing import Optional, List # Added List for potential future use
-from decimal import Decimal # Numeric fields map to Decimal
+from typing import Optional, List
+from decimal import Decimal
+from datetime import datetime # Needed for IngredientOut
+
+# Import your Enums (Ensure this path is correct)
+from models.enums import UnitNameEnum, DietLevelEnum
 
 # --- Base Schema ---
-# Defines the core properties of an ingredient.
+# Defines the core properties of an ingredient. NOW USING ENUMS.
 class IngredientBase(BaseModel):
     name: str = Field(
-        ..., # Ellipsis means this field is required
+        ...,
         min_length=1,
         examples=["Raw Apple with Skin", "Whole Wheat Flour", "Chicken Breast"],
         description="Primary display name of the ingredient."
@@ -17,94 +21,115 @@ class IngredientBase(BaseModel):
     description: Optional[str] = Field(
         default=None,
         examples=["A common variety of apple, consumed raw.", "Flour milled from the entire wheat kernel."],
-        description="Optional description providing more context about the ingredient."
+        description="Optional description providing more context."
     )
-    # Use Decimal for precise numeric fields corresponding to SQLAlchemy Numeric
     density_g_per_ml: Optional[Decimal] = Field(
         default=None,
-        gt=0, # Density should ideally be greater than 0
-        examples=[Decimal("0.95")], # Use Decimal in examples too
-        description="Optional: Density in grams per milliliter, used for volume conversions."
+        gt=0,
+        examples=[Decimal("0.95")],
+        description="Optional: Density in grams per milliliter."
     )
-    default_unit: str = Field(
-        # Although the model has a default, require it in create for clarity,
-        # or keep default="g" here if preferred. Let's require it.
-        ...,
-        max_length=10,
-        examples=["g", "ml", "piece", "cup"],
-        description="Default unit expected when using this ingredient (e.g., in recipes)."
+    # Use the Enum type for default_unit
+    default_unit: UnitNameEnum = Field(
+        # Default set here matches the SQLAlchemy model's default
+        default=UnitNameEnum.GRAM,
+        examples=[UnitNameEnum.GRAM, UnitNameEnum.MILLILITER],
+        description="Default unit expected when using this ingredient."
     )
-    diet_level: int = Field(
-        default=4, # Default as per model
-        ge=1, # Assuming 1 is the lowest level (e.g., Vegan)
-        le=4, # Assuming 4 is the highest level (e.g., Omnivore)
-        examples=[1, 2, 3, 4],
-        description="Diet classification (e.g., 1=Vegan, 2=Vegetarian, 3=Pescatarian, 4=Omnivore)."
+    # Use the Enum type for diet_level
+    diet_level: DietLevelEnum = Field(
+        default=DietLevelEnum.OMNIVORE, # Default matches model
+        examples=[DietLevelEnum.VEGAN, DietLevelEnum.OMNIVORE],
+        description="Diet classification."
     )
     validated: bool = Field(
-        default=False, # Default as per model
-        description="Indicates if the ingredient information has been validated/approved by an admin."
+        default=False,
+        description="Admin validation status."
     )
-    # Note: Fields like name_tsv are database-internal and not included in API schemas.
-    # Note: FKs like food_group_id could be added if those relationships are implemented.
 
 # --- Create Schema ---
-# Defines the data needed to create a new ingredient via POST.
 class IngredientCreate(IngredientBase):
-    # Inherits all fields from IngredientBase.
-    # Pydantic enforces required fields (name, default_unit).
-    # Optional fields can be provided.
-    # Default values for diet_level, validated, etc., are handled.
-    pass # No extra fields needed for basic create
+    # Inherits fields and validation from IngredientBase.
+    # Required fields are name. Defaults handle others if not provided.
+    pass
 
 # --- Update Schema ---
-# Defines the data that *can* be provided to update an existing ingredient via PUT/PATCH.
-# All fields are optional to allow partial updates.
+# All fields optional for partial updates. USES ENUMS.
 class IngredientUpdate(BaseModel):
-    name: Optional[str] = Field(default=None, min_length=1, examples=["Raw Apple with Skin (Fuji)"])
+    name: Optional[str] = Field(default=None, min_length=1)
     description: Optional[str] = Field(default=None)
-    density_g_per_ml: Optional[Decimal] = Field(default=None, gt=0) # Allow updating/setting density
-    default_unit: Optional[str] = Field(default=None, max_length=10)
-    diet_level: Optional[int] = Field(default=None, ge=1, le=4) # Allow changing diet level
-    validated: Optional[bool] = Field(default=None) # Allow changing validation status
+    density_g_per_ml: Optional[Decimal] = Field(default=None, gt=0)
+    default_unit: Optional[UnitNameEnum] = Field(default=None) # Optional Enum
+    diet_level: Optional[DietLevelEnum] = Field(default=None) # Optional Enum
+    validated: Optional[bool] = Field(default=None)
 
 # --- Output Schema ---
-# Defines the data structure returned FROM the API when retrieving ingredients.
-# Includes the database-generated ID.
+# Includes ID and timestamps. USES ENUMS.
 class IngredientOut(IngredientBase):
     ingredient_id: uuid.UUID
+    # Timestamps added from model
+    created_at: datetime
+    updated_at: datetime
 
-    # Pydantic V2 configuration for ORM mode
-    model_config = ConfigDict(
-        from_attributes=True
-    )
+    model_config = ConfigDict(from_attributes=True)
 
-    # # Pydantic V1 Config
-    # class Config:
-    #     orm_mode = True
+# --- Schemas for Ingredient Nutrient Linking ---
 
-# --- Potentially Needed Later ---
-# You will likely need schemas for IngredientAlias and IngredientNutrient as well
-# to handle adding/editing/viewing those related pieces of data. Example:
+# Schema for an item in the batch update request list
+class IngredientNutrientLink(BaseModel):
+    nutrient_id: uuid.UUID = Field(description="The ID of the nutrient.")
+    nutrient_value: Decimal = Field(ge=0, description="The value of the nutrient (non-negative).")
+    # Suggestion: Add if batch update should also set validation status
+    # validated: Optional[bool] = Field(default=None, description="Set validation status for this nutrient link.")
 
-# from .nutrient import NutrientOut # Assuming you have NutrientOut
+# Schema for the response of getting existing values (includes nutrient details)
+class IngredientNutrientOut(BaseModel):
+    ingredient_nutrient_id: uuid.UUID # PK of the link table
+    ingredient_id: uuid.UUID
+    nutrient_id: uuid.UUID
+    nutrient_value: Decimal
+    value_basis: str # e.g., 'per 100g'
+    validated: bool
+    # Populated via join in backend to provide context
+    nutrient_name: Optional[str] = Field(None, description="Name of the linked nutrient.")
+    unit: Optional[str] = Field(None, description="Unit of the linked nutrient.") # Consider using UnitNameEnum here if backend converts
 
-# class IngredientAliasOut(BaseModel):
-#     alias_id: uuid.UUID
-#     alias_name: str
-#     alias_type: Optional[str]
-#     language_code: Optional[str]
-#     model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
-# class IngredientNutrientValue(BaseModel):
-#     # Simplified - might include nutrient name/unit directly or nested NutrientOut
-#     nutrient_id: uuid.UUID
-#     nutrient_name: str # Denormalized for convenience?
-#     value: Decimal
-#     unit: str # Denormalized for convenience?
-#     # value_basis: str # Usually 'per 100g'
-#     # validated: bool
+# Input for the batch update endpoint
+BatchNutrientUpdateRequest = List[IngredientNutrientLink]
+
+# --- Schemas for Ingredient Aliases (Suggestion: Uncomment and define fully later) ---
+
+class IngredientAliasBase(BaseModel):
+    alias_name: str = Field(..., min_length=1)
+    # Consider AliasTypeEnum if defined
+    alias_type: Optional[str] = Field(default=None, max_length=50)
+    language_code: Optional[str] = Field(default=None, max_length=10)
+
+class IngredientAliasCreate(IngredientAliasBase):
+     # ingredient_id usually comes from URL path param in POST /ingredients/{id}/aliases
+     pass
+
+class IngredientAliasOut(IngredientAliasBase):
+    alias_id: uuid.UUID
+    ingredient_id: uuid.UUID # Often useful to include FK in output
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- Schema for Paginated Ingredient Response (Suggestion: Finalize if needed) ---
+
+class PaginatedIngredients(BaseModel):
+    items: List[IngredientOut]
+    total: int
+    skip: int
+    limit: int
+    # Optional: Add total_pages if calculated in backend
+    # total_pages: Optional[int] = None
+
+# --- Schema for Ingredient Output including details (Suggestion: Define when needed) ---
 
 # class IngredientOutWithDetails(IngredientOut):
 #      aliases: List[IngredientAliasOut] = []
-#      nutrient_values: List[IngredientNutrientValue] = [] # Simplified example
+#      nutrient_values: List[IngredientNutrientOut] = [] # Use the detailed Nutrient Out schema
