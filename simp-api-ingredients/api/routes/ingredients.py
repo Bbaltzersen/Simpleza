@@ -175,38 +175,44 @@ def _get_ingredient_or_404(ingredient_id: uuid.UUID, db: Session) -> Ingredient:
 def get_ingredient_nutrient_links(ingredient_id: uuid.UUID, db: Session = Depends(get_db)):
     """
     Retrieve all nutrient values associated with a specific ingredient,
-    including nutrient name and unit.
+    including nutrient name and unit (manual construction).
     """
-    # Ensure ingredient exists first
-    _get_ingredient_or_404(ingredient_id, db)
+    _get_ingredient_or_404(ingredient_id, db) # Helper defined previously
 
-    # Query IngredientNutrient and join Nutrient to get name/unit
-    # Use selectinload for efficient loading of related Nutrient objects
+    # Query IngredientNutrient and eagerly load the related Nutrient
+    # This query REQUIRES the IngredientNutrient model (with nutrient_value)
     nutrient_links = db.query(IngredientNutrient).filter(
         IngredientNutrient.ingredient_id == ingredient_id
     ).options(
-        selectinload(IngredientNutrient.nutrient) # Load related Nutrient data efficiently
+        joinedload(IngredientNutrient.nutrient) # Load Nutrient details
     ).all()
 
-    # Prepare response - FastAPI will convert using IngredientNutrientOut schema
-    # We need to manually add nutrient name/unit if not automatically mapped by relationship/schema
-    # Let's assume IngredientNutrientOut can handle this via from_attributes and relationship loading
+    # --- Manual Construction Loop (Alternative to @property) ---
     response_data = []
     for link in nutrient_links:
-        # Manually construct dict if schema doesn't automatically pick up joined fields
-        # Otherwise, if using from_attributes, just return the link object if relationships are loaded
-        response_item = IngredientNutrientOut.model_validate(link) # Use Pydantic v2 validation
-        if link.nutrient: # If nutrient was loaded via relationship
-             response_item.nutrient_name = link.nutrient.nutrient_name
-             # Convert enum value to string if needed by schema, Pydantic usually handles this
-             response_item.unit = str(link.nutrient.unit.value) if link.nutrient.unit else None
+        # Start with data directly from the IngredientNutrient link table object
+        response_item_data = {
+            "ingredient_nutrient_id": link.ingredient_nutrient_id,
+            "ingredient_id": link.ingredient_id,
+            "nutrient_id": link.nutrient_id,
+            "nutrient_value": link.nutrient_value,
+            "value_basis": link.value_basis,
+            "validated": link.validated,
+            "nutrient_name": None, # Default to None
+            "unit": None           # Default to None
+        }
+        # If the related Nutrient object was loaded, add its details
+        if link.nutrient:
+            response_item_data["nutrient_name"] = link.nutrient.nutrient_name
+            # Access unit directly as string (based on previous error)
+            response_item_data["unit"] = link.nutrient.unit if link.nutrient.unit else None
+
+        # Validate the constructed dictionary against the Pydantic schema
+        response_item = IngredientNutrientOut.model_validate(response_item_data)
         response_data.append(response_item)
+    # --- End Manual Construction Loop ---
 
-    # If IngredientNutrientOut uses from_attributes and relationships are loaded,
-    # often you can just return 'nutrient_links' directly:
-    # return nutrient_links
-
-    return response_data # Return manually constructed list
+    return response_data
 
 
 @router.put("/{ingredient_id}/nutrients", response_model=List[IngredientNutrientOut])
