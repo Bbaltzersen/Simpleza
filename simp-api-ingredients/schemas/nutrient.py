@@ -112,3 +112,5 @@ class NutrientOut(NutrientBase):
     # # Pydantic V1 Config (if using older version)
     # class Config:
     #     orm_mode = True
+
+    
