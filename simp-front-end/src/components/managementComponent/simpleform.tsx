@@ -2,12 +2,15 @@
 
 import React, { useCallback } from "react"; // Import useCallback
 import styles from "./simpleform.module.css";
+// Import the new component
+import AutosizeTextarea from "./autoSizeTextarea"; // Adjust path if needed
 
+// Interface includes 'textarea' type
 export interface FormField<T> {
   name: keyof T;
   type: "text" | "number" | "textarea" | "checkbox";
-  placeholder: string;
-  title?: string;
+  placeholder: string; // Used as label for checkbox
+  title?: string;      // Optional: Label text for text/textarea/number inputs
   required?: boolean;
 }
 
@@ -35,13 +38,7 @@ const SimpleForm = <T extends object>({
   disabled = false,
 }: FormProps<T>) => {
 
-  // --- Helper function to auto-resize textarea ---
-  const autoResizeTextarea = useCallback((element: HTMLTextAreaElement) => {
-    // Temporarily shrink height to get accurate scrollHeight
-    element.style.height = 'auto';
-    // Set height to scrollHeight to fit content
-    element.style.height = `${element.scrollHeight}px`;
-  }, []);
+  // No longer need autoResizeTextarea helper here
 
   const handleInputChange = ( name: keyof T, value: string, fieldType: FormField<T>['type']) => {
     setState((prevState) => {
@@ -72,17 +69,15 @@ const SimpleForm = <T extends object>({
           ) : null;
 
           if (field.type === "checkbox") {
+            // Checkbox rendering (keep as is)
             return (
               <div key={elementKey} className={styles.checkboxWrapper}>
                 <input
-                  type="checkbox"
-                  id={elementId}
-                  name={elementKey}
+                  type="checkbox" id={elementId} name={elementKey}
                   checked={Boolean(state[field.name])}
                   onChange={(e) => handleCheckboxChange(field.name, e.target.checked)}
-                  className={styles.checkbox}
-                  required={field.required ?? false}
-                />
+                  className={styles.checkbox} required={field.required ?? false}
+                 />
                 <label htmlFor={elementId} className={styles.checkboxLabel}>
                   {field.placeholder}
                   {field.required && <span className={styles.requiredIndicator}>*</span>}
@@ -91,32 +86,28 @@ const SimpleForm = <T extends object>({
             );
           }
 
-          // --- Props specifically for text/textarea ---
-          const elementProps = {
+          // Prepare props common to text input and textarea base
+          const commonInputProps = {
             name: elementKey,
             id: elementId,
             placeholder: field.placeholder,
             value: state[field.name] != null ? String(state[field.name]) : "",
+            onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+              handleInputChange(field.name, e.target.value, field.type),
             className: styles.input,
             required: field.required ?? false,
           };
 
+          // --- UPDATED: Use AutosizeTextarea component ---
           if (field.type === "textarea") {
             return (
               <div key={elementKey} className={styles.fieldWrapper}>
                 {labelElement}
-                <textarea
-                  {...elementProps}
-                  rows={1} // Start with minimum rows (optional)
+                <AutosizeTextarea
+                  {...commonInputProps} // Spread common props
+                  // Pass specific textarea props if needed, like className override
                   className={`${styles.input} ${styles.textarea}`}
-                  // Updated onChange for textarea
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                      handleInputChange(field.name, e.target.value, field.type);
-                      autoResizeTextarea(e.target); // Resize on change
-                  }}
-                  // Optional: Resize on initial render if needed via ref/useEffect,
-                  // but onChange often covers most use cases.
-                  // ref={el => el && autoResizeTextarea(el)} // Example using ref callback
+                  minRows={2} // Example: set minimum rows
                 />
               </div>
             );
@@ -127,15 +118,12 @@ const SimpleForm = <T extends object>({
                 <input
                   type="text"
                   inputMode={field.type === 'number' ? 'decimal' : 'text'}
-                  {...elementProps}
-                  // Use standard handler for text/number inputs
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleInputChange(field.name, e.target.value, field.type)
-                  }
+                  {...commonInputProps} // Use the common props here too
                 />
               </div>
             );
           }
+          // --- END UPDATE ---
         })}
         <input
           type="submit"

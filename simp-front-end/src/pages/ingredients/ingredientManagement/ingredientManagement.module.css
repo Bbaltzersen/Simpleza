@@ -1,0 +1,133 @@
+/* components/admin/ingredientManagement.module.css */
+
+/* Styles for the Nutrient Editor section */
+.nutrientEditor {
+    padding: 1rem 1.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .nutrientEditorTitle {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+  
+  /* Layout for nutrient rows - using Grid */
+  .nutrientGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
+    gap: 0.75rem 1.5rem; /* Row gap, Column gap */
+  }
+  
+  .nutrientRow {
+    display: contents; /* Allow label/input to align within the grid columns */
+  }
+  
+  .nutrientLabel {
+    grid-column: 1; /* Place label in first column of its implicit row */
+    font-size: 0.9rem;
+    color: #444;
+    text-align: right;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-self: center; /* Vertically center label with input */
+  }
+  
+  .nutrientInput {
+    grid-column: 2; /* Place input in second column */
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    width: 100%; /* Take available width in grid column */
+    box-sizing: border-box;
+  }
+  
+  .nutrientInput:focus {
+    outline: none;
+    border-color: #54755e; /* Match form focus */
+    box-shadow: 0 0 0 2px rgba(84, 117, 94, 0.2);
+  }
+  
+  .nutrientEditorActions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end; /* Align button to the right */
+    gap: 0.5rem;
+  }
+  
+  /* General Button Style (can be shared) */
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  .button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* Specific button styles */
+  .editNutrientsButton {
+    background-color: #ffeb3b; /* Light blue */
+    color: #303030;
+    border-color: #dfbe00;
+  }
+  .editNutrientsButton:hover:not(:disabled) {
+    background-color: #b99d00;
+  }
+  
+  .secondaryButton {
+    background-color: #f8f9fa; /* Light grey */
+    color: #343a40;
+    border-color: #dee2e6;
+  }
+  .secondaryButton:hover:not(:disabled) {
+    background-color: #e2e6ea;
+    border-color: #ced4da;
+  }
+  
+  .clearButton {
+    padding: 0.25rem; /* Smaller padding for icon button */
+    color: #6c757d; /* Grey icon */
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+  }
+  .clearButton:hover:not(:disabled) {
+    color: #343a40; /* Darker grey */
+    background-color: #e9ecef; /* Light background on hover */
+  }
+  
+  
+  /* Basic Loading/Error styles if not handled by ManagementContainer */
+  .loadingIndicator {
+    padding: 1rem;
+    text-align: center;
+    color: #666;
+  }
+  
+  .errorMessage {
+    padding: 0.75rem 1rem;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
