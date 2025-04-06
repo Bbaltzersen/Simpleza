@@ -283,7 +283,7 @@ const IngredientManagement: React.FC = () => {
 
   // --- Memos ---
   const ingredientFormFields: FormField<IngredientFormData>[] = useMemo(() => [
-    { name: "name", title: "Ingredient Name", type: "text", placeholder: "e.g., Raw Apple with Skin", required: true },
+    { name: "name", title: "Ingredient Name", type: "text", placeholder: "e.g., Apple", required: true },
     { name: "description", title: "Description", type: "textarea", placeholder: "Optional description..." },
     { name: "density_g_per_ml", title: "Density (g/mL)", type: "number", placeholder: "e.g., 0.95 (Optional)" },
     { name: "default_unit", title: "Default Unit", type: "text", placeholder: "e.g., gram, milliliter", required: true },
