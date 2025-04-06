@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from api.routes.companies import router as companies_router
 from api.routes.products import router as products_router
 from api.routes.nutrients import router as nutrients_router
-# from api.routes.ingredients import router as ingredients_router
+from api.routes.ingredients import router as ingredients_router
 from fastapi.middleware.cors import CORSMiddleware
 from auth.utils import is_authorized
 
@@ -27,7 +27,7 @@ app.add_middleware(
 app.include_router(companies_router, prefix="/v1/admin/companies", dependencies=[admin_dependency])
 app.include_router(products_router, prefix="/v1/admin/products", dependencies=[admin_dependency])
 app.include_router(nutrients_router, prefix="/v1/admin/nutrients", dependencies=[admin_dependency])
-# app.include_router(ingredients_router, prefix="/v1/ingredients", dependencies=[admin_dependency])
+app.include_router(ingredients_router, prefix="/v1/admin/ingredients", dependencies=[admin_dependency])
 
 if __name__ == "__main__":
     import uvicorn

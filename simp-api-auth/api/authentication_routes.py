@@ -16,7 +16,7 @@ from api.dependencies import (
     create_refresh_token,
     validate_password,
 )
-from models.schemas import UserResponse, UserCreate
+from schemas.user import UserResponse, UserCreate
 from database.handling import (
     create_user,
     get_user_by_username,

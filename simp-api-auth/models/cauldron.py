@@ -19,4 +19,5 @@ class Cauldron(Base):
     user = relationship("User", backref="cauldrons")
     recipe = relationship("Recipe", backref="cauldrons")
     cauldron_data = relationship("CauldronData", uselist=False, back_populates="cauldron")
-    usage_logs = relationship("CauldronUsageLog", back_populates="cauldron", cascade="all, delete-orphan")
+   
+   
