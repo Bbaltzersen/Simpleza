@@ -142,3 +142,7 @@ export async function getNutrientByName(name: string): Promise<NutrientOut | nul
     return null;
   }
 }
+
+export function fetchAllNutrientDefinitions() {
+    throw new Error("Function not implemented.");
+}

@@ -1,6 +1,36 @@
 /* components/admin/ingredientManagement.module.css */
 
-/* Styles for the Nutrient Editor section */
+/* --- Container & Layout Styles (Keep as before or adjust) --- */
+.managementContainer {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #fff;
+    margin-bottom: 2rem;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.statusSection {
+    margin-bottom: 1rem;
+    min-height: 2rem;
+}
+
+/* --- Nutrient Editor Styles (Keep as before or adjust) --- */
 .nutrientEditor {
     padding: 1rem 1.5rem;
     border: 1px solid #e0e0e0;
@@ -8,121 +38,155 @@
     background-color: #f9f9f9;
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-  }
-  
-  .nutrientEditorTitle {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nutrientEditorTitle {
     font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     color: #333;
-  }
-  
-  /* Layout for nutrient rows - using Grid */
-  .nutrientGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
-    gap: 0.75rem 1.5rem; /* Row gap, Column gap */
-  }
-  
-  .nutrientRow {
-    display: contents; /* Allow label/input to align within the grid columns */
-  }
-  
-  .nutrientLabel {
-    grid-column: 1; /* Place label in first column of its implicit row */
-    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.nutrientRow {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.nutrientLabel {
+
+    font-size: 1.125rem;
     color: #444;
     text-align: right;
-    padding-right: 0.5rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    align-self: center; /* Vertically center label with input */
-  }
-  
-  .nutrientInput {
-    grid-column: 2; /* Place input in second column */
+    align-self: center;
+    cursor: default;
+    padding-right: 0.5rem;
+    padding-bottom: 10px;
+}
+
+.nutrientInput {
     padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 0.95rem;
-    width: 100%; /* Take available width in grid column */
+    width: 100%;
     box-sizing: border-box;
-  }
-  
-  .nutrientInput:focus {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nutrientInput:focus {
     outline: none;
-    border-color: #54755e; /* Match form focus */
+    border-color: #54755e;
+    /* Green focus */
     box-shadow: 0 0 0 2px rgba(84, 117, 94, 0.2);
-  }
-  
-  .nutrientEditorActions {
+}
+
+.nutrientInput:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.nutrientEditorActions {
     margin-top: 1.5rem;
     display: flex;
-    justify-content: flex-end; /* Align button to the right */
-    gap: 0.5rem;
-  }
-  
-  /* General Button Style (can be shared) */
-  .button {
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* --- Shared Button Styles (Based on SimpleForm) --- */
+.button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 8px 16px;
+    gap: 0.5rem;
+    padding: 12px 15px;
+    /* Matched SimpleForm button padding */
     border-radius: 4px;
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 1rem;
+    /* Matched SimpleForm button font size */
     cursor: pointer;
-    border: 1px solid transparent;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  }
-  .button:disabled {
+    border: none;
+    /* Matched SimpleForm button border */
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
-  
-  /* Specific button styles */
-  .editNutrientsButton {
-    background-color: #ffeb3b; /* Light blue */
-    color: #303030;
-    border-color: #dfbe00;
-  }
-  .editNutrientsButton:hover:not(:disabled) {
+}
+
+/* Prevent hover on disabled */
+.button:disabled:hover {
+    background-color: revert;
+    border-color: revert;
+    color: revert;
+}
+
+/* --- Specific Button Styles --- */
+
+/* "Edit Nutrient Values" button - Style like SimpleForm's Edit Button */
+.editNutrientsButton {
+    background-color: #dfbe00;
+    /* Gold/Yellow */
+    color: #333;
+    /* Dark text */
+    /* Inherits padding, font-size, border, radius etc from .button */
+}
+
+.editNutrientsButton:hover:not(:disabled) {
     background-color: #b99d00;
-  }
-  
-  .secondaryButton {
-    background-color: #f8f9fa; /* Light grey */
-    color: #343a40;
-    border-color: #dee2e6;
-  }
-  .secondaryButton:hover:not(:disabled) {
-    background-color: #e2e6ea;
-    border-color: #ced4da;
-  }
-  
-  .clearButton {
-    padding: 0.25rem; /* Smaller padding for icon button */
-    color: #6c757d; /* Grey icon */
+    /* Darker Gold/Yellow */
+}
+
+/* "Done Editing Nutrients" button - Style like SimpleForm's Add Button */
+.secondaryButton {
+    background-color: #54755e;
+    /* Green */
+    color: white;
+    /* White text */
+    /* Inherits padding, font-size, border, radius etc from .button */
+}
+
+.secondaryButton:hover:not(:disabled) {
+    background-color: #304436;
+    /* Darker Green */
+}
+
+/* "Clear Selection" Icon Button */
+.clearButton {
+    /* Override base button for icon style */
+    padding: 0.3rem;
+    color: #6c757d;
     background-color: transparent;
     border: none;
-    border-radius: 4px;
-  }
-  .clearButton:hover:not(:disabled) {
-    color: #343a40; /* Darker grey */
-    background-color: #e9ecef; /* Light background on hover */
-  }
-  
-  
-  /* Basic Loading/Error styles if not handled by ManagementContainer */
-  .loadingIndicator {
+    /* Inherits display, align, justify, cursor, radius, transition, disabled state */
+}
+
+.clearButton:hover:not(:disabled) {
+    color: #343a40;
+    background-color: #e9ecef;
+}
+
+
+/* Basic Loading/Error styles */
+.loadingIndicator {
     padding: 1rem;
     text-align: center;
     color: #666;
-  }
-  
-  .errorMessage {
+    font-style: italic;
+    min-height: 40px;
+}
+
+.errorMessage {
     padding: 0.75rem 1rem;
     background-color: #f8d7da;
     color: #721c24;
@@ -130,4 +194,22 @@
     border-radius: 4px;
     margin-bottom: 1rem;
     text-align: center;
-  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nutrientGrid {
+        grid-template-columns: minmax(100px, auto) 1fr;
+        gap: 0.5rem 1rem;
+    }
+
+    .nutrientLabel {
+        text-align: left;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
