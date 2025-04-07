@@ -1,19 +1,16 @@
 import datetime
 from sqlalchemy import (
-    create_engine,
     Column,
     Integer,
     String,
-    Text,
-    DateTime,
-    UniqueConstraint
-)
+    Text
+    )
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
 Base = declarative_base()
 
-class AlcampoProduct(Base):
+class Product_Link(Base):
     """
     SQLAlchemy ORM model representing a product scraped from Alcampo online store.
     Maps to the 'alcampo_products' table in the database.
