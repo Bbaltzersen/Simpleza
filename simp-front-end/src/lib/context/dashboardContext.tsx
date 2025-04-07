@@ -17,7 +17,7 @@ import {
   deleteRecipe,
 } from "@/lib/api/recipe/recipe";
 import { ListRecipe, RecipeCreate, TagRetrieval } from "@/lib/types/recipe";
-import { Ingredient } from "@/lib/types/ingredient";
+import { IngredientBase } from "@/lib/types/ingredient";
 import { useAuth } from "@/lib/context/authContext";
 
 import {
@@ -40,7 +40,7 @@ interface DashboardContextType {
   deleteRecipe: (recipe_id: string) => Promise<void>;
   retrieveRecipeDetails: (recipe_id: string) => Promise<void>;
   hasMore: boolean;
-  ingredientSearchResults: Ingredient[];
+  ingredientSearchResults: IngredientBase[];
   searchIngredients: (query: string) => Promise<void>;
   tags: TagRetrieval[];
   searchTags: (query: string) => Promise<void>;
@@ -75,7 +75,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({
   // Define limits for initial load and infinite scroll.
   const initialLimit = 19; // Initial fetch returns 19 recipes.
   const infiniteLimit = 20; // Each subsequent call returns 20 recipes.
-  const [ingredientSearchResults, setIngredientSearchResults] = useState<Ingredient[]>([]);
+  const [ingredientSearchResults, setIngredientSearchResults] = useState<IngredientBase[]>([]);
   const [tags, setTags] = useState<TagRetrieval[]>([]);
 
   // Other state values (pagination for dropdown, if needed)
