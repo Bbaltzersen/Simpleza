@@ -4,6 +4,7 @@
 # e.g., class RecipeIngredient is in models/recipe_ingredient.py
 
 from .base import Base
+from .alcampo_product_link import Product_Link
 from .user import User
 from .recipe import Recipe
 from .recipe_author import RecipeAuthor
@@ -25,7 +26,6 @@ from .product import Product
 from .product_company import ProductCompany
 from .company import Company
 from .user_preference import UserPreference
-from .alcampo_productid import AlcampoProductID
 from .cauldron import Cauldron
 from .cauldron_data import CauldronData
 # --- Added New Tables ---
@@ -39,6 +39,7 @@ from .recommendation_source import RecommendationSource # For sources of recomme
 # Ensure __all__ matches the imported class names accurately
 __all__ = [
     "Base",
+    "Product_Link",
     "User",
     "Recipe",
     "RecipeAuthor",
