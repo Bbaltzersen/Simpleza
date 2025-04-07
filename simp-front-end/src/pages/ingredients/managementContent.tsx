@@ -11,7 +11,7 @@ import CompanyManagement from "./companyManagement/companyManagement";
 // Define entity names as a type
 type EntityType = "Ingredients" | "Products" | "Nutrition" | "Companies";
 
-const entityNames: EntityType[] = ["Ingredients", "Nutrition", "Products", "Companies"];
+const entityNames: EntityType[] = ["Ingredients", "Nutrition"];
 
 const IngredientContent: React.FC = () => {
   const [selectedEntity, setSelectedEntity] = useState<EntityType>("Ingredients");
@@ -34,9 +34,9 @@ const IngredientContent: React.FC = () => {
       {/* Display Selected Entity */}
       <div className="mt-4">
         {selectedEntity === "Ingredients" && <IngredientManagement />}
-        {selectedEntity === "Products" && <ProductManagement />}
+        {/* {selectedEntity === "Products" && <ProductManagement />} */}
         {selectedEntity === "Nutrition" && <NutritionManagement />}
-        {selectedEntity === "Companies" && <CompanyManagement />}
+        {/* {selectedEntity === "Companies" && <CompanyManagement />} */}
       </div>
     </div>
   );
