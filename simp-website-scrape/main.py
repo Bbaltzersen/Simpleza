@@ -6,6 +6,7 @@ import os # Good practice to import os if dealing with paths/env implicitly
 
 # Database Imports (from your modules)
 # Assuming Database/connection.py provides SessionLocal and engine
+from components.scraping.scr_alcampo_product_links import scrape_alcampo_incrementally
 from database.connection import SessionLocal, engine
 # Assuming models/alcampo_product_link.py defines Base
 # Corrected import path assuming models is at the root level
@@ -13,7 +14,6 @@ from models.alcampo_product_link import Base
 
 # Scraping Component Import
 # Corrected import path based on assumed structure
-from components.scraping.scr_alcampo_product_links import scrape_alcampo_and_save_links
 
 # --- Configuration ---
 # Define the target URL here or load from a config source
@@ -60,7 +60,7 @@ def run_scraper():
             print("Database session started successfully.")
             # Call the imported scraping function, passing the URL and the active session
             # Assumes scrape_alcampo_and_save_links handles its own WebDriver setup/teardown
-            processed, added = scrape_alcampo_and_save_links(ALCAMPO_FRESH_URL, db_session)
+            processed, added = scrape_alcampo_incrementally(ALCAMPO_FRESH_URL)
             print("Scraping function finished.")
         # Session is automatically committed if no exceptions occur within 'with' block,
         # or rolled back if an exception occurs. It's also closed.

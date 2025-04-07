@@ -1,4 +1,4 @@
-# main_scraper.py
+# component/scraping/scr_alcampo_product_links_incremental.py
 
 import time
 import sys
@@ -10,35 +10,40 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, WebDriverException
-
-# Database Imports from your modules
-from sqlalchemy.orm import Session
-from database.connection import SessionLocal, engine # Import Session factory and engine
-from database.handling import create_product_link # Import your DB handling function
-from models.alcampo_product_link import Base # Import Base for table creation
+# from selenium.webdriver.chrome.service import Service # If needed
 
 # --- Configuration ---
 TARGET_URL = "https://www.compraonline.alcampo.es/categories/frescos/OC2112?source=navigation"
 BASE_URL = "https://www.compraonline.alcampo.es"
 
-# --- Main Scraping Function (Using imported DB functions) ---
-def scrape_alcampo_and_save_links(url: str, db: Session) -> tuple[int, int]:
+# --- Main Scraping Function (Incremental Scan Strategy) ---
+def scrape_alcampo_incrementally(url: str) -> int:
     """
-    Scrapes product names/links and saves them progressively using imported DB functions.
+    Scrapes product names and links from an Alcampo category page that potentially
+    uses virtual scrolling (unloading off-screen elements).
+
+    It scrolls down incrementally, processing only the cards currently rendered
+    in the DOM, storing unique links found. Stops when scrolling down no longer
+    reveals new unique product links after several attempts.
 
     Args:
         url: The URL of the Alcampo category page.
-        db: The SQLAlchemy Session object.
 
     Returns:
-        A tuple containing: (number_of_products_found, number_of_products_added)
+        The total number of unique items found and printed.
     """
-    processed_count = 0
-    added_count = 0
+    found_links = set() # Store unique absolute links found
+    found_count = 0 # Count items successfully found and printed
     driver = None
+
+    # Selectors remain the same for the final product card
+    product_card_selector = "div[data-retailer-anchor='fop']"
+    name_selector_within_card = "h3[data-test='fop-title']"
+    link_selector_within_card = "a[data-test='fop-product-link']"
 
     try:
         print("Initializing WebDriver (expecting ChromeDriver in system PATH)...")
+        # Add options or service path if needed
         driver = webdriver.Chrome()
         print("WebDriver initialized successfully.")
         driver.maximize_window()
@@ -61,86 +66,123 @@ def scrape_alcampo_and_save_links(url: str, db: Session) -> tuple[int, int]:
         except Exception as e:
             print(f"An error occurred while handling the cookie banner: {e}")
 
-        # --- Infinite Scroll ---
-        print("Starting infinite scroll simulation...")
-        last_height = driver.execute_script("return document.body.scrollHeight")
-        scroll_attempts = 0
-        max_scroll_attempts = 30 # Safety limit
 
+        # --- Incremental Scroll and Scan ---
+        print("Starting incremental scroll and scan...")
+        scroll_attempts = 0
+        max_scroll_attempts = 100 # Safety limit for total scrolls
+        no_new_links_streak = 0
+        max_no_new_links_streak = 5 # Stop after this many scrolls with no new finds
+        wait_after_scroll = 3 # Seconds to wait for content to render after scroll (TUNABLE)
+
+        print("\n--- Found Products (Incremental Scan) ---")
         while scroll_attempts < max_scroll_attempts:
             scroll_attempts += 1
-            print(f"Scrolling down... (Attempt {scroll_attempts})")
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(3.5) # Adjust if needed
-            new_height = driver.execute_script("return document.body.scrollHeight")
-            print(f"  Current height: {new_height}, Previous height: {last_height}")
-            if new_height == last_height:
-                print("Scroll height hasn't changed. Performing final check...")
-                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                time.sleep(3.5)
-                new_height = driver.execute_script("return document.body.scrollHeight")
-                if new_height == last_height:
-                   print("Height confirmed unchanged. Stopping scroll.")
-                   break
-                else:
-                   print(f"Height changed after final check. Continuing. New height: {new_height}")
-            last_height = new_height
+            print(f"\nScroll Attempt {scroll_attempts}:")
 
-        if scroll_attempts == max_scroll_attempts:
-             print(f"WARNING: Reached maximum scroll attempts ({max_scroll_attempts}).")
-        else:
-             print("Finished scrolling.")
+            links_found_before_scan = len(found_links)
 
-        # --- Data Extraction and Progressive Saving via handling.py ---
-        print("Waiting briefly before extracting and saving data...")
-        time.sleep(2)
-
-        print("Extracting product data and saving to DB via create_product_link...")
-        product_card_selector = "[data-qa='product-tile']"
-        link_selector_within_card = "a[data-qa='product-tile--name']"
-
-        product_cards = driver.find_elements(By.CSS_SELECTOR, product_card_selector)
-        total_found = len(product_cards)
-        print(f"Found {total_found} potential product cards. Processing...")
-
-        for i, card in enumerate(product_cards):
-            processed_count += 1
-            print(f"Processing card {processed_count}/{total_found}...", end='\r') # Progress indicator
-            product_name = "N/A"
-            absolute_link = "N/A"
+            # Find *currently rendered* product cards
+            # It's crucial this happens *after* any potential wait for rendering
             try:
-                link_element = card.find_element(By.CSS_SELECTOR, link_selector_within_card)
-                product_name = link_element.text.strip()
-                relative_link = link_element.get_attribute('href')
-
-                # Construct absolute link
-                if relative_link and relative_link.startswith('/'):
-                    absolute_link = BASE_URL + relative_link
-                elif relative_link and relative_link.startswith('http'):
-                    absolute_link = relative_link
-                else:
-                    absolute_link = "Invalid Link Format"
-
-                # Call your handling function to add to DB
-                if product_name and absolute_link != "N/A" and absolute_link != "Invalid Link Format":
-                    # create_product_link returns the object on success, None on failure
-                    result = create_product_link(db, product_name, absolute_link)
-                    if result is not None:
-                         added_count += 1
-                    # else: Error/duplicate occurred (logged in handling.py)
-
-            except NoSuchElementException:
-                pass # Silently skip cards that don't match
+                current_cards = driver.find_elements(By.CSS_SELECTOR, product_card_selector)
+                print(f"  Found {len(current_cards)} potential cards currently in DOM.")
             except Exception as e:
-                print(f"\n  -> Error processing card {processed_count}: {e}. Skipping card.")
+                 print(f"  Error finding cards in attempt {scroll_attempts}: {e}")
+                 current_cards = []
 
-        print(f"\nFinished processing {processed_count} cards.")
+            if not current_cards:
+                 print("  No product cards found in current view/DOM state.")
+                 # Optional: Check if skeletons are present? Could indicate loading stall.
+                 # skeletons = driver.find_elements(By.CSS_SELECTOR, 'div[data-retailer-anchor="fop-skeleton"]')
+                 # if skeletons: print(f"  ({len(skeletons)} skeletons present)")
+
+            # Process the cards found in this view
+            cards_processed_this_scan = 0
+            for card in current_cards:
+                product_name = "N/A"
+                absolute_link = "N/A"
+                relative_link = "N/A"
+                try:
+                    # Extract link first to check if it's new
+                    link_element = card.find_element(By.CSS_SELECTOR, link_selector_within_card)
+                    relative_link = link_element.get_attribute('href')
+
+                    # Construct absolute link
+                    if relative_link:
+                        if relative_link.startswith('/'):
+                            absolute_link = BASE_URL + relative_link
+                        elif relative_link.startswith('http'):
+                            absolute_link = relative_link
+                        else:
+                            absolute_link = "Invalid Link Format" # Skip if format is weird
+
+                    # --- Process only if the link is new ---
+                    if absolute_link != "N/A" and "Invalid Link Format" not in absolute_link and absolute_link not in found_links:
+                        cards_processed_this_scan += 1
+                        # Now extract name since it's a new item
+                        name_element = card.find_element(By.CSS_SELECTOR, name_selector_within_card)
+                        product_name = name_element.text.strip()
+
+                        if product_name and product_name != "N/A":
+                            print(f"  Name: {product_name}")
+                            print(f"  Link: {absolute_link}")
+                            print("  ---")
+                            found_links.add(absolute_link)
+                            found_count += 1
+                        else:
+                            print(f"  Warning: Found new link {absolute_link} but failed to get name. Adding link to set.")
+                            found_links.add(absolute_link) # Add link anyway to avoid re-processing
+
+                except NoSuchElementException:
+                     # This card might be partially rendered or have unexpected structure
+                     # print(f"  Warning: Card in view missing expected sub-element (name or link). Link was '{relative_link}'.")
+                     pass # Silently ignore cards missing elements in this view
+                except Exception as e:
+                    print(f"  ERROR processing a card: {e}. Skipping card.", file=sys.stderr)
+
+            print(f"  Processed {cards_processed_this_scan} new unique cards in this scan.")
+            print(f"  Total unique items found so far: {len(found_links)}")
+
+            # --- Scroll Down ---
+            last_scroll_y = driver.execute_script("return window.scrollY")
+            # Scroll down by 90% of viewport height to ensure overlap
+            driver.execute_script("window.scrollBy(0, window.innerHeight * 0.9);")
+            print(f"  Scrolling down...")
+            time.sleep(wait_after_scroll) # CRUCIAL: Wait for new items to render
+            new_scroll_y = driver.execute_script("return window.scrollY")
+
+            # --- Check Stop Conditions ---
+            # 1. Did we actually scroll down?
+            if new_scroll_y <= last_scroll_y:
+                # We might be stuck at the bottom or something prevented scroll
+                print("\nScroll position did not increase. Assuming end of page or issue.")
+                break
+
+            # 2. Did we find any new links in the last scan?
+            if len(found_links) == links_found_before_scan:
+                no_new_links_streak += 1
+                print(f"\nNo new unique links found in this scroll ({no_new_links_streak}/{max_no_new_links_streak}).")
+                if no_new_links_streak >= max_no_new_links_streak:
+                    print("\nReached max streak of scrolls with no new links. Stopping.")
+                    break
+            else:
+                no_new_links_streak = 0 # Reset streak if new links were found
+
+        # End of while loop
+        if scroll_attempts == max_scroll_attempts:
+            print(f"\nWARNING: Reached maximum scroll attempts ({max_scroll_attempts}). May not have all products.")
+
+        print(f"\n--- End of Products (Incremental Scan) ---")
+
 
     except WebDriverException as e:
         print(f"\nA WebDriver error occurred: {e}", file=sys.stderr)
-        print("Please check system PATH and ChromeDriver version/permissions.", file=sys.stderr)
+        # ... (rest of WebDriverException handling) ...
     except Exception as e:
         print(f"\nAn unexpected error occurred during scraping: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
 
     finally:
         if driver:
@@ -148,45 +190,20 @@ def scrape_alcampo_and_save_links(url: str, db: Session) -> tuple[int, int]:
             driver.quit()
             print("WebDriver closed.")
 
-    # Return counts
-    return processed_count, added_count
+    # Return total unique count
+    return len(found_links)
 
-# --- Main Execution ---
+# --- Execution ---
 if __name__ == "__main__":
     start_time = time.time()
-    # Current time is Monday, April 7, 2025 at 6:07:36 AM CEST.
-    print(f"Starting Alcampo Scraper & DB Insert at {time.strftime('%Y-%m-%d %H:%M:%S %Z')}...")
-    print(f"Using Database defined in .env: {str(engine.url).split('@')[-1].split('/')[1]}") # Show DB name
+    print(f"--- Starting Alcampo Incremental Scraper at {datetime.datetime.now()} ---")
+    print(f"Target URL: {TARGET_URL}")
 
-    # Create database tables if they don't exist using Base from models
-    try:
-        print("Ensuring database table exists ('{Product_Link.__tablename__}')...")
-        Base.metadata.create_all(bind=engine) # Use imported Base and engine
-        print("Table check complete.")
-    except Exception as e:
-        print(f"FATAL: Could not create/check database tables. Error: {e}", file=sys.stderr)
-        print("Ensure DB connection details in .env are correct and DB is running.", file=sys.stderr)
-        sys.exit(1)
-
-    # Use a context manager for the session from SessionLocal
-    processed = 0
-    added = 0
-    try:
-        # SessionLocal is imported from Database.connection
-        with SessionLocal() as db_session:
-            print("Database session started.")
-            # Pass the session to the scraping function
-            processed, added = scrape_alcampo_and_save_links(TARGET_URL, db_session)
-    except Exception as e:
-         print(f"An error occurred managing the DB session or running the scraper: {e}", file=sys.stderr)
-    finally:
-         print("Database session closed.") # Automatically handled by 'with'
-
+    total_found = scrape_alcampo_incrementally(TARGET_URL)
 
     end_time = time.time()
     duration = end_time - start_time
-    print("\n--- Scraping and Saving Complete ---")
-    print(f"Total potential products processed: {processed}")
-    print(f"Products successfully added to DB: {added}") # Note: This count excludes duplicates/errors from create_product_link
-    print(f"Duration: {duration:.2f} seconds")
-    print(f"Finished at: {time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+    print("\n--- Scraping Summary ---")
+    print(f"Total unique products found and printed: {total_found}")
+    print(f"Script execution duration: {duration:.2f} seconds")
+    print(f"--- Scraper finished at {datetime.datetime.now()} ---")
