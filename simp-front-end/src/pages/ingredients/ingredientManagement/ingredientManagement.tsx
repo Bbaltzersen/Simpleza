@@ -47,8 +47,8 @@ const initialIngredientFormState: IngredientFormData = {
   name: "",
   description: "",
   density_g_per_ml: "", // String for input binding
-  default_unit: "gram", // Default matches UnitNameEnum.GRAM value
-  diet_level: 4,       // Default matches DietLevelEnum.OMNIVORE value
+  default_unit: "", // Default matches UnitNameEnum.GRAM value
+  diet_level: "",       // Default matches DietLevelEnum.OMNIVORE value
   validated: false,
 };
 

@@ -39,13 +39,13 @@ const initialFormState: NutrientFormData = {
   nutrient_name: "",
   nutrient_symbol: "",
   unit: "",
-  nutrient_decimals: 2,
+  nutrient_decimals: "",
   primary_group: "",
   secondary_group: "",
   tertiary_group: "",
   quaternary_group: "",
   description: "",
-  sort_order: 9999,
+  sort_order: "",
 };
 
 // --- Component ---
