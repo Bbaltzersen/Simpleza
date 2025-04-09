@@ -3,18 +3,15 @@
 import time
 import sys
 import datetime
-import uuid
+import uuid # Keep uuid import for potential future use, even if default handles it now
 import os
 
 # --- Database Imports ---
-# Assuming Database/connection.py provides SessionLocal
 from database.connection import SessionLocal
-# Assuming your Product_Link model is defined correctly, e.g., in models/alcampo_product_link.py
-from models.alcampo_product_link import Product_Link
+from models.alcampo_product_link import Alcampo_Product_Link # Uses the updated model name
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
-# Load environment variables (e.g., DATABASE_URL)
 load_dotenv()
 
 # --- Selenium Imports ---
@@ -27,24 +24,20 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException,
 
 
 # --- Database Handling Function ---
-# (This should ideally be in database/handling.py and imported)
-# Using the function structure you provided:
-def create_product_link(db: Session, name: str, link: str) -> Product_Link | None:
-    """Adds a new product link to the database."""
-    product_link_id = str(uuid.uuid4())
+# CORRECT for UUID model with default=uuid.uuid4
+def create_product_link(db: Session, name: str, link: str) -> Alcampo_Product_Link | None:
+    """Adds a new product link to the database, letting the model's default generate the UUID ID."""
     try:
-        product_link = Product_Link(
-            product_link_id=product_link_id,
+        # Omit product_link_id - SQLAlchemy will use the 'default=uuid.uuid4' from the model
+        product_link = Alcampo_Product_Link(
             product_name=name,
             product_link=link
-            # Add other fields like created_at if they exist in the model
-            # created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(product_link)
         db.commit()
+        # After commit, product_link.product_link_id will contain the generated UUID
         db.refresh(product_link)
-        # Use a distinct prefix for DB logging
-        print(f"  DB_ADD: Successfully committed: {link}")
+        print(f"  DB_ADD: Successfully committed (ID: {product_link.product_link_id}): {link}")
         return product_link
     except Exception as e:
         db.rollback()
@@ -54,16 +47,15 @@ def create_product_link(db: Session, name: str, link: str) -> Product_Link | Non
 # --- Configuration ---
 TARGET_URL = "https://www.compraonline.alcampo.es/categories/frescos/OC2112?source=navigation"
 BASE_URL = "https://www.compraonline.alcampo.es"
-# Tuned parameters based on previous request (adjust if needed)
 SCROLL_PAUSE_TIME = 3
-SCROLL_INCREMENT = 600 # Pixels (was 400 in prev request, user code has 600)
-MAX_NO_NEW_LINKS_STREAK = 40 # (User code has 40 - quite high)
+SCROLL_INCREMENT = 600
+MAX_NO_NEW_LINKS_STREAK = 40
 MAX_SCROLL_ATTEMPTS = 200
 
 # --- Main Scraping Function ---
 def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
     """
-    Scrapes Alcampo category page, handles virtual scroll, adds NEW links to DB.
+    Scrapes Alcampo category page, handles virtual scroll, adds NEW links to DB (UUID PK).
 
     Args:
         url: The URL of the Alcampo category page.
@@ -76,12 +68,12 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
           cards found in the DOM at the very end.
     """
     links_in_db_at_start = set()
-    found_links_this_run = set() # Store unique links found ONLY during this scrape
-    newly_added_to_db_count = 0 # Count items successfully added to DB
+    found_links_this_run = set()
+    newly_added_to_db_count = 0
     final_rendered_cards = 0
     final_skeleton_cards = 0
     driver = None
-    db: Session | None = None # Initialize db session variable
+    db: Session | None = None
 
     # Selectors
     product_card_selector = "div[data-retailer-anchor='fop']"
@@ -96,17 +88,16 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
         print("Database session established.")
         print("Loading existing links from database...")
         try:
-            existing_links_query = db.query(Product_Link.product_link).all()
+            # Query uses the correct model name now
+            existing_links_query = db.query(Alcampo_Product_Link.product_link).all()
             links_in_db_at_start = {link for (link,) in existing_links_query}
             print(f"Loaded {len(links_in_db_at_start)} existing links from DB.")
         except Exception as e:
             print(f"ERROR: Could not load existing links from DB: {e}", file=sys.stderr)
             print("WARNING: Proceeding without checking against existing DB links.")
-            # Keep links_in_db_at_start as an empty set
 
         # --- Initialize WebDriver ---
         print("Initializing WebDriver...")
-        # Add options or service path if needed
         driver = webdriver.Chrome()
         print("WebDriver initialized successfully.")
         driver.maximize_window()
@@ -115,7 +106,6 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
         driver.get(url)
 
         # --- Handle Cookie Banner ---
-        # (Same as before)
         try:
             print("Waiting for cookie consent banner...")
             cookie_button_selector = "#onetrust-accept-btn-handler"
@@ -139,12 +129,12 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
         print("\n--- Processing Products (Incremental Scan + DB Add) ---")
         while scroll_attempts < MAX_SCROLL_ATTEMPTS:
             scroll_attempts += 1
-            time.sleep(0.5) # Small pause before processing view
+            time.sleep(0.5)
             print(f"\nScroll Attempt {scroll_attempts}: Processing current view...")
 
-            links_found_before_scan = len(found_links_this_run) # Track new links for *this run*
+            links_found_before_scan = len(found_links_this_run)
 
-            # Find *currently rendered* product cards
+            # Find currently rendered product cards
             try:
                 current_cards = driver.find_elements(By.CSS_SELECTOR, product_card_selector)
                 print(f"  Found {len(current_cards)} potential cards currently in DOM.")
@@ -152,7 +142,6 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
                 print(f"  Error finding cards in attempt {scroll_attempts}: {e}")
                 current_cards = []
 
-            # (Optional: print warning if no cards found)
             if not current_cards and scroll_attempts > 1:
                  print("  No product cards found in current view/DOM state.")
 
@@ -174,13 +163,12 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
                         else:
                             absolute_link = "Invalid Link Format"
 
-                    # --- Process only if link is new for THIS RUN ---
-                    # Check against found_links_this_run set
+                    # Process only if link is new for THIS RUN
                     if absolute_link != "N/A" and "Invalid Link Format" not in absolute_link and absolute_link not in found_links_this_run:
                         new_items_processed_this_scan += 1
-                        found_links_this_run.add(absolute_link) # Add to this run's set
+                        found_links_this_run.add(absolute_link)
 
-                        # --- Check if it's also new compared to DB start state ---
+                        # Check if it's also new compared to DB start state
                         if absolute_link not in links_in_db_at_start:
                             print(f"  (+) New Link Found: {absolute_link}")
                             # Attempt to get name and add to DB
@@ -189,12 +177,10 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
                                 product_name = name_element.text.strip()
 
                                 if product_name and product_name != "N/A":
-                                    # Call the database function
+                                    # Call the database function (which uses the correct model now)
                                     added_product = create_product_link(db, product_name, absolute_link)
                                     if added_product:
                                         newly_added_to_db_count += 1
-                                        # Optional: print name here if needed, create_product_link logs success/fail
-                                        # print(f"      Name: {product_name}")
                                 else:
                                     print(f"  (!) Skipping DB add for {absolute_link}: Invalid product name found.")
 
@@ -202,9 +188,7 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
                                  print(f"  (!) Skipping DB add for {absolute_link}: Name element not found in card.")
                             except Exception as ne:
                                  print(f"  (!) Skipping DB add for {absolute_link}: Error getting name - {ne}")
-                        # else:
-                        #     # Link was found this run, but already existed in DB at start
-                        #     print(f"  (-) Link exists in DB: {absolute_link}") # Can be noisy, commented out
+                        # else: (Link already in DB) - No action needed
 
 
                 except NoSuchElementException:
@@ -217,20 +201,18 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
             print(f"  Total items added to DB this run so far: {newly_added_to_db_count}")
 
 
-            # --- Scroll Down by fixed amount ---
+            # --- Scroll Down ---
             last_scroll_y = driver.execute_script("return window.scrollY")
             driver.execute_script(f"window.scrollBy(0, {SCROLL_INCREMENT});")
             print(f"  Scrolling down {SCROLL_INCREMENT}px...")
-            time.sleep(SCROLL_PAUSE_TIME) # Wait for potential rendering
+            time.sleep(SCROLL_PAUSE_TIME)
             new_scroll_y = driver.execute_script("return window.scrollY")
 
             # --- Check Stop Conditions ---
             if new_scroll_y <= last_scroll_y:
                 print(f"\nScroll position did not increase (Before: {last_scroll_y}, After: {new_scroll_y}). Stopping.")
-                break # Stop immediately if scroll fails
+                break
 
-            # Check if new links were *processed* in the last scan iteration
-            # Note: We check processed links, not just added to DB, to detect end of list
             if new_items_processed_this_scan == 0:
                 no_new_links_streak += 1
                 print(f"\nNo new unique links processed after scroll ({no_new_links_streak}/{MAX_NO_NEW_LINKS_STREAK}).")
@@ -238,7 +220,7 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
                     print("\nReached max streak of scrolls with no new links processed. Stopping.")
                     break
             else:
-                no_new_links_streak = 0 # Reset streak
+                no_new_links_streak = 0
 
         # --- End of while loop ---
         if scroll_attempts == MAX_SCROLL_ATTEMPTS:
@@ -247,7 +229,6 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
         print(f"\n--- End of Scrolling and Processing Phase ---")
 
         # --- Final Verification Count ---
-        # (Same as before)
         print("Performing final verification count of rendered elements...")
         try:
             final_rendered_cards_list = driver.find_elements(By.CSS_SELECTOR, product_card_selector)
@@ -255,14 +236,14 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
             print(f"  Found {final_rendered_cards} fully rendered product cards in final DOM state.")
         except Exception as e:
             print(f"  Error finding final product cards: {e}")
-            final_rendered_cards = -1 # Indicate error
+            final_rendered_cards = -1
         try:
             final_skeleton_cards_list = driver.find_elements(By.CSS_SELECTOR, skeleton_selector)
             final_skeleton_cards = len(final_skeleton_cards_list)
             print(f"  Found {final_skeleton_cards} skeleton cards in final DOM state.")
         except Exception as e:
             print(f"  Error finding final skeleton cards: {e}")
-            final_skeleton_cards = -1 # Indicate error
+            final_skeleton_cards = -1
         final_verification_count = -1
         if final_rendered_cards != -1 and final_skeleton_cards != -1:
             final_verification_count = final_rendered_cards + final_skeleton_cards
@@ -284,7 +265,7 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
         traceback.print_exc()
 
     finally:
-        # Close resources in reverse order of opening
+        # Close resources
         if driver:
             print("Closing WebDriver...")
             driver.quit()
@@ -300,7 +281,7 @@ def scrape_alcampo_incrementally(url: str) -> tuple[int, int, int]:
 # --- Execution ---
 if __name__ == "__main__":
     start_time = time.time()
-    print(f"--- Starting Alcampo Incremental Scraper with DB Add ---")
+    print(f"--- Starting Alcampo Incremental Scraper with DB Add (UUID PK) ---") # Updated title
     print(f"Start Time: {datetime.datetime.now()}")
     print(f"Target URL: {TARGET_URL}")
     print(f"Scroll Increment: {SCROLL_INCREMENT}px, Pause: {SCROLL_PAUSE_TIME}s")

@@ -4,11 +4,11 @@
 # e.g., class RecipeIngredient is in models/recipe_ingredient.py
 
 from .base import Base
-from .alcampo_product_link import Product_Link
+from .alcampo_product_link import Alcampo_Product_Link
 
 
 # Ensure __all__ matches the imported class names accurately
 __all__ = [
     "Base",
-    "Product_Link",
+    "Alcampo_Product_Link",
 ]

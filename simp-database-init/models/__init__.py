@@ -4,7 +4,6 @@
 # e.g., class RecipeIngredient is in models/recipe_ingredient.py
 
 from .base import Base
-from .alcampo_product_link import Product_Link
 from .user import User
 from .recipe import Recipe
 from .recipe_author import RecipeAuthor
@@ -34,12 +33,11 @@ from .recommendation_source import RecommendationSource # For sources of recomme
 # Note: The association table 'recommendation_source_association' is typically defined
 # within recommendation_source.py or nutrient_recommendation.py and doesn't need
 # to be explicitly imported here unless used directly elsewhere.
-
+from .alcampo_product_link import Alcampo_Product_Link # Assuming this is a separate model for Alcampo product IDs
 
 # Ensure __all__ matches the imported class names accurately
 __all__ = [
     "Base",
-    "Product_Link",
     "User",
     "Recipe",
     "RecipeAuthor",
@@ -61,7 +59,7 @@ __all__ = [
     "ProductCompany",
     "Company",
     "UserPreference",
-    "AlcampoProductID",
+    "Alcampo_Product_Link",
     "Cauldron",
     "CauldronData",
     # --- Added New Class Names ---

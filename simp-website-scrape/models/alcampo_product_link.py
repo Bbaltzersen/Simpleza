@@ -7,17 +7,18 @@ from sqlalchemy import (
     )
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
+from .base import Base
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 
-Base = declarative_base()
-
-class Product_Link(Base):
+class Alcampo_Product_Link(Base):
     """
     SQLAlchemy ORM model representing a product scraped from Alcampo online store.
     Maps to the 'alcampo_products' table in the database.
     """
-    __tablename__ = 'alcampo_products'
+    __tablename__ = 'alcampo_product_links'
 
-    id = Column(Integer, primary_key=True)
+    product_link_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_name = Column(String(500), nullable=False)
     product_link = Column(Text, nullable=False, unique=True)
     
