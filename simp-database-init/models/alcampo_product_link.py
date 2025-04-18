@@ -1,6 +1,7 @@
 import datetime
 from sqlalchemy import (
     Column,
+    DateTime,
     Integer,
     String,
     Text
@@ -21,6 +22,7 @@ class Alcampo_Product_Link(Base):
     product_link_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     product_name = Column(String(500), nullable=False)
     product_link = Column(Text, nullable=False, unique=True)
+    details_scraped_at = Column(DateTime(timezone=True), nullable=True, index=True)
     
     def __repr__(self):
         """
