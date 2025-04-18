@@ -51,7 +51,7 @@ URL_LIST = [
 
 # Number of parallel processes for each task
 NUM_LINK_PROCESSES = 4
-NUM_DETAIL_PROCESSES = 4 # Adjust as needed based on system resources
+NUM_DETAIL_PROCESSES = 1 # Adjust as needed based on system resources
 TARGET_COMPANY_NAME = "Alcampo" # Company name for detail scraping
 
 # --- Helper Function (Moved here from detail scraper) ---
