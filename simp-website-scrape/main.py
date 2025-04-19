@@ -12,6 +12,7 @@ from decimal import Decimal # Needed for type hint
 # --- Database Imports ---
 from sqlalchemy.orm import Session # Needed for type hints
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError # Needed for get_or_create_company
+from components.scraping.scr_products_from_links_alcampo import scrape_product_details
 from database.connection import SessionLocal, engine
 from models.base import Base
 from models.alcampo_product_link import Alcampo_Product_Link
@@ -238,34 +239,52 @@ def run_parallel_detail_scraper():
 
 # --- Main Execution Guard ---
 if __name__ == "__main__":
-    freeze_support()
+        # (Example usage remains the same, testing the orchestrator function)
+    test_url = "https://www.compraonline.alcampo.es/products/92163"
+    # test_url_broken = "https://www.alcampo.es/compra-online/frescos/frutas/NONEXISTENT/p/999999"
 
-    parser = argparse.ArgumentParser(description="Run Alcampo scraping tasks.")
-    parser.add_argument(
-        '--task', type=str, choices=['links', 'details'], required=True,
-        help='Specify task: "links" or "details".'
-    )
-    # Optional: Add argument for number of detail processes
-    parser.add_argument(
-        '--detail-workers', type=int, default=NUM_DETAIL_PROCESSES,
-        help=f'Number of parallel workers for detail scraping (default: {NUM_DETAIL_PROCESSES}).'
-    )
-    args = parser.parse_args()
+    print("Running example orchestration (Title and PPU)...")
+    # Call the renamed main function
+    title, ppu, ppu_unit_name = scrape_product_details(test_url, worker_id=1)
 
-    # Update NUM_DETAIL_PROCESSES if provided via command line
-    NUM_DETAIL_PROCESSES = args.detail_workers
-
-    print(f"Executing task: {args.task}")
-    overall_start = time.time()
-
-    if args.task == 'links':
-        run_link_scraper()
-    elif args.task == 'details':
-        run_parallel_detail_scraper() # Call the new parallel orchestrator
+    print("\nExample Result:")
+    if title:
+        print(f"  Successfully extracted title -> '{title}'")
     else:
-        print(f"Error: Unknown task '{args.task}'. Please use 'links' or 'details'.", file=sys.stderr)
-        sys.exit(1)
+        print("  Failed to extract title.")
 
-    overall_end = time.time()
-    print(f"\n--- Task '{args.task}' finished ---")
-    print(f"Overall execution time for task '{args.task}': {(overall_end - overall_start):.2f} seconds")
+    if ppu is not None and ppu_unit_name is not None:
+         print(f"  Successfully extracted PPU -> {ppu} €/{ppu_unit_name}")
+    else:
+         print(f"  Failed to extract explicit Price Per Unit.")
+    # freeze_support()
+
+    # parser = argparse.ArgumentParser(description="Run Alcampo scraping tasks.")
+    # parser.add_argument(
+    #     '--task', type=str, choices=['links', 'details'], required=True,
+    #     help='Specify task: "links" or "details".'
+    # )
+    # # Optional: Add argument for number of detail processes
+    # parser.add_argument(
+    #     '--detail-workers', type=int, default=NUM_DETAIL_PROCESSES,
+    #     help=f'Number of parallel workers for detail scraping (default: {NUM_DETAIL_PROCESSES}).'
+    # )
+    # args = parser.parse_args()
+
+    # # Update NUM_DETAIL_PROCESSES if provided via command line
+    # NUM_DETAIL_PROCESSES = args.detail_workers
+
+    # print(f"Executing task: {args.task}")
+    # overall_start = time.time()
+
+    # if args.task == 'links':
+    #     run_link_scraper()
+    # elif args.task == 'details':
+    #     run_parallel_detail_scraper() # Call the new parallel orchestrator
+    # else:
+    #     print(f"Error: Unknown task '{args.task}'. Please use 'links' or 'details'.", file=sys.stderr)
+    #     sys.exit(1)
+
+    # overall_end = time.time()
+    # print(f"\n--- Task '{args.task}' finished ---")
+    # print(f"Overall execution time for task '{args.task}': {(overall_end - overall_start):.2f} seconds")
