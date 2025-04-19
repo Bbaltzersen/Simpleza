@@ -245,11 +245,12 @@ if __name__ == "__main__":
 
     print("Running example orchestration (Title and PPU)...")
     # Call the renamed main function
-    title, ppu, ppu_u, qty, item_size, item_unit = scrape_product_details(test_url, worker_id=1)
+    title, ppu, ppu_u, qty, item_size, item_unit, min_w, max_w = scrape_product_details(test_url, worker_id=1)
 
     print(f"Title: {title}")
     print(f"PPU: {ppu} {ppu_u}")
     print(f"Quantity: {qty} {item_size} {item_unit}")
+    print(f"Size Deviation: Min={min_w}g, Max={max_w}g")
 
     # freeze_support()
 
