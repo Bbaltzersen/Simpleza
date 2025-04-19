@@ -245,18 +245,12 @@ if __name__ == "__main__":
 
     print("Running example orchestration (Title and PPU)...")
     # Call the renamed main function
-    title, ppu, ppu_unit_name = scrape_product_details(test_url, worker_id=1)
+    title, ppu, ppu_u, qty, item_size, item_unit = scrape_product_details(test_url, worker_id=1)
 
-    print("\nExample Result:")
-    if title:
-        print(f"  Successfully extracted title -> '{title}'")
-    else:
-        print("  Failed to extract title.")
+    print(f"Title: {title}")
+    print(f"PPU: {ppu} {ppu_u}")
+    print(f"Quantity: {qty} {item_size} {item_unit}")
 
-    if ppu is not None and ppu_unit_name is not None:
-         print(f"  Successfully extracted PPU -> {ppu} €/{ppu_unit_name}")
-    else:
-         print(f"  Failed to extract explicit Price Per Unit.")
     # freeze_support()
 
     # parser = argparse.ArgumentParser(description="Run Alcampo scraping tasks.")
